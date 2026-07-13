@@ -1,35 +1,39 @@
 # HealthAtlas
 
-[Deutsche README](README.de.md)
+HealthAtlas is a privacy-first macOS app for turning personal health data into clear, visual insights.
 
-Privacy-first macOS app for visualising personal health data from local exports.
+The app is designed to bring data from Apple Health and Google Health/Google Fit together in one calm, modern dashboard. HealthAtlas focuses on trends and personal patterns instead of overwhelming users with raw tables.
 
-## Current status
+## What HealthAtlas offers
 
-This repository is a clean starter scaffold for Xcode and Codex. It contains a native AppKit shell, mock data only, the selected HealthAtlas heart icon concept, release rules, and a privacy review script.
+- A native macOS 26+ experience built with Swift and AppKit
+- Visual dashboards for activity, sleep, heart rate, wellness and other health metrics
+- Interactive trends with time ranges, comparisons and animated charts
+- Local, descriptive insights without medical diagnosis or treatment claims
+- Support for English and German, switchable directly inside the app
+- Selectable Liquid Glass themes and visual styles
+- Accessible animation controls, including Reduced Motion support
+- A visible local-processing status so it is clear where calculations happen
+- Direct access to the public [HealthAtlas GitHub repository](https://github.com/Schrotty74/HealthAtlas)
 
-The first implementation must use local import files. A direct macOS HealthKit integration must not be assumed: Apple Health data access is primarily provided by Apple platforms with HealthKit, while macOS support and Google data access require a separately verified import or synchronisation route. Do not add an integration until its current API and privacy requirements have been verified.
+## Privacy first
 
-## Product principles
+HealthAtlas is designed around local processing. Personal health data should remain on the user's Mac. The project does not include analytics, advertising, tracking or hidden cloud uploads.
 
-- macOS 26 or newer.
-- Native Swift and AppKit. No external framework unless explicitly approved.
-- Runtime language switch between English and German.
-- An in-app link to the public GitHub repository.
-- Privacy by default: local processing, no analytics, no tracking, no cloud upload.
-- No private data, usernames, machine names, absolute paths, tokens, exports, or generated user data in GitHub.
-- Development builds stay local.
-- Beta and final releases may publish only sanitized ZIP/DMG artifacts and a privacy-review report.
-- Dev, beta, and final are separate configurations and are always built from a clean state.
+Development builds are kept local. Only reviewed beta and final release artifacts may be published, and every publication must pass the project's privacy check first.
 
-## Open in Xcode
+## Data sources
 
-Open `HealthAtlas.xcodeproj` in Xcode. Select the shared `HealthAtlas` scheme and run on macOS 26 or newer. `Package.swift` is also included for package-based Codex work.
+The initial development direction uses user-selected local import files. Direct synchronisation with Apple Health or Google services will only be added after the relevant platform APIs, permissions and privacy requirements have been verified.
 
-## Open in Codex
+## Project status
 
-Give Codex the file `Docs/CODEX_HANDOFF.md` as the primary instruction set. It defines scope, architecture, privacy rules, release workflow, and acceptance criteria.
+HealthAtlas is currently in early development. This repository contains the native macOS project foundation, the first AppKit dashboard, the Liquid Glass design system, the bilingual UI foundation, the privacy workflow and the HealthAtlas heart icon.
 
-## Icon and release status
+The interface is being developed from the included visual concept, with animation and interaction treated as central parts of the product rather than optional decoration.
 
-The repository contains a prepared macOS `AppIcon.appiconset` based on the selected heart concept. Review it at all sizes in Xcode before release. The repository is a development scaffold; it does not contain a release app, ZIP, or DMG.
+## License
+
+License information will be added before the first public release.
+
+For technical project guidance, see the documentation in [`Docs/`](Docs/).
