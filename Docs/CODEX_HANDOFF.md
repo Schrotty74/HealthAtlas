@@ -6,6 +6,8 @@ Build a polished privacy-first macOS 26+ AppKit app named HealthAtlas. It visual
 
 The supplied HealthAtlas mockup is the binding design baseline. Do not replace it with a plain utility interface. The finished app must visibly carry over its glass depth, dashboard cards, source badges, dark premium palette, charts, selectable themes, and animated transitions. Read `Docs/DESIGN_SYSTEM.md` before changing UI code.
 
+The app must support English and German at runtime. The user chooses the language inside the app; the choice is stored locally and must never require a network request. The app must also provide a visible GitHub link to `https://github.com/Schrotty74/HealthAtlas`.
+
 ## Non-negotiable rules
 
 1. Never commit private data, health exports, usernames, email addresses, device names, absolute paths, access tokens, API credentials, signing identities, or machine-specific build output.
