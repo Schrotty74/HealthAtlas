@@ -27,7 +27,7 @@
 
 /* Begin PBXGroup section */
 		A40000000000000000000000 = {isa = PBXGroup; children = (A40000000000000000000001, A40000000000000000000002, A40000000000000000000003); sourceTree = "<group>"; };
-		A40000000000000000000001 /* HealthAtlas */ = {isa = PBXGroup; children = (A40000000000000000000004, A40000000000000000000005); path = HealthAtlas; sourceTree = "<group>"; };
+		A40000000000000000000001 /* HealthAtlas */ = {isa = PBXGroup; children = (A20000000000000000000004); path = HealthAtlas; sourceTree = "<group>"; };
 		A40000000000000000000002 /* Sources */ = {isa = PBXGroup; children = (A20000000000000000000001, A20000000000000000000002, A20000000000000000000003, A20000000000000000000006); path = Sources/HealthAtlasApp; sourceTree = "<group>"; };
 		A40000000000000000000003 /* Products */ = {isa = PBXGroup; children = (A20000000000000000000000); name = Products; sourceTree = "<group>"; };
 /* End PBXGroup section */
