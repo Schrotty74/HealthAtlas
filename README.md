@@ -22,12 +22,12 @@ The first implementation must use local import files. A direct macOS HealthKit i
 
 ## Open in Xcode
 
-Open `Package.swift` in Xcode. Select the `HealthAtlasApp` executable scheme and run on macOS 26 or newer.
+Open `HealthAtlas.xcodeproj` in Xcode. Select the shared `HealthAtlas` scheme and run on macOS 26 or newer. `Package.swift` is also included for package-based Codex work.
 
 ## Open in Codex
 
 Give Codex the file `Docs/CODEX_HANDOFF.md` as the primary instruction set. It defines scope, architecture, privacy rules, release workflow, and acceptance criteria.
 
-## Important limitation
+## Icon and release status
 
-The supplied icon is a design concept PNG, not yet a complete `.icns`/`.appiconset`. Before a release, create the complete macOS iconset from the concept and verify all required sizes in Xcode. Do not publish the concept sheet or any unreviewed asset.
+The repository contains a prepared macOS `AppIcon.appiconset` based on the selected heart concept. Review it at all sizes in Xcode before release. The repository is a development scaffold; it does not contain a release app, ZIP, or DMG.
