@@ -12,6 +12,8 @@ Die erste Implementierung arbeitet mit lokalen Importdateien. Ein direkter Zugri
 
 - macOS 26 oder neuer.
 - Native Entwicklung mit Swift und AppKit.
+- Umschaltbare Benutzeroberfläche auf Deutsch und Englisch.
+- Direkte GitHub-Verlinkung innerhalb der App.
 - Liquid-Glass-Design auf Grundlage des HealthAtlas-Mockups.
 - Umfangreiche, aber ruhige Animationen: Karten, Diagramme, Ringe, Übergänge und Sidebar-Auswahl.
 - Unterstützung für Reduced Motion und hohen Kontrast.
