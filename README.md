@@ -14,6 +14,8 @@ The first implementation must use local import files. A direct macOS HealthKit i
 
 - macOS 26 or newer.
 - Native Swift and AppKit. No external framework unless explicitly approved.
+- Runtime language switch between English and German.
+- An in-app link to the public GitHub repository.
 - Privacy by default: local processing, no analytics, no tracking, no cloud upload.
 - No private data, usernames, machine names, absolute paths, tokens, exports, or generated user data in GitHub.
 - Development builds stay local.
