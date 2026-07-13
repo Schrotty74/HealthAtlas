@@ -23,7 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "HealthAtlas"
+        window.title = AppLanguage.current.text(english: "HealthAtlas", german: "HealthAtlas")
         window.contentViewController = content
         window.center()
         window.makeKeyAndOrderFront(nil)
