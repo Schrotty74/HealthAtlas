@@ -7,6 +7,7 @@
 		A10000000000000000000001 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* main.swift */; };
 		A10000000000000000000002 /* HealthData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* HealthData.swift */; };
 		A10000000000000000000003 /* DashboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* DashboardViewController.swift */; };
+		A10000000000000000000005 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* AppLanguage.swift */; };
 		A10000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -17,6 +18,7 @@
 		A20000000000000000000003 /* DashboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewController.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000005 /* HealthAtlas */ = {isa = PBXFileReference; lastKnownFileType = folder; path = HealthAtlas; sourceTree = "<group>"; };
+		A20000000000000000000006 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -26,7 +28,7 @@
 /* Begin PBXGroup section */
 		A40000000000000000000000 = {isa = PBXGroup; children = (A40000000000000000000001, A40000000000000000000002, A40000000000000000000003); sourceTree = "<group>"; };
 		A40000000000000000000001 /* HealthAtlas */ = {isa = PBXGroup; children = (A40000000000000000000004, A40000000000000000000005); path = HealthAtlas; sourceTree = "<group>"; };
-		A40000000000000000000002 /* Sources */ = {isa = PBXGroup; children = (A20000000000000000000001, A20000000000000000000002, A20000000000000000000003); path = Sources/HealthAtlasApp; sourceTree = "<group>"; };
+		A40000000000000000000002 /* Sources */ = {isa = PBXGroup; children = (A20000000000000000000001, A20000000000000000000002, A20000000000000000000003, A20000000000000000000006); path = Sources/HealthAtlasApp; sourceTree = "<group>"; };
 		A40000000000000000000003 /* Products */ = {isa = PBXGroup; children = (A20000000000000000000000); name = Products; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
@@ -43,7 +45,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A30000000000000000000003 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001, A10000000000000000000002, A10000000000000000000003); runOnlyForDeploymentPostprocessing = 0; };
+		A30000000000000000000003 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001, A10000000000000000000002, A10000000000000000000003, A10000000000000000000005); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
