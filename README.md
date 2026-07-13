@@ -1,5 +1,7 @@
 # HealthAtlas
 
+[Deutsche README](README.de.md)
+
 Privacy-first macOS app for visualising personal health data from local exports.
 
 ## Current status
