@@ -1,54 +1,39 @@
 # HealthAtlas
 
-Datenschutzorientierte macOS-App zur grafischen Aufbereitung persönlicher Gesundheitsdaten aus lokalen Importdateien.
+HealthAtlas ist eine datenschutzorientierte macOS-App, die persönliche Gesundheitsdaten verständlich und grafisch aufbereitet.
 
-## Aktueller Stand
+Die App soll Daten aus Apple Health und Google Health/Google Fit in einem ruhigen, modernen Dashboard zusammenführen. HealthAtlas konzentriert sich auf Verläufe und persönliche Muster, statt Nutzer mit reinen Rohdaten und Tabellen zu überladen.
 
-Dieses Repository ist ein sauberer Ausgangspunkt für Xcode und Codex. Es enthält ein natives AppKit-Grundgerüst, ausschließlich künstliche Testdaten, das ausgewählte HealthAtlas-Herz-Icon, die verbindliche Liquid-Glass-Designgrundlage, Animationsvorgaben, Datenschutzregeln und eine Datenschutzprüfung vor Veröffentlichungen.
+## Was HealthAtlas bietet
 
-Die erste Implementierung arbeitet mit lokalen Importdateien. Ein direkter Zugriff auf Apple-Health-Daten unter macOS darf nicht vorausgesetzt werden. Eine direkte Synchronisierung mit Apple Health oder Google Health/Google Fit wird erst umgesetzt, wenn die aktuelle technische API-Verfügbarkeit, Berechtigungen und Datenschutzanforderungen nachweislich geprüft wurden.
+- Native macOS-Erfahrung für macOS 26 oder neuer mit Swift und AppKit
+- Grafische Übersichten für Aktivität, Schlaf, Herzfrequenz, Wohlbefinden und weitere Gesundheitswerte
+- Interaktive Trends mit Zeiträumen, Vergleichen und animierten Diagrammen
+- Lokal berechnete, beschreibende Einblicke ohne Diagnosen oder Behandlungsempfehlungen
+- Deutsch und Englisch, direkt in der App umschaltbar
+- Wählbare Liquid-Glass-Themes und verschiedene visuelle Stile
+- Einstellbare Animationen einschließlich Unterstützung für „Bewegung reduzieren“
+- Sichtbarer Status für lokale Verarbeitung, damit jederzeit klar ist, wo Berechnungen stattfinden
+- Direkter Zugriff auf das öffentliche [HealthAtlas-GitHub-Repository](https://github.com/Schrotty74/HealthAtlas)
 
-## Grundsätze
+## Datenschutz an erster Stelle
 
-- macOS 26 oder neuer.
-- Native Entwicklung mit Swift und AppKit.
-- Umschaltbare Benutzeroberfläche auf Deutsch und Englisch.
-- Direkte GitHub-Verlinkung innerhalb der App.
-- Liquid-Glass-Design auf Grundlage des HealthAtlas-Mockups.
-- Umfangreiche, aber ruhige Animationen: Karten, Diagramme, Ringe, Übergänge und Sidebar-Auswahl.
-- Unterstützung für Reduced Motion und hohen Kontrast.
-- Lokale Verarbeitung ohne Tracking, Werbung, Analyse-SDKs oder Cloud-Upload.
-- Keine privaten Daten, Benutzernamen, Gerätenamen, absoluten Pfade, Zugangsdaten oder Gesundheitsdateien in GitHub.
-- Dev-Builds bleiben ausschließlich lokal.
-- Beta- und Final-Artefakte dürfen nur nach Datenschutzprüfung veröffentlicht werden.
-- Dev, Beta und Final werden immer getrennt und aus einem sauberen Zustand gebaut.
+HealthAtlas ist für lokale Verarbeitung ausgelegt. Persönliche Gesundheitsdaten sollen auf dem Mac des Nutzers bleiben. Das Projekt verwendet keine Analyse, Werbung, Nachverfolgung oder versteckten Cloud-Upload.
 
-## Xcode
+Dev-Builds bleiben lokal. Nur geprüfte Beta- und Final-Artefakte dürfen veröffentlicht werden. Vor jeder Veröffentlichung muss die Datenschutzprüfung erfolgreich durchlaufen werden.
 
-Öffne `HealthAtlas.xcodeproj` in Xcode und wähle das gemeinsame Scheme `HealthAtlas`. Das Projekt enthält bereits ein macOS-App-Target, das Ziel macOS 26, den Bundle-Identifier, das Asset-Katalog-Grundgerüst und ein AppIcon-Set.
+## Datenquellen
 
-## Codex
+Die erste Entwicklungsrichtung verwendet vom Nutzer ausgewählte lokale Importdateien. Eine direkte Synchronisierung mit Apple Health oder Google-Diensten wird erst ergänzt, wenn die erforderlichen Plattform-APIs, Berechtigungen und Datenschutzanforderungen geprüft wurden.
 
-Verwende `Docs/CODEX_HANDOFF.md` als zentrale Arbeitsanweisung. Die verbindliche Design- und Animationsspezifikation befindet sich in `Docs/DESIGN_SYSTEM.md`.
+## Projektstatus
 
-## Datenschutzprüfung
+HealthAtlas befindet sich derzeit in einer frühen Entwicklungsphase. Dieses Repository enthält das native macOS-Projekt, das erste AppKit-Dashboard, das Liquid-Glass-Designsystem, die Grundlage für die zweisprachige Oberfläche, den Datenschutz-Workflow und das HealthAtlas-Herz-Icon.
 
-Vor jedem Beta- oder Final-Upload aus dem Projektordner ausführen:
+Die Oberfläche wird auf Grundlage des enthaltenen visuellen Konzepts entwickelt. Animationen und Interaktionen sind zentrale Bestandteile des Produkts und keine optionale Dekoration.
 
-```bash
-./Scripts/privacy-check.sh
-```
+## Lizenz
 
-Ein Fehlschlag blockiert die Veröffentlichung.
+Die Lizenz wird vor der ersten öffentlichen Veröffentlichung ergänzt.
 
-## Wichtiger Hinweis
-
-Die enthaltenen Gesundheitswerte sind ausschließlich künstliche Demo-Werte. Das Icon ist ein vorbereiteter Liquid-Glass-Entwurf und muss vor einer Veröffentlichung in Xcode bei allen Größen visuell geprüft werden.
-
-Weitere Informationen:
-
-- [English README](README.md)
-- [Codex-Übergabe](Docs/CODEX_HANDOFF.md)
-- [Design- und Animationssystem](Docs/DESIGN_SYSTEM.md)
-- [Datenschutzvertrag](Docs/PRIVACY.md)
-- [Release-Workflow](Docs/RELEASE_WORKFLOW.md)
+Technische Projektinformationen befinden sich in der Dokumentation unter [`Docs/`](Docs/).
