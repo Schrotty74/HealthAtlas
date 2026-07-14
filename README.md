@@ -23,6 +23,15 @@ The project contains no analytics, advertising, tracking, account or cloud uploa
 
 ## Local builds and Gatekeeper
 
+Create the local Dev app with:
+
+```bash
+bash Scripts/build-development.sh
+```
+
+The only runnable Dev output is `dist/local-test/HealthAtlas-Development/HealthAtlas Dev.app`.
+The `.build` directory is only Xcode's temporary compiler workspace, not a second app to open.
+
 The current Dev and Beta builds are ad-hoc signed because the project has no
 Apple Developer account. macOS Gatekeeper will therefore show a warning the
 first time one is opened.
@@ -64,27 +73,27 @@ All screenshots below use the included synthetic demo data — no personal healt
 
 ### Import
 
-![HealthAtlas empty import screen](Screenshots/import.png)
+<a href="Screenshots/import.png"><img src="Screenshots/import.png" alt="HealthAtlas empty import screen" width="50%"></a>
 
 ### Overview
 
-![HealthAtlas overview with selected health cards](Screenshots/overview.png)
+<a href="Screenshots/overview.png"><img src="Screenshots/overview.png" alt="HealthAtlas overview with selected health cards" width="50%"></a>
 
 ### Sources
 
-![HealthAtlas source selection for imported Apple Health data types](Screenshots/sources.png)
+<a href="Screenshots/sources.png"><img src="Screenshots/sources.png" alt="HealthAtlas source selection for imported Apple Health data types" width="50%"></a>
 
 ### Trends
 
-![HealthAtlas interactive heart-rate trend](Screenshots/trends.png)
+<a href="Screenshots/trends.png"><img src="Screenshots/trends.png" alt="HealthAtlas interactive heart-rate trend" width="50%"></a>
 
 ### Insights
 
-![HealthAtlas local heart-rate insight](Screenshots/insights.png)
+<a href="Screenshots/insights.png"><img src="Screenshots/insights.png" alt="HealthAtlas local heart-rate insight" width="50%"></a>
 
 ### Design Studio
 
-![HealthAtlas theme and language settings](Screenshots/design-studio.png)
+<a href="Screenshots/design-studio.png"><img src="Screenshots/design-studio.png" alt="HealthAtlas theme and language settings" width="50%"></a>
 
 ## Beta packages
 
