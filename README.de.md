@@ -60,28 +60,17 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 3. Unter **Quellen** die gewünschten Werte wählen.
 4. Kacheln unter **Übersicht**, Punkte und Zeiträume unter **Verläufe** sowie Zusammenfassungen unter **Einblicke** erkunden.
 
-### Demo-Vorschau
-
-Die folgenden echten App-Screenshots verwenden ausschließlich den synthetischen
-Export aus diesem Repository.
-
-| Übersicht | Verläufe |
-| --- | --- |
-| ![Farbige Gesundheits-Kacheln aus der synthetischen Apple-Health-Demo](Screenshots/overview-demo.png) | ![Interaktiver Herzfrequenz-Verlauf aus der synthetischen Apple-Health-Demo](Screenshots/trends-demo.png) |
-
-![Lokaler Herzfrequenz-Einblick aus der synthetischen Apple-Health-Demo](Screenshots/insights-demo.png)
-
 ## Beta-Pakete
 
 Das Beta-Skript erzeugt lokal eine ad-hoc-signierte App sowie ZIP, DMG und
-SHA-256-Dateien. Es veröffentlicht nichts auf GitHub:
+SHA-256-Dateien, legt sie lokal ab und veröffentlicht einen GitHub-Pre-Release.
 
 ```bash
 bash Scripts/create-beta-from-dev.sh
 ```
 
-Die App liegt danach unter `dist/releases/beta/<version>/`; ZIP, DMG und
-Prüfsummen unter `Backup/releases/beta/<version>/`.
+Die App liegt danach unter `dist/releases/beta/<version>/`; ZIP, DMG,
+Prüfsummen und Changelog unter `Backup/releases/beta/<version>/`.
 
 ## Projektstatus
 

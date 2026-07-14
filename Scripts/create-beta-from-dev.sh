@@ -76,8 +76,6 @@ done
 previous_beta_tag="$(git tag --list 'v*-beta*' --sort=-version:refname | awk -v current="$release_tag" '$0 != current { print; exit }')"
 release_base="${previous_beta_tag:-$(git rev-list --max-parents=0 HEAD)}"
 {
-  echo "# HealthAtlas Beta $version"
-  echo
   echo "## Änderungen"
   git log --reverse --no-merges --format='- %s' "$release_base"..HEAD
   echo

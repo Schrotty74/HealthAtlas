@@ -58,28 +58,17 @@ Use the included synthetic demo instead of personal data:
 3. Choose the metrics under **Sources**.
 4. Explore cards in **Overview**, point details and time ranges in **Trends**, and per-metric summaries in **Insights**.
 
-### Demo preview
-
-These are real local app screenshots using only the synthetic export included in
-this repository.
-
-| Overview | Trends |
-| --- | --- |
-| ![Colour-coded health cards from the synthetic Apple Health demo](Screenshots/overview-demo.png) | ![Interactive heart-rate trend from the synthetic Apple Health demo](Screenshots/trends-demo.png) |
-
-![Local Heart Rate insight from the synthetic Apple Health demo](Screenshots/insights-demo.png)
-
 ## Beta packages
 
-The beta script builds an ad-hoc-signed app plus ZIP, DMG and SHA-256 files
-locally. It does not publish anything to GitHub:
+The beta script builds an ad-hoc-signed app plus ZIP, DMG and SHA-256 files,
+stores them locally and publishes a GitHub pre-release.
 
 ```bash
 bash Scripts/create-beta-from-dev.sh
 ```
 
-The app is written to `dist/releases/beta/<version>/`; ZIP, DMG and checksums
-are written to `Backup/releases/beta/<version>/`.
+The app is written to `dist/releases/beta/<version>/`; ZIP, DMG, checksums and
+the changelog are written to `Backup/releases/beta/<version>/`.
 
 ## Project status
 
