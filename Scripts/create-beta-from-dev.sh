@@ -46,7 +46,34 @@ fi
 HEALTHATLAS_ALLOW_RELEASE_PACKAGE=YES \
   bash Scripts/build-release-package.sh beta "${HEALTHATLAS_BETA_VERSION:-0.1.0-beta.1}"
 
+version="${HEALTHATLAS_BETA_VERSION:-0.1.0-beta.1}"
+artifact_directory="$root/Backup/releases/beta/$version"
+release_tag="v$version"
+
+if ! command -v gh >/dev/null 2>&1; then
+  echo "Abbruch: GitHub CLI 'gh' wurde nicht gefunden." >&2
+  exit 1
+fi
+
+git push -u origin beta
+
+release_files=(
+  "$artifact_directory/HealthAtlas-$version-macos.zip"
+  "$artifact_directory/HealthAtlas-$version-macos.dmg"
+  "$artifact_directory/HealthAtlas-$version-macos.zip.sha256"
+  "$artifact_directory/HealthAtlas-$version-macos.dmg.sha256"
+)
+release_notes=$'HealthAtlas Beta mit lokalem Apple-Health-Import, auswählbaren Kennzahlen, interaktiven Verläufen und lokalen Einblicken.\n\nGatekeeper: Dieser Build ist ad-hoc signiert. Im Finder mit Control-Klick auf die App klicken, „Öffnen“ wählen und anschließend bestätigen.\n\nDer Build enthält keine persönlichen Gesundheitsdaten.'
+if gh release view "$release_tag" >/dev/null 2>&1; then
+  gh release upload "$release_tag" "${release_files[@]}" --clobber
+  gh release edit "$release_tag" --prerelease --title "HealthAtlas $version" --notes "$release_notes"
+else
+  gh release create "$release_tag" "${release_files[@]}" \
+    --target beta --prerelease --title "HealthAtlas $version" --notes "$release_notes"
+fi
+
 echo "Lokaler Beta-Build erstellt."
 echo "Quell-Snapshot: ${snapshot_commit:0:12}"
 echo "App: $root/dist/releases/beta/${HEALTHATLAS_BETA_VERSION:-0.1.0-beta.1}/HealthAtlas Beta.app"
 echo "ZIP und DMG: $root/Backup/releases/beta/${HEALTHATLAS_BETA_VERSION:-0.1.0-beta.1}/"
+echo "GitHub Pre-Release: $release_tag"
