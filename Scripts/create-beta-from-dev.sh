@@ -17,7 +17,7 @@ release_version() {
     [[ -n "$requested_version" ]] && { echo "$requested_version"; return; }
     local marketing_version="$(build_setting MARKETING_VERSION)"
     [[ -n "$marketing_version" ]] || { echo "Abbruch: MARKETING_VERSION fehlt." >&2; exit 1; }
-    echo "${marketing_version}-beta.local"
+    echo "$marketing_version"
 }
 
 require_dev_branch() {
@@ -59,7 +59,13 @@ backup_directory_for_version() {
     esac
 }
 
-artifact_base_name() { echo "HealthAtlas-Beta-$1-macos"; }
+artifact_base_name() {
+    if [[ "$1" == *beta* ]]; then
+        echo "HealthAtlas-$1-macos"
+    else
+        echo "HealthAtlas-Beta-$1-macos"
+    fi
+}
 
 require_release_artifacts() {
     local artifact
