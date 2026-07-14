@@ -272,6 +272,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     private let body = NSStackView()
     private var selectedSection: DashboardSection = .overview
     private var importedSummary: ImportedHealthSummary?
+    private var isScreenshotDemoLoaded = false
     private var selectedTypeIDs = Set<String>()
     private let selectedTypeIDsPreferenceKey = "HealthAtlas.selectedHealthTypeIDs"
     private var selectedTrendTypeID: String?
@@ -296,7 +297,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         subtitleLabel.font = .systemFont(ofSize: 13, weight: .medium)
         subtitleLabel.textColor = NSColor.white.withAlphaComponent(0.72)
         statusLabel.font = .systemFont(ofSize: 11, weight: .bold)
-        statusLabel.textColor = .systemGreen
+        statusLabel.textColor = .white
 
         importButton.bezelStyle = .rounded
         importButton.controlSize = .large
@@ -372,7 +373,9 @@ private final class HealthWorkspaceViewController: NSViewController {
         let language = AppLanguage.current
         titleLabel.stringValue = selectedSection.title(for: language)
         subtitleLabel.stringValue = language.text(english: "A calm, visual view of your health — on this Mac.", german: "Eine ruhige, visuelle Sicht auf deine Gesundheit — auf diesem Mac.")
-        statusLabel.stringValue = "●  " + language.text(english: "LOCAL ONLY · No account, cloud sync, analytics or tracking", german: "NUR LOKAL · Kein Konto, Cloud-Sync, Analytics oder Tracking")
+        statusLabel.stringValue = isScreenshotDemoLoaded
+            ? "●  " + language.text(english: "DEMO DATA · Synthetic local data · No account, cloud sync, analytics or tracking", german: "DEMODATEN · Synthetische lokale Daten · Kein Konto, Cloud-Sync, Analytics oder Tracking")
+            : "●  " + language.text(english: "LOCAL ONLY · No account, cloud sync, analytics or tracking", german: "NUR LOKAL · Kein Konto, Cloud-Sync, Analytics oder Tracking")
         importButton.title = language.text(english: "Import Apple Health…", german: "Apple Health importieren …")
         importButton.isHidden = importedSummary == nil
         body.addArrangedSubview(statusLabel)
@@ -450,7 +453,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         let points = trendPoints(for: metric)
         let detail = NSTextField(labelWithString: selectedTrendPoint(from: points)?.detail(for: metric) ?? AppLanguage.current.text(english: "Click a point for its value", german: "Klicke auf einen Punkt für den Wert"))
         detail.font = .systemFont(ofSize: 12, weight: .semibold)
-        detail.textColor = metricAccent
+        detail.textColor = .white
         let graph = TrendGraphView(points: points, tintColor: metricAccent, showsPoints: true) { [weak self] point in
             self?.selectedTrendDate = point.date
             self?.rebuildBody()
@@ -497,7 +500,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     private func buildInsights() {
         let intro = NSTextField(labelWithString: AppLanguage.current.text(english: "Descriptive local summaries — never diagnoses.", german: "Beschreibende lokale Zusammenfassungen — niemals Diagnosen."))
         intro.font = .systemFont(ofSize: 12, weight: .bold)
-        intro.textColor = .systemPink
+        intro.textColor = .white
         body.addArrangedSubview(intro)
         let metrics = selectedDataTypes().filter { !$0.dailyValues.isEmpty }
         guard let metric = selectedInsightMetric(from: metrics) else {
@@ -714,7 +717,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         stylePrimaryButton(button)
         let privacy = NSTextField(labelWithString: AppLanguage.current.text(english: "Local import · no upload · no account", german: "Lokaler Import · kein Upload · kein Konto"))
         privacy.font = .systemFont(ofSize: 11, weight: .semibold)
-        privacy.textColor = NSColor.systemGreen.withAlphaComponent(0.92)
+        privacy.textColor = .white
         let stack = NSStackView(views: [hero, title, detail, button, privacy])
         stack.orientation = .vertical
         stack.alignment = .centerX
@@ -883,6 +886,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         guard let path = ProcessInfo.processInfo.environment["HEALTHATLAS_SCREENSHOT_DEMO_FILE"] else { return }
         let url = URL(fileURLWithPath: path)
         guard case .imported(let summary) = LocalImportValidator.validate(url: url) else { return }
+        isScreenshotDemoLoaded = true
         applyImportedSummary(summary, selectAll: true)
     }
 
