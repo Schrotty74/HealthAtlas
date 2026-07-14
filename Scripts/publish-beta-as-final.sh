@@ -44,8 +44,6 @@ done
 previous_final_tag="$(git tag --list 'v*' --sort=-version:refname | awk '$0 !~ /-beta/ { print; exit }')"
 release_base="${previous_final_tag:-$(git rev-list --max-parents=0 HEAD)}"
 {
-  echo "# HealthAtlas $version"
-  echo
   echo "## Änderungen"
   git log --reverse --no-merges --format='- %s' "$release_base"..HEAD
   echo
