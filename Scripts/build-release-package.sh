@@ -61,7 +61,10 @@ if [[ "$channel" == "beta" && "$default_version" != *beta* ]]; then
     default_version="$default_version$default_version_suffix"
 fi
 version="${2:-${HEALTHATLAS_VERSION:-$default_version}}"
-artifact_base_name="$dist_name_prefix-$version-macos"
+artifact_base_name="HealthAtlas-$version-macos"
+if [[ "$channel" == "beta" && "$version" != *beta* ]]; then
+    artifact_base_name="HealthAtlas-Beta-$version-macos"
+fi
 
 case "$version" in
     *local*|*test*)

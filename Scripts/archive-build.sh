@@ -27,7 +27,8 @@ case "$version" in
 esac
 local_backup_directory="$root_directory/Backup/app-backups"
 icloud_backup_directory="${HEALTHATLAS_ICLOUD_BACKUP_DIRECTORY:-$HOME/Library/Mobile Documents/com~apple~CloudDocs/Backup/Apps/Codex}"
-build_zip="$artifact_directory/HealthAtlas-$version-macos.zip"
+artifact_base="HealthAtlas-$version-macos"
+build_zip="$artifact_directory/$artifact_base.zip"
 checksum_file="$build_zip.sha256"
 staging_directory="$root_directory/.build/backup/HealthAtlas-$version"
 backup_name="HealthAtlas-Backup-$version-$timestamp.zip"
