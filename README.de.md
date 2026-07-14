@@ -62,6 +62,8 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 
 ## Screenshots
 
+Alle folgenden Screenshots verwenden ausschließlich die mitgelieferten synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
+
 ### Import
 
 ![Leere HealthAtlas-Startansicht für den Apple-Health-Import](Screenshots/import.png)

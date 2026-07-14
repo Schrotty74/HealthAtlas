@@ -60,6 +60,8 @@ Use the included synthetic demo instead of personal data:
 
 ## Screenshots
 
+All screenshots below use the included synthetic demo data — no personal health data is shown.
+
 ### Import
 
 ![HealthAtlas empty import screen](Screenshots/import.png)
