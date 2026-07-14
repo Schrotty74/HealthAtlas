@@ -23,6 +23,15 @@ Das Projekt enthält weder Analytics, Werbung, Tracking, Konto noch Cloud-Upload
 
 ## Lokale Builds und Gatekeeper
 
+Den lokalen Dev-Build erstellst du mit:
+
+```bash
+bash Scripts/build-development.sh
+```
+
+Die einzige startbare Dev-App liegt anschließend unter `dist/local-test/HealthAtlas-Development/HealthAtlas Dev.app`.
+Der Ordner `.build` ist ausschließlich der temporäre Compiler-Arbeitsbereich von Xcode, keine zweite App zum Öffnen.
+
 Die aktuellen Dev- und Beta-Builds sind ad hoc signiert, weil für das Projekt
 kein Apple-Developer-Account vorhanden ist. macOS Gatekeeper zeigt beim ersten
 Öffnen daher einen Hinweis an.
@@ -66,27 +75,27 @@ Alle folgenden Screenshots verwenden ausschließlich die mitgelieferten syntheti
 
 ### Import
 
-![Leere HealthAtlas-Startansicht für den Apple-Health-Import](Screenshots/import.png)
+<a href="Screenshots/import.png"><img src="Screenshots/import.png" alt="Leere HealthAtlas-Startansicht für den Apple-Health-Import" width="50%"></a>
 
 ### Übersicht
 
-![HealthAtlas-Übersicht mit ausgewählten Gesundheits-Kacheln](Screenshots/overview.png)
+<a href="Screenshots/overview.png"><img src="Screenshots/overview.png" alt="HealthAtlas-Übersicht mit ausgewählten Gesundheits-Kacheln" width="50%"></a>
 
 ### Quellen
 
-![HealthAtlas-Auswahl importierter Apple-Health-Datentypen](Screenshots/sources.png)
+<a href="Screenshots/sources.png"><img src="Screenshots/sources.png" alt="HealthAtlas-Auswahl importierter Apple-Health-Datentypen" width="50%"></a>
 
 ### Verläufe
 
-![Interaktiver Herzfrequenz-Verlauf in HealthAtlas](Screenshots/trends.png)
+<a href="Screenshots/trends.png"><img src="Screenshots/trends.png" alt="Interaktiver Herzfrequenz-Verlauf in HealthAtlas" width="50%"></a>
 
 ### Einblicke
 
-![Lokaler Herzfrequenz-Einblick in HealthAtlas](Screenshots/insights.png)
+<a href="Screenshots/insights.png"><img src="Screenshots/insights.png" alt="Lokaler Herzfrequenz-Einblick in HealthAtlas" width="50%"></a>
 
 ### Design-Studio
 
-![HealthAtlas-Theme- und Spracheinstellungen](Screenshots/design-studio.png)
+<a href="Screenshots/design-studio.png"><img src="Screenshots/design-studio.png" alt="HealthAtlas-Theme- und Spracheinstellungen" width="50%"></a>
 
 ## Beta-Pakete
 
