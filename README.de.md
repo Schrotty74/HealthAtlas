@@ -62,6 +62,10 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 
 ## Screenshots
 
+### Import
+
+![Leere HealthAtlas-Startansicht für den Apple-Health-Import](Screenshots/import.png)
+
 ### Übersicht
 
 ![HealthAtlas-Übersicht mit ausgewählten Gesundheits-Kacheln](Screenshots/overview.png)
