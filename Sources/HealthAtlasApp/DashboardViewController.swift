@@ -1108,25 +1108,6 @@ private final class MetricCardBackgroundView: NSView {
         let topGlow = NSBezierPath(rect: NSRect(x: 0, y: 0, width: bounds.width, height: bounds.height * 0.30))
         NSColor.white.withAlphaComponent(0.045).setFill()
         topGlow.fill()
-        let wave = NSBezierPath()
-        wave.lineWidth = 2.2
-        let baseline = bounds.height * 0.34
-        for index in 0...28 {
-            let x = bounds.width * CGFloat(index) / 28
-            let amplitude: CGFloat
-            if title.contains("herz") || title.contains("heart") {
-                amplitude = index % 7 == 3 ? -20 : (index % 7 == 4 ? 12 : 0)
-            } else if title.contains("schlaf") || title.contains("sleep") {
-                amplitude = sin(CGFloat(index) * 0.75) * 5
-            } else {
-                amplitude = sin(CGFloat(index) * 0.55) * 8
-            }
-            let point = NSPoint(x: x, y: baseline + amplitude)
-            index == 0 ? wave.move(to: point) : wave.line(to: point)
-        }
-        accent.withAlphaComponent(0.68).setStroke()
-        wave.stroke()
-
         let symbol: String
         if title.contains("schritt") || title.contains("step") { symbol = "figure.walk" }
         else if title.contains("herz") || title.contains("heart") { symbol = "heart.fill" }
