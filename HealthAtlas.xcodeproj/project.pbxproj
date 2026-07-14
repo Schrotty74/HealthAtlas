@@ -38,7 +38,7 @@
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		A70000000000000000000001 /* Project object */ = {isa = PBXProject; attributes = {LastUpgradeCheck = 2600; TargetAttributes = {A50000000000000000000001 = {CreatedOnToolsVersion = 2600; }; }; }; buildConfigurationList = A60000000000000000000001; compatibilityVersion = "Xcode 3.2"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = A40000000000000000000000; productRefGroup = A40000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A50000000000000000000001); };
+		A70000000000000000000001 /* Project object */ = {isa = PBXProject; attributes = {LastUpgradeCheck = 2600; TargetAttributes = {A50000000000000000000001 = {CreatedOnToolsVersion = 2600; }; }; }; buildConfigurationList = A60000000000000000000001; compatibilityVersion = "Xcode 16.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = A40000000000000000000000; productRefGroup = A40000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A50000000000000000000001); };
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
