@@ -10,6 +10,7 @@ xcuserdata/
 *.app
 *.dmg
 *.zip
+*.sha256
 *.log
 *.ips
 *.sqlite
@@ -26,5 +27,7 @@ xcuserdata/
 *.xlsx
 *.xls
 *.pdf
+Backup/
+dist/
 Secrets.xcconfig
 Local.xcconfig

@@ -13,7 +13,7 @@ if rg -n -i "$forbidden" --glob '!Scripts/privacy-check.sh' --glob '!Docs/**' --
 fi
 
 if find . \
-    -path './.git' -o -path './.build' -o -path './Backup' -o -path './dist' -prune -o \
+    \( -path './.git' -o -path './.build' -o -path './Backup' -o -path './dist' \) -prune -o \
     -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*.log' -o -name '*.ips' \) -print \
     | rg -q .; then
   echo "Privacy check failed: release or diagnostic artifacts must not be staged in the source tree."
