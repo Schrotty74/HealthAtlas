@@ -65,9 +65,9 @@ this repository.
 
 | Overview | Trends |
 | --- | --- |
-| ![Colour-coded health cards from the synthetic Apple Health demo](Docs/Screenshots/overview-demo.png) | ![Interactive heart-rate trend from the synthetic Apple Health demo](Docs/Screenshots/trends-demo.png) |
+| ![Colour-coded health cards from the synthetic Apple Health demo](Screenshots/overview-demo.png) | ![Interactive heart-rate trend from the synthetic Apple Health demo](Screenshots/trends-demo.png) |
 
-![Local Heart Rate insight from the synthetic Apple Health demo](Docs/Screenshots/insights-demo.png)
+![Local Heart Rate insight from the synthetic Apple Health demo](Screenshots/insights-demo.png)
 
 ## Beta packages
 
@@ -90,5 +90,3 @@ distribution are explicitly out of scope.
 ## License
 
 License information will be added before the first public release.
-
-For technical project guidance, see the documentation in [`Docs/`](Docs/).

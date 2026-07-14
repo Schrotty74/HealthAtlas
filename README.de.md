@@ -67,9 +67,9 @@ Export aus diesem Repository.
 
 | Übersicht | Verläufe |
 | --- | --- |
-| ![Farbige Gesundheits-Kacheln aus der synthetischen Apple-Health-Demo](Docs/Screenshots/overview-demo.png) | ![Interaktiver Herzfrequenz-Verlauf aus der synthetischen Apple-Health-Demo](Docs/Screenshots/trends-demo.png) |
+| ![Farbige Gesundheits-Kacheln aus der synthetischen Apple-Health-Demo](Screenshots/overview-demo.png) | ![Interaktiver Herzfrequenz-Verlauf aus der synthetischen Apple-Health-Demo](Screenshots/trends-demo.png) |
 
-![Lokaler Herzfrequenz-Einblick aus der synthetischen Apple-Health-Demo](Docs/Screenshots/insights-demo.png)
+![Lokaler Herzfrequenz-Einblick aus der synthetischen Apple-Health-Demo](Screenshots/insights-demo.png)
 
 ## Beta-Pakete
 
@@ -92,5 +92,3 @@ bereit für Feedback; medizinische Integration, Diagnosefunktionen und eine
 ## Lizenz
 
 Die Lizenz wird vor der ersten öffentlichen Veröffentlichung ergänzt.
-
-Technische Projektinformationen befinden sich in der Dokumentation unter [`Docs/`](Docs/).
