@@ -58,6 +58,28 @@ Use the included synthetic demo instead of personal data:
 3. Choose the metrics under **Sources**.
 4. Explore cards in **Overview**, point details and time ranges in **Trends**, and per-metric summaries in **Insights**.
 
+## Screenshots
+
+### Overview
+
+![HealthAtlas overview with selected health cards](Screenshots/overview.png)
+
+### Sources
+
+![HealthAtlas source selection for imported Apple Health data types](Screenshots/sources.png)
+
+### Trends
+
+![HealthAtlas interactive heart-rate trend](Screenshots/trends.png)
+
+### Insights
+
+![HealthAtlas local heart-rate insight](Screenshots/insights.png)
+
+### Design Studio
+
+![HealthAtlas theme and language settings](Screenshots/design-studio.png)
+
 ## Beta packages
 
 The beta script builds an ad-hoc-signed app plus ZIP, DMG and SHA-256 files,

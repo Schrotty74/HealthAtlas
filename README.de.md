@@ -60,6 +60,28 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 3. Unter **Quellen** die gewünschten Werte wählen.
 4. Kacheln unter **Übersicht**, Punkte und Zeiträume unter **Verläufe** sowie Zusammenfassungen unter **Einblicke** erkunden.
 
+## Screenshots
+
+### Übersicht
+
+![HealthAtlas-Übersicht mit ausgewählten Gesundheits-Kacheln](Screenshots/overview.png)
+
+### Quellen
+
+![HealthAtlas-Auswahl importierter Apple-Health-Datentypen](Screenshots/sources.png)
+
+### Verläufe
+
+![Interaktiver Herzfrequenz-Verlauf in HealthAtlas](Screenshots/trends.png)
+
+### Einblicke
+
+![Lokaler Herzfrequenz-Einblick in HealthAtlas](Screenshots/insights.png)
+
+### Design-Studio
+
+![HealthAtlas-Theme- und Spracheinstellungen](Screenshots/design-studio.png)
+
 ## Beta-Pakete
 
 Das Beta-Skript erzeugt lokal eine ad-hoc-signierte App sowie ZIP, DMG und
