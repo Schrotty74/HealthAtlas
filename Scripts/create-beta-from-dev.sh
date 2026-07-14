@@ -1,102 +1,145 @@
-#!/usr/bin/env bash
+#!/bin/zsh
+
 set -euo pipefail
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
-temporary_index=""
+root_directory="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$root_directory"
 requested_version="${1:-}"
 
-cleanup() {
-  rm -f "$temporary_index"
+build_setting() {
+    local name="$1"
+    xcodebuild -project HealthAtlas.xcodeproj -target HealthAtlas -configuration Beta \
+        -derivedDataPath "$root_directory/.build/xcode-beta-derived-data" -showBuildSettings 2>/dev/null \
+        | awk -F' = ' -v setting="$name" '$1 ~ setting "$" { print $2; exit }'
 }
-trap cleanup EXIT
 
-cd "$root"
+release_version() {
+    [[ -n "$requested_version" ]] && { echo "$requested_version"; return; }
+    local marketing_version="$(build_setting MARKETING_VERSION)"
+    [[ -n "$marketing_version" ]] || { echo "Abbruch: MARKETING_VERSION fehlt." >&2; exit 1; }
+    echo "${marketing_version}-beta.local"
+}
+
+require_dev_branch() {
+    local branch="$(git branch --show-current)"
+    [[ "$branch" == "dev" ]] || { echo "Abbruch: Beta muss vom aktuellen dev-Branch erstellt werden." >&2; exit 1; }
+}
+
+ensure_beta_ref() {
+    git show-ref --verify --quiet refs/heads/beta && return
+    if git show-ref --verify --quiet refs/remotes/origin/beta; then
+        git update-ref refs/heads/beta refs/remotes/origin/beta
+    else
+        git update-ref refs/heads/beta HEAD
+    fi
+}
+
+require_gh() {
+    command -v gh >/dev/null 2>&1 || { echo "Abbruch: GitHub CLI 'gh' wurde nicht gefunden." >&2; exit 1; }
+}
+
+worktree_tree() {
+    local changed_paths=("${(@f)$( { git diff --name-only HEAD --; git diff --cached --name-only; git ls-files --others --exclude-standard; } | sort -u)}")
+    (( ${#changed_paths[@]} > 0 )) && git add -A -- "${changed_paths[@]}"
+    git write-tree
+}
+
+create_beta_commit() {
+    local version="$1" tree="$2" parent parent_tree
+    parent="$(git rev-parse refs/heads/beta)"
+    parent_tree="$(git rev-parse "$parent^{tree}")"
+    [[ "$tree" == "$parent_tree" ]] && { echo "$parent"; return; }
+    printf 'Create beta %s from dev\n' "$version" | git commit-tree "$tree" -p "$parent"
+}
+
+backup_directory_for_version() {
+    case "$1" in
+        *local*|*test*) echo "$root_directory/Backup/local-test/$1" ;;
+        *) echo "$root_directory/Backup/releases/beta/$1" ;;
+    esac
+}
+
+artifact_base_name() { echo "HealthAtlas-Beta-$1-macos"; }
+
+require_release_artifacts() {
+    local artifact
+    for artifact in "$@"; do [[ -f "$artifact" ]] || { echo "Abbruch: Release-Artefakt fehlt: $artifact" >&2; exit 1; }; done
+}
+
+last_beta_tag() { git describe --tags --match 'v*-beta*' --abbrev=0 HEAD 2>/dev/null || true; }
+
+categorized_release_changes() {
+    local base_ref="$1"
+    git log --reverse --no-merges --format='%s' "$base_ref"..HEAD | awk '
+        BEGIN { new=""; fixed=""; improved="" }
+        tolower($0) ~ /(fix|bug|hang|crash|error)/ { fixed = fixed "- " $0 "\n"; next }
+        tolower($0) ~ /(improve|faster|performance|speed)/ { improved = improved "- " $0 "\n"; next }
+        { new = new "- " $0 "\n" }
+        END { if (new != "") print "## New\n\n" new; if (fixed != "") print "## Fixed\n\n" fixed; if (improved != "") print "## Improved\n\n" improved }'
+}
+
+write_release_notes() {
+    local notes_file="$1" previous_beta_tag="$2" base_ref="$3" changes
+    changes="$(categorized_release_changes "$base_ref")"
+    [[ -n "$changes" ]] || changes="## Changes\n\n- Initial HealthAtlas beta release."
+    cat > "$notes_file" <<EOF
+This beta contains the latest HealthAtlas fixes and improvements since ${previous_beta_tag:-the first beta}.
+
+$changes
+## Privacy
+
+HealthAtlas starts without personal data. The included demo is synthetic; imports remain local to the active build variant and are never uploaded.
+
+## Gatekeeper
+
+This build is ad-hoc signed. In Finder, Control-click the app, choose Open, then confirm Open.
+EOF
+}
+
+create_github_release() {
+    local version="$1" target_commit="$2" notes_file="$3"; shift 3
+    GH_PROMPT_DISABLED=1 gh release create "v$version" "$@" --target "$target_commit" --title "HealthAtlas Beta $version" --notes-file "$notes_file" --prerelease
+}
+
+require_dev_branch
+ensure_beta_ref
+require_gh
 bash Scripts/prepare-build-layout.sh
-bash Scripts/privacy-check.sh
+Scripts/privacy-check.sh
 
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "Abbruch: Beta benötigt ein lokales Git-Arbeitsverzeichnis." >&2
-  exit 1
-fi
-
-if [[ "$(git branch --show-current)" != "dev" ]]; then
-  echo "Abbruch: Beta wird nur aus dem lokalen dev-Branch erstellt." >&2
-  exit 1
-fi
-
-if ! git show-ref --verify --quiet refs/heads/beta; then
-  git update-ref refs/heads/beta HEAD
-fi
-
-if ! command -v gh >/dev/null 2>&1; then
-  echo "Abbruch: GitHub CLI 'gh' wurde nicht gefunden." >&2
-  exit 1
-fi
-
-version="${requested_version:-${HEALTHATLAS_BETA_VERSION:-0.1.0-beta.1}}"
-artifact_directory="$root/Backup/releases/beta/$version"
-artifact_base="HealthAtlas-$version-macos"
-zip_file="$artifact_directory/$artifact_base.zip"
-dmg_file="$artifact_directory/$artifact_base.dmg"
+version="$(release_version)"
+dev_commit="$(git rev-parse --short HEAD)"
+previous_beta_tag="$(last_beta_tag)"
+previous_release_note_ref="${previous_beta_tag:-$(git rev-list --max-parents=0 HEAD)}"
+artifact_base="$(artifact_base_name "$version")"
+backup_directory="$(backup_directory_for_version "$version")"
+zip_file="$backup_directory/$artifact_base.zip"
+dmg_file="$backup_directory/$artifact_base.dmg"
 zip_checksum_file="$zip_file.sha256"
 dmg_checksum_file="$dmg_file.sha256"
-release_notes_file="$artifact_directory/HealthAtlas-Beta-$version-release-notes.md"
+release_notes_file="$backup_directory/HealthAtlas-Beta-$version-release-notes.md"
 
-# Use an isolated index: the developer's staged files and Dev branch remain untouched.
-temporary_index="$(mktemp)"
-export GIT_INDEX_FILE="$temporary_index"
-git read-tree HEAD
-git add -A
-snapshot_tree="$(git write-tree)"
-unset GIT_INDEX_FILE
+HEALTHATLAS_VERSION="$version" HEALTHATLAS_ALLOW_RELEASE_PACKAGE=YES Scripts/build-release-package.sh beta
+require_release_artifacts "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
+Scripts/privacy-check.sh
 
+tree="$(worktree_tree)"
 beta_before="$(git rev-parse refs/heads/beta)"
-if [[ "$snapshot_tree" == "$(git rev-parse "$beta_before^{tree}")" ]]; then
-  snapshot_commit="$beta_before"
+beta_commit="$(create_beta_commit "$version" "$tree")"
+git update-ref refs/heads/beta "$beta_commit" "$beta_before"
+git push --set-upstream origin refs/heads/beta:refs/heads/beta
+
+write_release_notes "$release_notes_file" "$previous_beta_tag" "$previous_release_note_ref"
+if gh release view "v$version" >/dev/null 2>&1; then
+    gh release upload "v$version" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file" --clobber
+    gh release edit "v$version" --prerelease --title "HealthAtlas Beta $version" --notes-file "$release_notes_file"
 else
-  snapshot_commit="$(printf 'Create local HealthAtlas beta snapshot from dev\n' | git commit-tree "$snapshot_tree" -p "$beta_before")"
-  git update-ref refs/heads/beta "$snapshot_commit" "$beta_before"
+    create_github_release "$version" "$beta_commit" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi
 
-HEALTHATLAS_ALLOW_RELEASE_PACKAGE=YES \
-  bash Scripts/build-release-package.sh beta "$version"
-
-release_tag="v$version"
-release_files=(
-  "$zip_file"
-  "$dmg_file"
-  "$zip_checksum_file"
-  "$dmg_checksum_file"
-)
-
-for artifact in "${release_files[@]}"; do
-  [[ -f "$artifact" ]] || { echo "Abbruch: Release-Artefakt fehlt: $artifact" >&2; exit 1; }
-done
-
-previous_beta_tag="$(git tag --list 'v*-beta*' --sort=-version:refname | awk -v current="$release_tag" '$0 != current { print; exit }')"
-release_base="${previous_beta_tag:-$(git rev-list --max-parents=0 HEAD)}"
-{
-  echo "## Änderungen"
-  git log --reverse --no-merges --format='- %s' "$release_base"..HEAD
-  echo
-  echo "## Datenschutz"
-  echo "Die Demo ist synthetisch. Der Build enthält keine persönlichen Gesundheitsdaten; Importe bleiben lokal."
-  echo
-  echo "## Gatekeeper"
-  echo "Der Build ist ad-hoc signiert. Im Finder mit Control-Klick auf die App klicken, „Öffnen“ wählen und anschließend bestätigen."
-} > "$release_notes_file"
-
-git push -u origin beta
-if gh release view "$release_tag" >/dev/null 2>&1; then
-  gh release upload "$release_tag" "${release_files[@]}" --clobber
-  gh release edit "$release_tag" --prerelease --title "HealthAtlas Beta $version" --notes-file "$release_notes_file"
-else
-  gh release create "$release_tag" "${release_files[@]}" \
-    --target "$snapshot_commit" --prerelease --title "HealthAtlas Beta $version" --notes-file "$release_notes_file"
-fi
-
-echo "Lokaler Beta-Build erstellt."
-echo "Quell-Snapshot: ${snapshot_commit:0:12}"
-echo "App: $root/dist/releases/beta/$version/HealthAtlas Beta.app"
-echo "ZIP, DMG, Prüfsummen und Changelog: $artifact_directory"
-echo "GitHub Pre-Release: $release_tag"
+echo "Beta wurde aus Dev erstellt."
+echo "Version: $version"
+echo "Ausgabeordner: $backup_directory"
+echo "Release Notes: $release_notes_file"
+echo "Dev-Commit: $dev_commit"
+echo "Beta-Commit: $(git rev-parse --short "$beta_commit")"
