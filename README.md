@@ -60,6 +60,10 @@ Use the included synthetic demo instead of personal data:
 
 ## Screenshots
 
+### Import
+
+![HealthAtlas empty import screen](Screenshots/import.png)
+
 ### Overview
 
 ![HealthAtlas overview with selected health cards](Screenshots/overview.png)
