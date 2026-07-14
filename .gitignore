@@ -19,6 +19,9 @@ xcuserdata/
 *.jsonl
 *.healthdata
 *.xml
+!Demo/
+!Demo/AppleHealthDemo/
+!Demo/AppleHealthDemo/Export.xml
 *.csv
 *.xlsx
 *.xls

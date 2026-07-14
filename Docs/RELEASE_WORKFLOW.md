@@ -1,26 +1,40 @@
 # HealthAtlas release workflow
 
+HealthAtlas follows the AppAtlas model: `dev` is the local working branch,
+`beta` is the local test snapshot, and `main` is the local final source.
+
 ## Dev
 
-- Local only.
-- Delete `.build`, `DerivedData`, previous app bundles, and local app data.
-- Build with the development configuration.
-- Do not commit or upload the resulting app.
+- Use the single Xcode scheme **HealthAtlas Dev** for daily development.
+- Dev remains local. Its own preferences and application-support area are
+  cleared before every build.
 
-## Beta
+## Beta from Dev
 
-- Start from a clean checkout and clean build directories.
-- Run tests and `Scripts/privacy-check.sh`.
-- Build an unsigned or appropriately signed beta according to the selected distribution method.
-- Review the app on a clean macOS 26+ account.
-- Package only the app in a sanitised ZIP and DMG.
-- Publish the privacy report next to the beta artifacts.
+- Run `bash Scripts/create-beta-from-dev.sh` while checked out on `dev`.
+- The script makes a local `beta` commit from the current non-ignored Dev
+  source with an isolated temporary index, so it does not modify Dev's staging
+  area or copy any app data.
+- It builds the Beta configuration and creates a local, ad-hoc-signed app,
+  ZIP, DMG and SHA-256 files. The app is in
+  `dist/releases/beta/<version>/`; the distributable files are in
+  `Backup/releases/beta/<version>/`.
 
-## Final
+## Final from Beta
 
-- Repeat the beta procedure from a fresh clean checkout.
-- Verify version, build number, entitlements, signing, and notarisation status.
-- Run the privacy check again immediately before packaging.
-- Publish only the final ZIP/DMG and the privacy report.
+- Run `bash Scripts/publish-beta-as-final.sh` from a clean worktree.
+- The script fast-forwards local `main` from `beta`, then builds the Final
+  configuration in `.build/final/DerivedData/`.
+- It stops on a divergent history instead of mixing source states.
 
-Never use a beta or final build directory as the source for another build. Every channel must be reproducible from source.
+## Local folder layout
+
+`Scripts/prepare-build-layout.sh` creates the AppAtlas-style layout only under
+the HealthAtlas repository: `.build/dev`, `.build/beta`, `.build/final`,
+`Backup/`, and `dist/`. These folders are ignored by Git. The Beta package
+script writes only locally to these ignored folders and never includes imported
+health data.
+
+No script pushes to GitHub or creates a GitHub release. The local package is
+ad-hoc signed because no Apple Developer account is available; Gatekeeper is
+therefore expected for testers.

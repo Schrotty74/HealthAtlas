@@ -1,5 +1,28 @@
 import Foundation
 
+enum BuildChannel: String {
+    case dev, beta, final
+
+    static var current: BuildChannel {
+        let value = Bundle.main.object(forInfoDictionaryKey: "HealthAtlasBuildChannel") as? String
+        return value.flatMap(BuildChannel.init(rawValue:)) ?? .dev
+    }
+
+    var displayName: String {
+        switch self {
+        case .dev: "HealthAtlas Dev"
+        case .beta: "HealthAtlas Beta"
+        case .final: "HealthAtlas"
+        }
+    }
+}
+
+enum BuildEnvironment {
+    static var defaults: UserDefaults {
+        UserDefaults(suiteName: "com.healthatlas.app.\(BuildChannel.current.rawValue).preferences") ?? .standard
+    }
+}
+
 enum AppLanguage: String, CaseIterable {
     case english = "en"
     case german = "de"
@@ -7,7 +30,7 @@ enum AppLanguage: String, CaseIterable {
     static let preferenceKey = "HealthAtlas.appLanguage"
 
     static var current: AppLanguage {
-        if let stored = UserDefaults.standard.string(forKey: preferenceKey),
+        if let stored = BuildEnvironment.defaults.string(forKey: preferenceKey),
            let language = AppLanguage(rawValue: stored) {
             return language
         }
@@ -26,6 +49,6 @@ enum AppLanguage: String, CaseIterable {
     }
 
     func save() {
-        UserDefaults.standard.set(rawValue, forKey: Self.preferenceKey)
+        BuildEnvironment.defaults.set(rawValue, forKey: Self.preferenceKey)
     }
 }
