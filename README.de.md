@@ -1,3 +1,11 @@
+<p align="center">
+  <img src="Resources/HealthAtlasIcon-Concept.png" alt="HealthAtlas-Logo" width="160">
+</p>
+
+<p align="center">
+  <a href="README.md">🇬🇧 English</a>
+</p>
+
 # HealthAtlas
 
 HealthAtlas ist eine datenschutzorientierte macOS-App, die einen lokalen Apple-Health-Export verständlich und grafisch aufbereitet.

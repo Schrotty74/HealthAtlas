@@ -2,6 +2,10 @@
   <img src="Resources/HealthAtlasIcon-Concept.png" alt="HealthAtlas logo" width="160">
 </p>
 
+<p align="center">
+  <a href="README.de.md">🇩🇪 Deutsch</a>
+</p>
+
 # HealthAtlas
 
 HealthAtlas is a privacy-first macOS app for turning a local Apple Health export into clear, visual insights.
