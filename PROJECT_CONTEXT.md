@@ -1,6 +1,6 @@
 # HealthAtlas – Projektkontext
 
-> Haupt-Wissensquelle für neue Codex-Chats. Stand: 2026-07-23.  
+> Haupt-Wissensquelle für neue Codex-Chats. Stand: 2026-07-31.
 > Zuerst diese Datei, danach [NEXT_STEPS.md](NEXT_STEPS.md), [README.md](README.md) und bei deutschen Texten [README.de.md](README.de.md) lesen. Für synthetische Testdaten siehe [Demo/README.md](Demo/README.md).
 
 ## Ziel und Zweck
@@ -12,9 +12,11 @@ HealthAtlas ist eine native macOS-App zur **lokalen** Darstellung eines vom Nutz
 - `Sources/HealthAtlasApp/`: AppKit-/SwiftUI-Anwendung.
   - `AppEntry.swift`: Fenster, App-Lebenszyklus und Wiederöffnen aus dem Dock.
   - `DashboardViewController.swift`: Dashboard, AppKit-Layout, native Glas-Sidebar, Importansicht, Themes, Karten, Trends und Einblicke.
+  - `AIHelp.swift`: datensparsame Ersteinführung mit Handbuch-Link und den drei bewusst gewählten KI-Diensten.
   - `HealthData.swift`: Dateiprüfung, ZIP-/XML-Import, XML-Parser, Tagesaggregation und Datentyp-Bezeichnungen.
   - `AppLanguage.swift`: Deutsch/Englisch sowie getrennte Einstellungen je Build-Kanal.
-- `Tests/HealthAtlasTests/`: Swift-Testing-Test für die Apple-Health-XML-Auswertung.
+- `Sources/HealthAtlasApp/Resources/AI/`: lokal eingebundene Logos für ChatGPT, Google Gemini und Claude. Sie werden nicht aus dem Netz nachgeladen.
+- `Tests/HealthAtlasTests/`: Swift-Testing-Tests für XML/ZIP-Import sowie KI-Dienst-URLs, datensparsamen Prompt und sprachabhängige Handbuch-Links.
 - `Demo/AppleHealthDemo/Export.xml`: synthetische, sichere Testdaten. Keine persönlichen Daten hinzufügen.
 - `Scripts/`: Dev-, Release-, Backup- und Datenschutzskripte.
 - `dist/`: erzeugte, nicht zu versionierende App-Ausgaben.
@@ -30,11 +32,11 @@ HealthAtlas ist eine native macOS-App zur **lokalen** Darstellung eines vom Nutz
 - Nichtnumerische Einträge können als erkannter Datentyp erscheinen, haben aber keinen numerischen Verlauf.
 - Importierte Daten liegen nur im Speicher der laufenden App-Sitzung. Beim nächsten Start ist die App wieder leer.
 - Kein direkter HealthKit-Zugriff, keine Cloud-Synchronisierung und keine Analyse- oder Tracking-Anbindung.
-- Die Dateiauswahl akzeptiert derzeit auch JSON/CSV zur lokalen Prüfung; daraus wird jedoch kein Apple-Health-Dashboard importiert. Dieser Unterschied ist eine bekannte Einschränkung.
 
 ## Umgesetzte Funktionen
 
 - Leerer Start mit animierter lokaler Importansicht.
+- Solange keine eigenen Daten geladen sind: Handbuch-Schaltfläche und freiwillige KI-Ersthilfe für ChatGPT, Google Gemini oder Claude. Erst ein bewusster Klick kopiert eine feste allgemeine Frage in die Zwischenablage und öffnet danach den jeweiligen Dienst. Der Prompt enthält nur den öffentlichen, sprachabhängigen PDF-Handbuch-Link.
 - Auswahl erkannter Datentypen unter **Quellen**; Auswahl wird getrennt je Dev/Beta/Final gespeichert.
 - Übersicht mit wählbar 4, 8 oder 12 Karten und Seitennavigation.
 - Interaktive Verläufe: Datentyp, 7T/30T/3M/1J und anklickbare Datenpunkte.
@@ -90,6 +92,7 @@ Für eine Ergänzung der allgemeinen Entwicklungsumgebung muss zuerst ein exakte
 - Keine Konten, Analytics, Werbung, Tracking oder versteckten Uploads.
 - Nur vom Nutzer gewählte lokale Dateien werden gelesen.
 - Die Demo und alle Repository-Screenshots müssen synthetische Daten verwenden und als Demo gekennzeichnet sein.
+- Persönliche App- oder Gesundheitsdaten werden niemals in einen KI-Prompt aufgenommen oder an ChatGPT, Gemini oder Claude gesendet. Das Einfügen der kopierten allgemeinen Frage erfolgt ausschließlich durch die Person mit Cmd+V.
 - Die vorhandenen Builds sind ad-hoc signiert; ohne Apple-Developer-Account erscheint beim ersten Start Gatekeeper. Die README enthält die sichere Öffnungsanleitung.
 - Medizinische Integration, Diagnosen und öffentliche Verteilung sind nicht Teil des dokumentierten Funktionsstands.
 
@@ -97,7 +100,7 @@ Für eine Ergänzung der allgemeinen Entwicklungsumgebung muss zuerst ein exakte
 
 - Kein bestätigter aktueller Bug ist dokumentiert. Aktuelle Build-, Test- und UI-Checks sind vor einer neuen Behauptung auszuführen.
 - Kein CI-Workflow und keine Lockfile-Datei wurden im Repository gefunden.
-- Die Lizenz ist laut README noch nicht festgelegt.
+- Das Projekt soll vollständig Open Source sein; eine konkrete Lizenzdatei ist im Repository noch nicht vorhanden.
 - Nicht geklärt bzw. nicht dokumentiert: Anforderungen für eine spätere Signierung, Notarisierung oder öffentliche Distribution.
 
 Bei größeren fachlichen, Architektur-, Build-, Datenschutz- oder Release-Änderungen diese Datei und [NEXT_STEPS.md](NEXT_STEPS.md) aktualisieren.

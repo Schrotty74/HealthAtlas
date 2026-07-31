@@ -62,6 +62,20 @@ systemweit deaktiviert.
 
 Apple-Health-ZIP-Archive mit `Export.xml` und direkte `Export.xml`-Dateien werden lokal gelesen; die klinische Zusatzdatei wird bewusst nicht importiert. Es gibt keine direkte HealthKit- oder Cloud-Anbindung.
 
+## Erste Hilfe und Handbücher
+
+Solange keine eigenen Daten geladen sind, bietet die leere Startansicht den
+lokalen Import, die Schaltfläche **Handbuch öffnen** sowie freiwillige Hilfe mit
+ChatGPT, Google Gemini oder Claude. Die Auswahl eines Dienstes kopiert eine
+feste allgemeine Einführungsfrage in die Zwischenablage und öffnet danach erst
+dessen Website. Die Frage enthält ausschließlich den öffentlichen,
+sprachabhängigen Handbuch-Link — niemals Gesundheitswerte, Importinhalte,
+lokale Pfade, Zugangsdaten oder andere App-Daten. Es wird nichts automatisch
+gesendet; erst mit Cmd+V entscheidet die Person selbst über das Einfügen.
+
+- [HealthAtlas-Handbuch (Deutsch, PDF)](output/pdf/HealthAtlas-Handbuch-DE.pdf)
+- [HealthAtlas Manual (English, PDF)](output/pdf/HealthAtlas-Manual-EN.pdf)
+
 ## Demo ohne persönliche Daten
 
 Für einen sicheren Test liegt eine vollständig synthetische Apple-Health-Datei im Repository: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). Sie enthält fiktive Schritte, Herzfrequenz, Körpergewicht, aktive Energie, Geh-/Laufdistanz und Schlafanalyse über mehrere Tage.

@@ -60,6 +60,19 @@ Apple Health ZIP archives containing `Export.xml` and direct `Export.xml` files
 are read locally. The clinical companion file is intentionally not imported.
 There is no direct HealthKit or cloud-service connection.
 
+## First-start help and manuals
+
+While no personal data is loaded, the empty start screen offers a local import,
+an **Open Manual** button and optional help with ChatGPT, Google Gemini or
+Claude. Choosing a service copies one fixed, general introduction question to
+the clipboard and then opens that service's website. It contains only the
+public, language-specific manual link — never health values, imported content,
+local paths, credentials or other app data. Nothing is sent automatically; the
+person decides whether to paste the question with Cmd+V.
+
+- [HealthAtlas Manual (English, PDF)](output/pdf/HealthAtlas-Manual-EN.pdf)
+- [HealthAtlas-Handbuch (Deutsch, PDF)](output/pdf/HealthAtlas-Handbuch-DE.pdf)
+
 ## Demo without personal data
 
 The repository includes a fully synthetic Apple Health file for safe testing: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). It contains fictional steps, heart rate, body mass, active energy, walking/running distance and sleep-analysis records across several days.

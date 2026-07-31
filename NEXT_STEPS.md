@@ -1,12 +1,12 @@
 # HealthAtlas – Nächste Schritte
 
-Stand: 2026-07-23. Bei größeren Änderungen aktualisieren. Kontext und feste Regeln stehen in [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+Stand: 2026-07-31. Bei größeren Änderungen aktualisieren. Kontext und feste Regeln stehen in [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 
 ## Priorität 1 – Vor der nächsten Beta gezielt prüfen
 
-- Lokalen Dev-Build und `swift test` ausführen; aktuelle Ergebnisse hier erst danach eintragen.
-- Den kompletten Importfluss mit der synthetischen Demo prüfen: Import, Auswahl unter Quellen, 4/8/12 Karten, Zeiträume, anklickbare Verlaufspunkte und Einblicke.
-- Einen ZIP-Export mit enthaltenem `Export.xml` testen. Ein dokumentiertes Testergebnis liegt noch nicht vor.
+- `swift test` ist am 2026-07-31 erfolgreich mit fünf Tests gelaufen: XML-Import, ZIP mit `Export.xml`, Dienst-URLs, datensparsamer Prompt und sprachabhängige Handbuch-Links.
+- Der Dev-Build vom 2026-07-31 enthält die drei lokalen KI-Logos; der Bundle-Inhalt und die Ad-hoc-Signatur wurden geprüft.
+- Den kompletten sichtbaren Importfluss mit der synthetischen Demo weiter manuell prüfen: Auswahl unter Quellen, 4/8/12 Karten, Zeiträume, anklickbare Verlaufspunkte und Einblicke.
 - Datenschutzprüfung vor einem Release ausführen. Keine privaten Apple-Health-Exporte für Tests oder Screenshots verwenden.
 
 ## Priorität 2 – Geplante visuelle Weiterentwicklung
@@ -23,9 +23,8 @@ Diese Punkte sind Wünsche aus der bisherigen Produktarbeit, keine bereits zuges
 
 ## Priorität 3 – Produkt- und Release-Klärungen
 
-- Entscheiden, welche Lizenz vor einer öffentlichen Veröffentlichung gelten soll.
+- Eine konkrete Open-Source-Lizenz auswählen und als Lizenzdatei ergänzen.
 - Anforderungen für Apple-Signierung und Notarisierung erst klären, wenn ein Developer-Account und eine Veröffentlichung tatsächlich beauftragt sind.
-- Falls JSON/CSV dauerhaft nicht unterstützt werden sollen, Dateiauswahl und Validierung auf ZIP/XML begrenzen. Derzeit werden JSON/CSV nur geprüft, nicht in ein Dashboard importiert.
 
 ## Keine offenen Aufgaben ohne Auftrag
 
