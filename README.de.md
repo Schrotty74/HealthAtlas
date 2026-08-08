@@ -10,7 +10,13 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 - Lokaler Import von Apple-Health-`Export.xml`-Dateien und ZIP-Archiven damit
 - Frei wählbare, erkannte Datentypen für die Anzeige
 - Dynamische Kennzahlen-Kacheln mit eigener Farbe und grafischem Hintergrund
-- Interaktive Verläufe: Datentyp, 7T/30T/3M/1J und einzelne Datenpunkte auswählen
+- Interaktive Verläufe: Datentyp, 7T/30T/3M/1J, Hover-Werte und einzelne Datenpunkte auswählen
+- Favoriten, lokale Reihenfolge, Kategorien und Suche für große Datentyp-Listen
+- Gemeinsamer Mehrfach-Verlauf, visuelle Tagesringe und lokaler Zeitraumvergleich
+- Datenkalender mit 12 Wochen oder einem Jahr, lokale Musterkarte und echte Vollbild-Fokusansicht
+- Anpassbares Dashboard: Kartenzahl, kompakte/Standard/Fokus-Dichte sowie freie lokale Reihenfolge per Drag & Drop
+- Lokale Datenqualitäts-Übersicht ohne Bewertung der Gesundheitswerte
+- Lokaler PDF-Bericht an einen bewusst gewählten Speicherort
 - Beschreibende lokale Einblicke, niemals Diagnosen oder Behandlungsempfehlungen
 - Deutsche und englische Oberfläche
 - Glass-Themes, dezente Karten-/Diagramm-Animationen und native Milchglas-Sidebar
@@ -22,6 +28,15 @@ HealthAtlas ist für lokale Verarbeitung ausgelegt. Persönliche Gesundheitsdate
 Das Projekt enthält weder Analytics, Werbung, Tracking, Konto noch Cloud-Upload. Importierte Daten bleiben nur für die laufende App-Sitzung im Speicher; beim nächsten Öffnen startet die App wieder leer.
 
 ## Lokale Builds und Gatekeeper
+
+Den lokalen Dev-Build erstellst du mit:
+
+```bash
+bash Scripts/build-development.sh
+```
+
+Die einzige startbare Dev-App liegt anschließend unter `dist/local-test/HealthAtlas-Development/HealthAtlas Dev.app`.
+Der Ordner `.build` ist ausschließlich der temporäre Compiler-Arbeitsbereich von Xcode, keine zweite App zum Öffnen.
 
 Die aktuellen Dev- und Beta-Builds sind ad hoc signiert, weil für das Projekt
 kein Apple-Developer-Account vorhanden ist. macOS Gatekeeper zeigt beim ersten
@@ -49,7 +64,7 @@ Apple-Health-ZIP-Archive mit `Export.xml` und direkte `Export.xml`-Dateien werde
 
 Für einen sicheren Test liegt eine vollständig synthetische Apple-Health-Datei im Repository: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). Sie enthält fiktive Schritte, Herzfrequenz, Körpergewicht, aktive Energie, Geh-/Laufdistanz und Schlafanalyse über mehrere Tage.
 
-In HealthAtlas **Apple Health importieren …** wählen und diese Datei öffnen. Unter **Quellen** Datentypen wählen, unter **Übersicht** die Kartenzahl festlegen und unter **Verläufe** Datentyp, Zeitraum und einzelne Punkte ausprobieren. Es werden keine persönlichen Daten benötigt oder hochgeladen.
+In HealthAtlas **Apple Health importieren …** wählen und diese Datei öffnen. Unter **Quellen** Datentypen wählen, unter **Übersicht** Kartenzahl und Dichte festlegen und unter **Verläufe** Datentyp, Zeitraum und einzelne Punkte ausprobieren. Es werden keine persönlichen Daten benötigt oder hochgeladen.
 
 ## Sicher testen
 
@@ -58,30 +73,47 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 1. HealthAtlas öffnen und **Apple Health importieren …** wählen.
 2. [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml) auswählen.
 3. Unter **Quellen** die gewünschten Werte wählen.
-4. Kacheln unter **Übersicht**, Punkte und Zeiträume unter **Verläufe** sowie Zusammenfassungen unter **Einblicke** erkunden.
+4. Kacheln, Mehrfach-Verlauf und Ringe unter **Übersicht**, Punkte und Zeiträume unter **Verläufe** sowie Kalender und Muster unter **Einblicke** erkunden.
 
-### Demo-Vorschau
+## Screenshots
 
-Die folgenden echten App-Screenshots verwenden ausschließlich den synthetischen
-Export aus diesem Repository.
+Alle folgenden Screenshots verwenden ausschließlich die mitgelieferten synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
 
-| Übersicht | Verläufe |
-| --- | --- |
-| ![Farbige Gesundheits-Kacheln aus der synthetischen Apple-Health-Demo](Docs/Screenshots/overview-demo.png) | ![Interaktiver Herzfrequenz-Verlauf aus der synthetischen Apple-Health-Demo](Docs/Screenshots/trends-demo.png) |
+### Import
 
-![Lokaler Herzfrequenz-Einblick aus der synthetischen Apple-Health-Demo](Docs/Screenshots/insights-demo.png)
+<a href="Screenshots/import.png"><img src="Screenshots/import.png" alt="Leere HealthAtlas-Startansicht für den Apple-Health-Import" width="50%"></a>
+
+### Übersicht
+
+<a href="Screenshots/overview.png"><img src="Screenshots/overview.png" alt="HealthAtlas-Übersicht mit ausgewählten Gesundheits-Kacheln" width="50%"></a>
+
+### Quellen
+
+<a href="Screenshots/sources.png"><img src="Screenshots/sources.png" alt="HealthAtlas-Auswahl importierter Apple-Health-Datentypen" width="50%"></a>
+
+### Verläufe
+
+<a href="Screenshots/trends.png"><img src="Screenshots/trends.png" alt="Interaktiver Herzfrequenz-Verlauf in HealthAtlas" width="50%"></a>
+
+### Einblicke
+
+<a href="Screenshots/insights.png"><img src="Screenshots/insights.png" alt="Lokaler Herzfrequenz-Einblick in HealthAtlas" width="50%"></a>
+
+### Design-Studio
+
+<a href="Screenshots/design-studio.png"><img src="Screenshots/design-studio.png" alt="HealthAtlas-Theme- und Spracheinstellungen" width="50%"></a>
 
 ## Beta-Pakete
 
 Das Beta-Skript erzeugt lokal eine ad-hoc-signierte App sowie ZIP, DMG und
-SHA-256-Dateien. Es veröffentlicht nichts auf GitHub:
+SHA-256-Dateien, legt sie lokal ab und veröffentlicht einen GitHub-Pre-Release.
 
 ```bash
 bash Scripts/create-beta-from-dev.sh
 ```
 
-Die App liegt danach unter `dist/releases/beta/<version>/`; ZIP, DMG und
-Prüfsummen unter `Backup/releases/beta/<version>/`.
+Die App liegt danach unter `dist/releases/beta/<version>/`; ZIP, DMG,
+Prüfsummen und Changelog unter `Backup/releases/beta/<version>/`.
 
 ## Projektstatus
 
@@ -92,5 +124,3 @@ bereit für Feedback; medizinische Integration, Diagnosefunktionen und eine
 ## Lizenz
 
 Die Lizenz wird vor der ersten öffentlichen Veröffentlichung ergänzt.
-
-Technische Projektinformationen befinden sich in der Dokumentation unter [`Docs/`](Docs/).

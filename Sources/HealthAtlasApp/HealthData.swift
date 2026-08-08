@@ -1,6 +1,7 @@
 import Foundation
 
 struct HealthMetric {
+    let identifier: String
     let title: String
     let value: String
     let detail: String
@@ -28,6 +29,53 @@ struct HealthMetric {
         case "health records": AppLanguage.current.text(english: "health records", german: "Gesundheitsdatensätze")
         default: detail
         }
+    }
+}
+
+enum HealthDataCategory: String, CaseIterable {
+    case activity, heart, sleep, body, hearing, other
+
+    static func category(for identifier: String) -> HealthDataCategory {
+        let value = identifier.lowercased()
+        if value.contains("heart") || value.contains("cardio") || value.contains("blood") { return .heart }
+        if value.contains("sleep") { return .sleep }
+        if value.contains("bodymass") || value.contains("bodyfat") || value.contains("leanbody") || value.contains("bmi") || value.contains("height") { return .body }
+        if value.contains("audio") || value.contains("hearing") { return .hearing }
+        if value.contains("step") || value.contains("distance") || value.contains("energy") || value.contains("walking") || value.contains("running") || value.contains("flight") || value.contains("workout") || value.contains("activity") { return .activity }
+        return .other
+    }
+
+    func displayName(for language: AppLanguage) -> String {
+        switch self {
+        case .activity: language.text(english: "Activity", german: "Aktivität")
+        case .heart: language.text(english: "Heart", german: "Herz")
+        case .sleep: language.text(english: "Sleep", german: "Schlaf")
+        case .body: language.text(english: "Body", german: "Körper")
+        case .hearing: language.text(english: "Hearing", german: "Hören")
+        case .other: language.text(english: "Other", german: "Weitere")
+        }
+    }
+}
+
+struct HealthPeriodComparison: Equatable {
+    let current: Double
+    let previous: Double
+
+    var difference: Double { current - previous }
+    var percentage: Double? { previous == 0 ? nil : difference / abs(previous) * 100 }
+
+    static func make(values: [HealthDailyValue], metric: HealthDataTypeSummary, days: Int) -> HealthPeriodComparison? {
+        guard days > 0, let latestDate = values.map(\.date).max() else { return nil }
+        let calendar = Calendar.current
+        guard let currentStart = calendar.date(byAdding: .day, value: -(days - 1), to: latestDate),
+              let previousStart = calendar.date(byAdding: .day, value: -days, to: currentStart) else { return nil }
+        let currentValues = values.filter { $0.date >= currentStart && $0.date <= latestDate }.map(metric.displayValue(for:))
+        let previousValues = values.filter { $0.date >= previousStart && $0.date < currentStart }.map(metric.displayValue(for:))
+        guard !currentValues.isEmpty, !previousValues.isEmpty else { return nil }
+        return HealthPeriodComparison(
+            current: currentValues.reduce(0, +) / Double(currentValues.count),
+            previous: previousValues.reduce(0, +) / Double(previousValues.count)
+        )
     }
 }
 
@@ -115,13 +163,13 @@ enum LocalImportResult: Equatable {
 }
 
 enum LocalImportValidator {
-    private static let supportedExtensions: Set<String> = ["json", "xml", "csv", "zip"]
+    private static let supportedExtensions: Set<String> = ["xml", "zip"]
     static let maximumBytes = 100 * 1024 * 1024
 
     static func validate(url: URL) -> LocalImportResult {
         let extensionName = url.pathExtension.lowercased()
         guard supportedExtensions.contains(extensionName) else {
-            return .rejected(AppLanguage.current.text(english: "Only Apple Health ZIP/XML, JSON and CSV files can be checked.", german: "Es können nur Apple-Health-ZIP/XML-, JSON- und CSV-Dateien geprüft werden."))
+            return .rejected(AppLanguage.current.text(english: "Select an Apple Health ZIP archive or Export.xml file.", german: "Wähle ein Apple-Health-ZIP-Archiv oder eine Export.xml-Datei aus."))
         }
         guard let values = try? url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey]), values.isRegularFile == true else {
             return .rejected(AppLanguage.current.text(english: "Please select a regular local file.", german: "Bitte wähle eine normale lokale Datei aus."))
@@ -151,7 +199,9 @@ enum AppleHealthImporter {
             return .rejected(AppLanguage.current.text(english: "The archive is too large to import safely.", german: "Das Archiv ist für einen sicheren Import zu groß."))
         }
         guard let entries = unzip(arguments: ["-Z1", url.path]),
-              let exportEntry = String(data: entries, encoding: .utf8)?.split(whereSeparator: \.isNewline).first(where: { $0.lowercased().hasSuffix("/export.xml") || $0.lowercased() == "export.xml" }) else {
+              let exportEntry = String(data: entries, encoding: .utf8)?.split(whereSeparator: \.isNewline).first(where: { entry in
+                  entry.split(separator: "/").last?.lowercased() == "export.xml"
+              }) else {
             return .rejected(AppLanguage.current.text(english: "This ZIP does not contain the required Export.xml data file.", german: "Dieses ZIP enthält nicht die erforderliche Datendatei Export.xml."))
         }
         guard let xml = unzip(arguments: ["-p", url.path, String(exportEntry)]), xml.count <= maximumXMLBytes else {
