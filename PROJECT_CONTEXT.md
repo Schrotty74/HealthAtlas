@@ -1,6 +1,6 @@
 # HealthAtlas – Projektkontext
 
-> Haupt-Wissensquelle für neue Codex-Chats. Stand: 2026-07-31.
+> Haupt-Wissensquelle für neue Codex-Chats. Stand: 2026-08-10.
 > Zuerst diese Datei, danach [NEXT_STEPS.md](NEXT_STEPS.md), [README.md](README.md) und bei deutschen Texten [README.de.md](README.de.md) lesen. Für synthetische Testdaten siehe [Demo/README.md](Demo/README.md).
 
 ## Ziel und Zweck
@@ -21,6 +21,9 @@ HealthAtlas ist eine native macOS-App zur **lokalen** Darstellung eines vom Nutz
 - `Scripts/`: Dev-, Release-, Backup- und Datenschutzskripte.
 - `dist/`: erzeugte, nicht zu versionierende App-Ausgaben.
 - `Backup/`: erzeugte, nicht zu versionierende Release- und Backup-Artefakte.
+- `output/pdf/`: die öffentlichen deutschen und englischen Handbücher.
+- `tmp/pdfs/generate_healthatlas_manuals.py`: Generator für beide Handbücher;
+  gerenderte PDF-Prüfbilder bleiben temporär und gehören nicht nach Git.
 - `HealthAtlas.xcodeproj/`: Xcode-Projekt; Projektformat ist Xcode 16.0.
 - `Package.swift`: Swift Package Manifest für die App und Tests. Es sind keine externen Swift-Package-Abhängigkeiten deklariert.
 
@@ -41,10 +44,14 @@ HealthAtlas ist eine native macOS-App zur **lokalen** Darstellung eines vom Nutz
 - Übersicht mit wählbar 4, 8 oder 12 Karten und Seitennavigation.
 - Interaktive Verläufe: Datentyp, 7T/30T/3M/1J und anklickbare Datenpunkte.
 - Einblicke als beschreibende lokale Zusammenfassung mit letztem Wert und Veränderung zum vorherigen Wert.
+- Gemeinsamer Mehrfach-Verlauf, Tagesringe, lokale Zeitraumvergleiche,
+  Datenkalender, Musterkarte sowie Vollbild-Fokus.
+- Konfigurierbare Kartendichte und lokale Drag-and-drop-Reihenfolge.
 - Deutsch und Englisch, wählbar im Design-Studio.
 - Themes: Clear Glass, Midnight Glass, Aurora und Warmpaper.
 - Native AppKit-Milchglas-Sidebar; Clear Glass nutzt zusätzlich eine durchscheinende Arbeitsfläche.
-- Animierte Karten, Liniencharts und Importdarstellung.
+- Animierte Karten, Liniencharts und Importdarstellung; Clear Glass verwendet
+  zusätzlich eine ruhige, reduzierbare Glüh-/Lichtpunkt-Animation.
 - Synthetische Demo für sichere Tests und Repository-Screenshots.
 
 ## Build-, Test- und Release-Workflow
@@ -56,12 +63,19 @@ Die Login-Shell ist zsh. Für Bash-Skripte auf diesem Mac die Homebrew-Bash verw
 ```
 
 - **Dev:** `Scripts/build-development.sh` erzeugt die startbare App unter `dist/local-test/HealthAtlas-Development/HealthAtlas Dev.app`.
-- **Tests:** `swift test` führt die Swift-Tests aus. Ein aktuelles Testergebnis ist in diesem Dokument nicht festgehalten; vor Aussagen über den Status selbst ausführen.
+- **Tests:** `swift test` führt die Swift-Tests aus. Am 2026-08-10 waren sieben
+  Tests für Import, Datentypen, Vergleiche und die datensparsame KI-Hilfe
+  erfolgreich; vor einer neuen Aussage erneut ausführen.
 - **Beta:** `Scripts/create-beta-from-dev.sh` darf nur vom Branch `dev` aus verwendet werden. Es baut Paketdateien, aktualisiert `beta` und erstellt bzw. aktualisiert eine GitHub-Vorabveröffentlichung.
 - **Final:** `Scripts/publish-beta-as-final.sh` erwartet einen sauberen Arbeitsbaum, übernimmt `beta` per Fast-Forward in `main`, baut Paketdateien und veröffentlicht auf GitHub.
 - **Paketierung:** `Scripts/build-release-package.sh` erfordert die explizite Umgebungsfreigabe `HEALTHATLAS_ALLOW_RELEASE_PACKAGE=YES`.
 - **Backups:** `Scripts/archive-build.sh` erfordert `HEALTHATLAS_ALLOW_BACKUP=YES`, erstellt ein lokales Build-Backup und kann eine optionale Cloud-Kopie anlegen.
 - **Datenschutz:** Vor Releases `Scripts/privacy-check.sh`; bei Bedarf zusätzlich `Scripts/privacy-audit.sh` ausführen.
+
+Die aktuelle veröffentlichte Vorabversion ist `0.1.0-beta.2` mit ZIP, DMG und
+SHA-256-Dateien. Der Arbeitsstand für diese Dokumente ist `main`; Änderungen an
+den Übergabedokumenten nur dort veröffentlichen, sofern nicht ausdrücklich etwas
+anderes beauftragt wird.
 
 Builds, Releases, Tags, Commits, Pushes und Backups niemals ohne ausdrücklichen Auftrag starten.
 
