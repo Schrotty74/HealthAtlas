@@ -9,7 +9,11 @@
 		A10000000000000000000002 /* HealthData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* HealthData.swift */; };
 		A10000000000000000000003 /* DashboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* DashboardViewController.swift */; };
 		A10000000000000000000005 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* AppLanguage.swift */; };
+		A10000000000000000000006 /* AIHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* AIHelp.swift */; };
 		A10000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Assets.xcassets */; };
+		A10000000000000000000007 /* healthatlas-chatgpt-logo.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* healthatlas-chatgpt-logo.jpg */; };
+		A10000000000000000000008 /* healthatlas-gemini-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* healthatlas-gemini-logo.svg */; };
+		A10000000000000000000009 /* healthatlas-claude-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* healthatlas-claude-logo.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +24,10 @@
 		A20000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000005 /* HealthAtlas */ = {isa = PBXFileReference; lastKnownFileType = folder; path = HealthAtlas; sourceTree = "<group>"; };
 		A20000000000000000000006 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* AIHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIHelp.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* healthatlas-chatgpt-logo.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = Resources/AI/healthatlas-chatgpt-logo.jpg; sourceTree = "<group>"; };
+		A20000000000000000000009 /* healthatlas-gemini-logo.svg */ = {isa = PBXFileReference; lastKnownFileType = image.svg; path = Resources/AI/healthatlas-gemini-logo.svg; sourceTree = "<group>"; };
+		A20000000000000000000010 /* healthatlas-claude-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Resources/AI/healthatlas-claude-logo.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,7 +37,7 @@
 /* Begin PBXGroup section */
 		A40000000000000000000000 = {isa = PBXGroup; children = (A40000000000000000000001, A40000000000000000000002, A40000000000000000000003); sourceTree = "<group>"; };
 		A40000000000000000000001 /* HealthAtlas */ = {isa = PBXGroup; children = (A20000000000000000000004); path = HealthAtlas; sourceTree = "<group>"; };
-		A40000000000000000000002 /* Sources */ = {isa = PBXGroup; children = (A20000000000000000000001, A20000000000000000000002, A20000000000000000000003, A20000000000000000000006); path = Sources/HealthAtlasApp; sourceTree = "<group>"; };
+		A40000000000000000000002 /* Sources */ = {isa = PBXGroup; children = (A20000000000000000000001, A20000000000000000000002, A20000000000000000000003, A20000000000000000000006, A20000000000000000000007, A20000000000000000000008, A20000000000000000000009, A20000000000000000000010); path = Sources/HealthAtlasApp; sourceTree = "<group>"; };
 		A40000000000000000000003 /* Products */ = {isa = PBXGroup; children = (A20000000000000000000000); name = Products; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
@@ -42,11 +50,11 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A30000000000000000000002 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000004); runOnlyForDeploymentPostprocessing = 0; };
+		A30000000000000000000002 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000004, A10000000000000000000007, A10000000000000000000008, A10000000000000000000009); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A30000000000000000000003 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001, A10000000000000000000002, A10000000000000000000003, A10000000000000000000005); runOnlyForDeploymentPostprocessing = 0; };
+		A30000000000000000000003 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001, A10000000000000000000002, A10000000000000000000003, A10000000000000000000005, A10000000000000000000006); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */

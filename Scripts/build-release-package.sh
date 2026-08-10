@@ -109,6 +109,7 @@ for private_rpath in "${private_rpaths[@]}"; do
     [[ -n "$private_rpath" ]] || continue
     install_name_tool -delete_rpath "$private_rpath" "$app_binary"
 done
+strip -S "$app_binary"
 local_path_pattern="/""Users/[^/]+|/""Volumes/[^/]+"
 if rg -a "$local_path_pattern" "$app_binary" >/dev/null; then
     echo "Build abgebrochen: lokaler Pfad im App-Binary gefunden." >&2
