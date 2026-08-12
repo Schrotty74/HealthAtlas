@@ -79,7 +79,7 @@ Use the included synthetic demo instead of personal data:
 
 ## Screenshots
 
-All screenshots below use the included synthetic demo data — no personal health data is shown.
+All screenshots below show the current HealthAtlas interface with synthetic demo data — no personal health data is shown.
 
 ### Import
 

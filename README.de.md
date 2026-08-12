@@ -82,7 +82,7 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 
 ## Screenshots
 
-Alle folgenden Screenshots verwenden ausschließlich die mitgelieferten synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
+Alle folgenden Screenshots zeigen die aktuelle HealthAtlas-Oberfläche mit ausschließlich synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
 
 ### Import
 
