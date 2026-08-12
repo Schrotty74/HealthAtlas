@@ -28,6 +28,37 @@ require_clean_worktree() {
     fi
 }
 
+sync_branch_with_origin() {
+    local branch="$1" current_branch local_ref remote_ref local_commit remote_commit
+    current_branch="$(git branch --show-current)"
+    local_ref="refs/heads/$branch"
+    remote_ref="refs/remotes/origin/$branch"
+
+    git fetch --quiet origin "$branch"
+    if ! git show-ref --verify --quiet "$local_ref"; then
+        git update-ref "$local_ref" "$remote_ref"
+        return
+    fi
+
+    local_commit="$(git rev-parse "$local_ref")"
+    remote_commit="$(git rev-parse "$remote_ref")"
+    [[ "$local_commit" == "$remote_commit" ]] && return
+
+    if git merge-base --is-ancestor "$local_ref" "$remote_ref"; then
+        if [[ "$current_branch" == "$branch" ]]; then
+            git merge --ff-only "$remote_ref"
+        else
+            git update-ref "$local_ref" "$remote_ref"
+        fi
+    elif git merge-base --is-ancestor "$remote_ref" "$local_ref"; then
+        git push origin "$local_ref:$local_ref"
+    else
+        echo "Abbruch: $branch ist lokal und auf GitHub auseinander gelaufen." >&2
+        echo "Bitte die Abweichung zuerst bewusst zusammenführen." >&2
+        exit 1
+    fi
+}
+
 ensure_branch_exists() {
     local branch="$1" start_point="$2"
     git show-ref --verify --quiet "refs/heads/$branch" || git branch "$branch" "$start_point"
@@ -102,6 +133,8 @@ require_clean_worktree
 require_gh
 ensure_branch_exists beta main
 ensure_branch_exists main beta
+sync_branch_with_origin beta
+sync_branch_with_origin main
 bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
 
