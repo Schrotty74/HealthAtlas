@@ -25,6 +25,46 @@ require_dev_branch() {
     [[ "$branch" == "dev" ]] || { echo "Abbruch: Beta muss vom aktuellen dev-Branch erstellt werden." >&2; exit 1; }
 }
 
+working_tree_is_dirty() {
+    ! git diff --quiet || ! git diff --cached --quiet || [[ -n "$(git ls-files --others --exclude-standard)" ]]
+}
+
+sync_branch_with_origin() {
+    local branch="$1" current_branch local_ref remote_ref local_commit remote_commit
+    current_branch="$(git branch --show-current)"
+    local_ref="refs/heads/$branch"
+    remote_ref="refs/remotes/origin/$branch"
+
+    git fetch --quiet origin "$branch"
+    if ! git show-ref --verify --quiet "$local_ref"; then
+        git update-ref "$local_ref" "$remote_ref"
+        return
+    fi
+
+    local_commit="$(git rev-parse "$local_ref")"
+    remote_commit="$(git rev-parse "$remote_ref")"
+    [[ "$local_commit" == "$remote_commit" ]] && return
+
+    if git merge-base --is-ancestor "$local_ref" "$remote_ref"; then
+        if [[ "$current_branch" == "$branch" ]]; then
+            working_tree_is_dirty && {
+                echo "Abbruch: $branch ist auf GitHub neuer, aber lokale Änderungen sind noch offen." >&2
+                echo "Bitte zuerst committen, staschen oder die Änderungen bewusst sichern." >&2
+                exit 1
+            }
+            git merge --ff-only "$remote_ref"
+        else
+            git update-ref "$local_ref" "$remote_ref"
+        fi
+    elif git merge-base --is-ancestor "$remote_ref" "$local_ref"; then
+        git push origin "$local_ref:$local_ref"
+    else
+        echo "Abbruch: $branch ist lokal und auf GitHub auseinander gelaufen." >&2
+        echo "Bitte die Abweichung zuerst bewusst zusammenführen." >&2
+        exit 1
+    fi
+}
+
 ensure_beta_ref() {
     git show-ref --verify --quiet refs/heads/beta && return
     if git show-ref --verify --quiet refs/remotes/origin/beta; then
@@ -77,9 +117,9 @@ last_beta_tag() {
 }
 
 categorized_release_changes() {
-    local base_ref="$1"
+    local base_ref="$1" target_ref="$2"
     local changed_paths
-    changed_paths="$(git diff --name-only "$base_ref" HEAD -- Sources Tests HealthAtlas.xcodeproj README.md README.de.md output/pdf Scripts 2>/dev/null | sort -u)"
+    changed_paths="$(git diff --name-only "$base_ref" "$target_ref" -- Sources Tests HealthAtlas.xcodeproj README.md README.de.md output/pdf Scripts 2>/dev/null | sort -u)"
     [[ -n "$changed_paths" ]] || return 1
 
     printf '## Changes\n\n'
@@ -122,7 +162,9 @@ create_github_release() {
 }
 
 require_dev_branch
+sync_branch_with_origin dev
 ensure_beta_ref
+sync_branch_with_origin beta
 require_gh
 bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
@@ -131,10 +173,6 @@ version="$(release_version)"
 dev_commit="$(git rev-parse --short HEAD)"
 previous_beta_tag="$(last_beta_tag)"
 previous_release_note_ref="${previous_beta_tag:-$(git rev-list --max-parents=0 HEAD)}"
-release_changes="$(categorized_release_changes "$previous_release_note_ref")" || {
-    echo "Abbruch: Seit ${previous_beta_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Keine Beta ohne tatsächliche Änderungen erstellen." >&2
-    exit 1
-}
 artifact_base="$(artifact_base_name "$version")"
 backup_directory="$(backup_directory_for_version "$version")"
 zip_file="$backup_directory/$artifact_base.zip"
@@ -150,6 +188,10 @@ Scripts/privacy-check.sh
 tree="$(worktree_tree)"
 beta_before="$(git rev-parse refs/heads/beta)"
 beta_commit="$(create_beta_commit "$version" "$tree")"
+release_changes="$(categorized_release_changes "$previous_release_note_ref" "$beta_commit")" || {
+    echo "Abbruch: Seit ${previous_beta_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Keine Beta ohne tatsächliche Änderungen erstellen." >&2
+    exit 1
+}
 git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
