@@ -1,11 +1,3 @@
-<p align="center">
-  <img src="Resources/HealthAtlasIcon-Concept.png" alt="HealthAtlas-Logo" width="160">
-</p>
-
-<p align="center">
-  <a href="README.md">🇬🇧 English</a>
-</p>
-
 # HealthAtlas
 
 HealthAtlas ist eine datenschutzorientierte macOS-App, die einen lokalen Apple-Health-Export verständlich und grafisch aufbereitet.
@@ -18,10 +10,21 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 - Lokaler Import von Apple-Health-`Export.xml`-Dateien und ZIP-Archiven damit
 - Frei wählbare, erkannte Datentypen für die Anzeige
 - Dynamische Kennzahlen-Kacheln mit eigener Farbe und grafischem Hintergrund
-- Interaktive Verläufe: Datentyp, 7T/30T/3M/1J und einzelne Datenpunkte auswählen
+- Interaktive Verläufe: Datentyp, 7T/30T/3M/1J, Hover-Werte und einzelne Datenpunkte auswählen
+- Favoriten, lokale Reihenfolge, Kategorien und Suche für große Datentyp-Listen
+- Wählbare Fokus-Kennzahl mit animiertem Ring, großem Verlauf und typabhängiger Grafik
+- Gemeinsamer Mehrfach-Verlauf, visuelle Tagesringe und lokaler Zeitraumvergleich
+- Eigene Datenkalender-Balken mit 12 Wochen oder einem Jahr unter Verläufen und Einblicken, lokale Musterkarte und echte Vollbild-Fokusansicht mit Zeitraumvergleich
+- Interaktive Verläufe mit schwebender Wertkarte, Datum, Mini-Trend und sanft pulsierendem ausgewählten Punkt
+- Anpassbares Dashboard: Kartenzahl, kompakte/Standard/Fokus-Dichte sowie freie lokale Reihenfolge per Drag & Drop
+- Lokale Datenqualitäts-Übersicht ohne Bewertung der Gesundheitswerte
+- Lokaler PDF-Bericht an einen bewusst gewählten Speicherort
 - Beschreibende lokale Einblicke, niemals Diagnosen oder Behandlungsempfehlungen
 - Deutsche und englische Oberfläche
-- Glass-Themes, dezente Karten-/Diagramm-Animationen und native Milchglas-Sidebar
+- Beschreibende Karte „Dein Zeitraum in Kürze“ für die letzten sieben lokalen Erfassungstage — keine Bewertung und keine Diagnose
+- Geführte Glas-Leerzustände mit direkter Aktion zu Quellen oder lokalem Import
+- Glass-Themes, dezente Karten-/Diagramm-Animationen, Import-Erfolgsschimmer, native Milchglas-Sidebar sowie Glow, Lichtpunkte, Konturen und Gesundheits-Symbole im Clear-Glass-Theme hinter gut lesbaren Inhalten
+- Startfenster im 16:9-Format, danach frei skalierbar
 
 ## Datenschutz an erster Stelle
 
@@ -62,25 +65,11 @@ systemweit deaktiviert.
 
 Apple-Health-ZIP-Archive mit `Export.xml` und direkte `Export.xml`-Dateien werden lokal gelesen; die klinische Zusatzdatei wird bewusst nicht importiert. Es gibt keine direkte HealthKit- oder Cloud-Anbindung.
 
-## Erste Hilfe und Handbücher
-
-Solange keine eigenen Daten geladen sind, bietet die leere Startansicht den
-lokalen Import, die Schaltfläche **Handbuch öffnen** sowie freiwillige Hilfe mit
-ChatGPT, Google Gemini oder Claude. Die Auswahl eines Dienstes kopiert eine
-feste allgemeine Einführungsfrage in die Zwischenablage und öffnet danach erst
-dessen Website. Die Frage enthält ausschließlich den öffentlichen,
-sprachabhängigen Handbuch-Link — niemals Gesundheitswerte, Importinhalte,
-lokale Pfade, Zugangsdaten oder andere App-Daten. Es wird nichts automatisch
-gesendet; erst mit Cmd+V entscheidet die Person selbst über das Einfügen.
-
-- [HealthAtlas-Handbuch (Deutsch, PDF)](output/pdf/HealthAtlas-Handbuch-DE.pdf)
-- [HealthAtlas Manual (English, PDF)](output/pdf/HealthAtlas-Manual-EN.pdf)
-
 ## Demo ohne persönliche Daten
 
 Für einen sicheren Test liegt eine vollständig synthetische Apple-Health-Datei im Repository: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). Sie enthält fiktive Schritte, Herzfrequenz, Körpergewicht, aktive Energie, Geh-/Laufdistanz und Schlafanalyse über mehrere Tage.
 
-In HealthAtlas **Apple Health importieren …** wählen und diese Datei öffnen. Unter **Quellen** Datentypen wählen, unter **Übersicht** die Kartenzahl festlegen und unter **Verläufe** Datentyp, Zeitraum und einzelne Punkte ausprobieren. Es werden keine persönlichen Daten benötigt oder hochgeladen.
+In HealthAtlas **Apple Health importieren …** wählen und diese Datei öffnen. Unter **Quellen** Datentypen wählen, unter **Übersicht** Kartenzahl und Dichte festlegen und unter **Verläufe** Datentyp, Zeitraum und einzelne Punkte ausprobieren. Es werden keine persönlichen Daten benötigt oder hochgeladen.
 
 ## Sicher testen
 
@@ -89,7 +78,7 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 1. HealthAtlas öffnen und **Apple Health importieren …** wählen.
 2. [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml) auswählen.
 3. Unter **Quellen** die gewünschten Werte wählen.
-4. Kacheln unter **Übersicht**, Punkte und Zeiträume unter **Verläufe** sowie Zusammenfassungen unter **Einblicke** erkunden.
+4. Kacheln, Mehrfach-Verlauf und Ringe unter **Übersicht**, Punkte und Zeiträume unter **Verläufe** sowie Kalender und Muster unter **Einblicke** erkunden.
 
 ## Screenshots
 

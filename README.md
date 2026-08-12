@@ -1,11 +1,3 @@
-<p align="center">
-  <img src="Resources/HealthAtlasIcon-Concept.png" alt="HealthAtlas logo" width="160">
-</p>
-
-<p align="center">
-  <a href="README.de.md">🇩🇪 Deutsch</a>
-</p>
-
 # HealthAtlas
 
 HealthAtlas is a privacy-first macOS app for turning a local Apple Health export into clear, visual insights.
@@ -17,11 +9,21 @@ It starts empty, imports only a file you choose, and turns selected health data 
 - Native macOS app built with Swift, SwiftUI and AppKit
 - Local import of Apple Health `Export.xml` files and ZIP archives containing one
 - Select exactly which recognised data types appear in the app
-- Responsive metric cards with individual colour and graphic treatments
-- Interactive trends: select a data type, 7D/30D/3M/1Y range, and individual data points
+- A selectable hero metric with animated orbit, large trend line and type-specific visual treatment
+- Responsive metric cards with individual colour and graphic treatments; click a card for a detailed local focus view
+- Interactive trends: select a data type, 7D/30D/3M/1Y range, floating hover cards with date, value and mini-trend, plus gently pulsing selected points
+- A descriptive “Your period at a glance” card for the latest locally recorded seven days — never a rating or diagnosis
+- Favourites, local ordering, categories and search for large data-type lists
+- Shared multi-metric timeline, visual daily rings and local period comparison
+- Separate data-calendar panels for 12 weeks or one year in Trends and Insights, a local pattern card and a true full-screen focus view
+- Configurable dashboard: card count, compact/standard/focus density and free local drag-and-drop ordering
+- Local data-quality overview without rating health values
+- Local PDF report written only to a location explicitly selected by the person
 - Descriptive local insights; never diagnoses or treatment recommendations
 - German and English UI
-- Glass themes, subtle card and chart animations, and a native frosted sidebar
+- Guided frosted-glass empty states that lead directly to Sources or local import
+- Glass themes, subtle card and chart animations, native frosted sidebar, import-success shimmer, and a calm Clear Glass atmosphere with glow, sparks, contours and health symbols behind readable content
+- A 16:9 start window that remains freely resizable afterwards
 
 ## Privacy first
 
@@ -60,24 +62,11 @@ Apple Health ZIP archives containing `Export.xml` and direct `Export.xml` files
 are read locally. The clinical companion file is intentionally not imported.
 There is no direct HealthKit or cloud-service connection.
 
-## First-start help and manuals
-
-While no personal data is loaded, the empty start screen offers a local import,
-an **Open Manual** button and optional help with ChatGPT, Google Gemini or
-Claude. Choosing a service copies one fixed, general introduction question to
-the clipboard and then opens that service's website. It contains only the
-public, language-specific manual link — never health values, imported content,
-local paths, credentials or other app data. Nothing is sent automatically; the
-person decides whether to paste the question with Cmd+V.
-
-- [HealthAtlas Manual (English, PDF)](output/pdf/HealthAtlas-Manual-EN.pdf)
-- [HealthAtlas-Handbuch (Deutsch, PDF)](output/pdf/HealthAtlas-Handbuch-DE.pdf)
-
 ## Demo without personal data
 
 The repository includes a fully synthetic Apple Health file for safe testing: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). It contains fictional steps, heart rate, body mass, active energy, walking/running distance and sleep-analysis records across several days.
 
-In HealthAtlas, choose **Import Apple Health…** and select that file. Use **Sources** to choose data types, **Overview** to select the card count, and **Trends** to try data types, periods and individual points. No personal data is required or uploaded.
+In HealthAtlas, choose **Import Apple Health…** and select that file. Use **Sources** to choose data types, **Overview** to select card count and density, and **Trends** to try data types, periods and individual points. No personal data is required or uploaded.
 
 ## Try it safely
 
@@ -86,7 +75,7 @@ Use the included synthetic demo instead of personal data:
 1. Open HealthAtlas and choose **Import Apple Health…**.
 2. Select [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml).
 3. Choose the metrics under **Sources**.
-4. Explore cards in **Overview**, point details and time ranges in **Trends**, and per-metric summaries in **Insights**.
+4. Explore cards, the shared timeline and rings in **Overview**, point details and time ranges in **Trends**, and calendars and patterns in **Insights**.
 
 ## Screenshots
 
