@@ -9,17 +9,21 @@ It starts empty, imports only a file you choose, and turns selected health data 
 - Native macOS app built with Swift, SwiftUI and AppKit
 - Local import of Apple Health `Export.xml` files and ZIP archives containing one
 - Select exactly which recognised data types appear in the app
-- Responsive metric cards with individual colour and graphic treatments
-- Interactive trends: select a data type, 7D/30D/3M/1Y range, hover values and individual data points
+- A selectable hero metric with animated orbit, large trend line and type-specific visual treatment
+- Responsive metric cards with individual colour and graphic treatments; click a card for a detailed local focus view
+- Interactive trends: select a data type, 7D/30D/3M/1Y range, floating hover cards with date, value and mini-trend, plus gently pulsing selected points
+- A descriptive “Your period at a glance” card for the latest locally recorded seven days — never a rating or diagnosis
 - Favourites, local ordering, categories and search for large data-type lists
 - Shared multi-metric timeline, visual daily rings and local period comparison
-- Data calendar for 12 weeks or one year, local pattern card and a true full-screen focus view
+- Separate data-calendar panels for 12 weeks or one year in Trends and Insights, a local pattern card and a true full-screen focus view
 - Configurable dashboard: card count, compact/standard/focus density and free local drag-and-drop ordering
 - Local data-quality overview without rating health values
 - Local PDF report written only to a location explicitly selected by the person
 - Descriptive local insights; never diagnoses or treatment recommendations
 - German and English UI
-- Glass themes, subtle card and chart animations, and a native frosted sidebar
+- Guided frosted-glass empty states that lead directly to Sources or local import
+- Glass themes, subtle card and chart animations, native frosted sidebar, import-success shimmer, and a calm Clear Glass atmosphere with glow, sparks, contours and health symbols behind readable content
+- A 16:9 start window that remains freely resizable afterwards
 
 ## Privacy first
 
