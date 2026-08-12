@@ -72,16 +72,32 @@ require_release_artifacts() {
     for artifact in "$@"; do [[ -f "$artifact" ]] || { echo "Abbruch: Release-Artefakt fehlt: $artifact" >&2; exit 1; }; done
 }
 
-last_beta_tag() { git describe --tags --match 'v*-beta*' --abbrev=0 HEAD 2>/dev/null || true; }
+last_beta_tag() {
+    git tag --list 'v*-beta*' --sort=-version:refname | head -n 1
+}
 
 categorized_release_changes() {
     local base_ref="$1"
-    git log --reverse --no-merges --format='%s' "$base_ref"..HEAD | awk '
-        BEGIN { new=""; fixed=""; improved="" }
-        tolower($0) ~ /(fix|bug|hang|crash|error)/ { fixed = fixed "- " $0 "\n"; next }
-        tolower($0) ~ /(improve|faster|performance|speed)/ { improved = improved "- " $0 "\n"; next }
-        { new = new "- " $0 "\n" }
-        END { if (new != "") print "## New\n\n" new; if (fixed != "") print "## Fixed\n\n" fixed; if (improved != "") print "## Improved\n\n" improved }'
+    local changed_paths
+    changed_paths="$(git diff --name-only "$base_ref" HEAD -- Sources Tests README.md README.de.md output/pdf 2>/dev/null | sort -u)"
+    [[ -n "$changed_paths" ]] || return 0
+
+    printf '## Changes\n\n'
+    if grep -qx 'Sources/HealthAtlasApp/DashboardViewController.swift' <<<"$changed_paths"; then
+        printf '%s\n' '- Updated the dashboard, charts, empty states, and visual interactions.'
+    fi
+    if grep -qx 'Sources/HealthAtlasApp/HealthData.swift' <<<"$changed_paths"; then
+        printf '%s\n' '- Improved local Apple Health import and data presentation.'
+    fi
+    if grep -qx 'Sources/HealthAtlasApp/AIHelp.swift' <<<"$changed_paths"; then
+        printf '%s\n' '- Added privacy-safe first-start help with optional AI service links.'
+    fi
+    if grep -Eq '^(README\.md|README\.de\.md|output/pdf/)' <<<"$changed_paths"; then
+        printf '%s\n' '- Updated the German and English documentation and manuals.'
+    fi
+    if grep -q '^Tests/' <<<"$changed_paths"; then
+        printf '%s\n' '- Expanded automated coverage for local import and presentation behavior.'
+    fi
 }
 
 write_release_notes() {
