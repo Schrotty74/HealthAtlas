@@ -28,6 +28,37 @@ require_clean_worktree() {
     fi
 }
 
+sync_branch_with_origin() {
+    local branch="$1" current_branch local_ref remote_ref local_commit remote_commit
+    current_branch="$(git branch --show-current)"
+    local_ref="refs/heads/$branch"
+    remote_ref="refs/remotes/origin/$branch"
+
+    git fetch --quiet origin "$branch"
+    if ! git show-ref --verify --quiet "$local_ref"; then
+        git update-ref "$local_ref" "$remote_ref"
+        return
+    fi
+
+    local_commit="$(git rev-parse "$local_ref")"
+    remote_commit="$(git rev-parse "$remote_ref")"
+    [[ "$local_commit" == "$remote_commit" ]] && return
+
+    if git merge-base --is-ancestor "$local_ref" "$remote_ref"; then
+        if [[ "$current_branch" == "$branch" ]]; then
+            git merge --ff-only "$remote_ref"
+        else
+            git update-ref "$local_ref" "$remote_ref"
+        fi
+    elif git merge-base --is-ancestor "$remote_ref" "$local_ref"; then
+        git push origin "$local_ref:$local_ref"
+    else
+        echo "Abbruch: $branch ist lokal und auf GitHub auseinander gelaufen." >&2
+        echo "Bitte die Abweichung zuerst bewusst zusammenführen." >&2
+        exit 1
+    fi
+}
+
 ensure_branch_exists() {
     local branch="$1" start_point="$2"
     git show-ref --verify --quiet "refs/heads/$branch" || git branch "$branch" "$start_point"
@@ -49,22 +80,36 @@ require_release_artifacts() {
     for artifact in "$@"; do [[ -f "$artifact" ]] || { echo "Abbruch: Release-Artefakt fehlt: $artifact" >&2; exit 1; }; done
 }
 
-last_final_tag() { git describe --tags --match 'v*' --exclude '*beta*' --abbrev=0 HEAD 2>/dev/null || true; }
+last_final_tag() {
+    git tag --list 'v*' --sort=-version:refname | grep -v -- '-beta' | head -n 1 || true
+}
 
 categorized_release_changes() {
     local base_ref="$1"
-    git log --reverse --no-merges --format='%s' "$base_ref"..HEAD | awk '
-        BEGIN { new=""; fixed=""; improved="" }
-        tolower($0) ~ /(fix|bug|hang|crash|error)/ { fixed = fixed "- " $0 "\n"; next }
-        tolower($0) ~ /(improve|faster|performance|speed)/ { improved = improved "- " $0 "\n"; next }
-        { new = new "- " $0 "\n" }
-        END { if (new != "") print "## New\n\n" new; if (fixed != "") print "## Fixed\n\n" fixed; if (improved != "") print "## Improved\n\n" improved }'
+    local changed_paths
+    changed_paths="$(git diff --name-only "$base_ref" HEAD -- Sources Tests HealthAtlas.xcodeproj README.md README.de.md output/pdf Scripts 2>/dev/null | sort -u)"
+    [[ -n "$changed_paths" ]] || return 1
+
+    printf '## Changelog\n\n'
+    if grep -q '^Sources/' <<<"$changed_paths"; then
+        printf '%s\n' '- HealthAtlas app functionality and interface updated.'
+    fi
+    if grep -q '^HealthAtlas.xcodeproj/' <<<"$changed_paths"; then
+        printf '%s\n' '- Xcode project configuration updated.'
+    fi
+    if grep -q '^Tests/' <<<"$changed_paths"; then
+        printf '%s\n' '- Automated tests for local behavior updated.'
+    fi
+    if grep -Eq '^(README\.md|README\.de\.md|output/pdf/)' <<<"$changed_paths"; then
+        printf '%s\n' '- German and English documentation, screenshots and manuals updated.'
+    fi
+    if grep -q '^Scripts/' <<<"$changed_paths"; then
+        printf '%s\n' '- Build, backup, privacy or release automation updated.'
+    fi
 }
 
 write_release_notes() {
-    local notes_file="$1" previous_final_tag="$2" changes
-    changes="$(categorized_release_changes "$previous_final_tag")"
-    [[ -n "$changes" ]] || changes="## Changes\n\n- Initial stable HealthAtlas release."
+    local notes_file="$1" previous_final_tag="$2" changes="$3"
     cat > "$notes_file" <<EOF
 This stable release contains the latest HealthAtlas changes since ${previous_final_tag:-the first stable release}.
 
@@ -88,6 +133,8 @@ require_clean_worktree
 require_gh
 ensure_branch_exists beta main
 ensure_branch_exists main beta
+sync_branch_with_origin beta
+sync_branch_with_origin main
 bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
 
@@ -107,10 +154,15 @@ beta_commit="$(git rev-parse --short HEAD)"
 git switch main
 git merge --ff-only beta
 
+release_changes="$(categorized_release_changes "${previous_release_note_ref}")" || {
+    echo "Abbruch: Seit ${previous_final_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Kein Final ohne vollständigen Changelog erstellen." >&2
+    exit 1
+}
+
 HEALTHATLAS_VERSION="$version" HEALTHATLAS_ALLOW_RELEASE_PACKAGE=YES Scripts/build-release-package.sh final
 require_release_artifacts "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 
-write_release_notes "$release_notes_file" "$previous_final_tag" "$previous_release_note_ref"
+write_release_notes "$release_notes_file" "$previous_final_tag" "$release_changes"
 HEALTHATLAS_ALLOW_PUSH=YES git push --set-upstream origin main
 release_tag="v$version"
 if gh release view "$release_tag" >/dev/null 2>&1; then
