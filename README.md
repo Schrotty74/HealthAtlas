@@ -1,5 +1,7 @@
 # HealthAtlas
 
+[Deutsch](README.de.md)
+
 HealthAtlas is a privacy-first macOS app for turning a local Apple Health export into clear, visual insights.
 
 It starts empty, imports only a file you choose, and turns selected health data into a calm, modern dashboard. HealthAtlas focuses on trends and personal patterns instead of raw tables.
@@ -83,27 +85,27 @@ All screenshots below show the current HealthAtlas interface with synthetic demo
 
 ### Import
 
-<a href="Screenshots/import.png"><img src="Screenshots/import.png" alt="HealthAtlas empty import screen" width="50%"></a>
+<a href="Screenshots/en/import.png"><img src="Screenshots/en/import.png" alt="HealthAtlas empty import screen" width="50%"></a>
 
 ### Overview
 
-<a href="Screenshots/overview.png"><img src="Screenshots/overview.png" alt="HealthAtlas overview with selected health cards" width="50%"></a>
+<a href="Screenshots/en/overview.png"><img src="Screenshots/en/overview.png" alt="HealthAtlas overview with selected health cards" width="50%"></a>
 
 ### Sources
 
-<a href="Screenshots/sources.png"><img src="Screenshots/sources.png" alt="HealthAtlas source selection for imported Apple Health data types" width="50%"></a>
+<a href="Screenshots/en/sources.png"><img src="Screenshots/en/sources.png" alt="HealthAtlas source selection for imported Apple Health data types" width="50%"></a>
 
 ### Trends
 
-<a href="Screenshots/trends.png"><img src="Screenshots/trends.png" alt="HealthAtlas interactive heart-rate trend" width="50%"></a>
+<a href="Screenshots/en/trends.png"><img src="Screenshots/en/trends.png" alt="HealthAtlas interactive heart-rate trend" width="50%"></a>
 
 ### Insights
 
-<a href="Screenshots/insights.png"><img src="Screenshots/insights.png" alt="HealthAtlas local heart-rate insight" width="50%"></a>
+<a href="Screenshots/en/insights.png"><img src="Screenshots/en/insights.png" alt="HealthAtlas local heart-rate insight" width="50%"></a>
 
 ### Design Studio
 
-<a href="Screenshots/design-studio.png"><img src="Screenshots/design-studio.png" alt="HealthAtlas theme and language settings" width="50%"></a>
+<a href="Screenshots/en/design-studio.png"><img src="Screenshots/en/design-studio.png" alt="HealthAtlas theme and language settings" width="50%"></a>
 
 ## Beta packages
 
