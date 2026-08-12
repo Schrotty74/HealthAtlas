@@ -72,22 +72,36 @@ require_release_artifacts() {
     for artifact in "$@"; do [[ -f "$artifact" ]] || { echo "Abbruch: Release-Artefakt fehlt: $artifact" >&2; exit 1; }; done
 }
 
-last_beta_tag() { git describe --tags --match 'v*-beta*' --abbrev=0 HEAD 2>/dev/null || true; }
+last_beta_tag() {
+    git tag --list 'v*-beta*' --sort=-version:refname | head -n 1
+}
 
 categorized_release_changes() {
     local base_ref="$1"
-    git log --reverse --no-merges --format='%s' "$base_ref"..HEAD | awk '
-        BEGIN { new=""; fixed=""; improved="" }
-        tolower($0) ~ /(fix|bug|hang|crash|error)/ { fixed = fixed "- " $0 "\n"; next }
-        tolower($0) ~ /(improve|faster|performance|speed)/ { improved = improved "- " $0 "\n"; next }
-        { new = new "- " $0 "\n" }
-        END { if (new != "") print "## New\n\n" new; if (fixed != "") print "## Fixed\n\n" fixed; if (improved != "") print "## Improved\n\n" improved }'
+    local changed_paths
+    changed_paths="$(git diff --name-only "$base_ref" HEAD -- Sources Tests HealthAtlas.xcodeproj README.md README.de.md output/pdf Scripts 2>/dev/null | sort -u)"
+    [[ -n "$changed_paths" ]] || return 1
+
+    printf '## Changes\n\n'
+    if grep -q '^Sources/' <<<"$changed_paths"; then
+        printf '%s\n' '- Updated HealthAtlas app functionality and interface.'
+    fi
+    if grep -q '^HealthAtlas.xcodeproj/' <<<"$changed_paths"; then
+        printf '%s\n' '- Updated the Xcode project configuration.'
+    fi
+    if grep -q '^Tests/' <<<"$changed_paths"; then
+        printf '%s\n' '- Updated automated tests for local behavior.'
+    fi
+    if grep -Eq '^(README\.md|README\.de\.md|output/pdf/)' <<<"$changed_paths"; then
+        printf '%s\n' '- Updated German and English documentation, screenshots or manuals.'
+    fi
+    if grep -q '^Scripts/' <<<"$changed_paths"; then
+        printf '%s\n' '- Updated build, backup, privacy or release automation.'
+    fi
 }
 
 write_release_notes() {
-    local notes_file="$1" previous_beta_tag="$2" base_ref="$3" changes
-    changes="$(categorized_release_changes "$base_ref")"
-    [[ -n "$changes" ]] || changes="## Changes\n\n- Initial HealthAtlas beta release."
+    local notes_file="$1" previous_beta_tag="$2" changes="$3"
     cat > "$notes_file" <<EOF
 This beta contains the latest HealthAtlas fixes and improvements since ${previous_beta_tag:-the first beta}.
 
@@ -117,6 +131,10 @@ version="$(release_version)"
 dev_commit="$(git rev-parse --short HEAD)"
 previous_beta_tag="$(last_beta_tag)"
 previous_release_note_ref="${previous_beta_tag:-$(git rev-list --max-parents=0 HEAD)}"
+release_changes="$(categorized_release_changes "$previous_release_note_ref")" || {
+    echo "Abbruch: Seit ${previous_beta_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Keine Beta ohne tatsächliche Änderungen erstellen." >&2
+    exit 1
+}
 artifact_base="$(artifact_base_name "$version")"
 backup_directory="$(backup_directory_for_version "$version")"
 zip_file="$backup_directory/$artifact_base.zip"
@@ -135,7 +153,7 @@ beta_commit="$(create_beta_commit "$version" "$tree")"
 git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
-write_release_notes "$release_notes_file" "$previous_beta_tag" "$previous_release_note_ref"
+write_release_notes "$release_notes_file" "$previous_beta_tag" "$release_changes"
 if gh release view "v$version" >/dev/null 2>&1; then
     gh release upload "v$version" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file" --clobber
     gh release edit "v$version" --prerelease --title "HealthAtlas Beta $version" --notes-file "$release_notes_file"
