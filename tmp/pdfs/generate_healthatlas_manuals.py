@@ -171,7 +171,7 @@ def image_block(name, caption, styles):
     path = SHOTS / name
     image = Image(str(path))
     max_w = PAGE_W - LEFT - RIGHT
-    max_h = 111 * mm
+    max_h = 100 * mm
     scale = min(max_w / image.imageWidth, max_h / image.imageHeight)
     image.drawWidth = image.imageWidth * scale
     image.drawHeight = image.imageHeight * scale
@@ -239,7 +239,7 @@ def manual_de(styles):
             "Es gibt keine direkte HealthKit-Verbindung und keinen Cloud-Import.",
             "Bei einem nicht passenden ZIP, einer nicht lesbaren XML oder einer zu großen Datei zeigt HealthAtlas eine Erklärung an und importiert nichts.",
         ], callout_data=("Export auf dem iPhone", "In Apple Health: Übersicht öffnen, oben rechts Bild oder Initialen wählen, dann " + '"Alle Gesundheitsdaten exportieren"' + ". Apple kann die Bezeichnung der Oberfläche ändern. Quelle: Apple Support, " + '<font color="#42C5EE">support.apple.com/de-de/guide/iphone/iph5ede58c3d/26/ios/26</font>', TEAL))
-    s += section("Navigation und Status", "Die linke Milchglas-Sidebar bleibt in jedem Theme sichtbar. Sie enthält alle fünf Bereiche und zeigt am unteren Rand " + '"Privat - Nur lokal"' + " als ständige Datenschutzerinnerung.", styles,
+    s += section("Navigation und Status", "Die linke Milchglas-Sidebar bleibt in jedem Theme sichtbar. Vor dem ersten lokalen Import heißt ihr erster Eintrag " + '"Import"' + "; nach erfolgreichem Import wird daraus " + '"Übersicht"' + ". Am unteren Rand bleibt " + '"Privat - Nur lokal"' + " als ständige Datenschutzerinnerung sichtbar.", styles,
         bullets_list=[
             "<b>Übersicht:</b> Karten der ausgewählten Datentypen.",
             "<b>Verläufe:</b> Interaktive Zeitreihe eines ausgewählten Typs.",
@@ -251,10 +251,11 @@ def manual_de(styles):
     s += [PageBreak()]
     s += section("Übersicht", "Nach einem erfolgreichen Import zeigt die Übersicht nur die Datentypen, die unter Quellen aktiviert sind. Jede Karte hat eine zu ihrem Typ passende Akzentfarbe und grafische Behandlung. Die angezeigten Zahlen beziehen sich auf den jeweils letzten verfügbaren Tageswert.", styles,
         bullets_list=[
+            "Oben kann eine <b>Fokus-Kennzahl</b> ausgewählt werden. Sie zeigt den letzten lokalen Wert, einen großen Kurzverlauf und einen sanft animierten Ring. <b>Dein Zeitraum in Kürze</b> beschreibt darunter nur, wie viele aktivierte Typen in den letzten sieben lokalen Erfassungstagen Werte enthalten — ohne Ziel, Bewertung oder Diagnose.",
             "Mit <b>4</b>, <b>8</b> oder <b>12</b> wird die Kartenzahl pro Seite festgelegt. <b>Kompakt</b>, <b>Standard</b> und <b>Fokus</b> ändern die Kartendichte lokal. Karten lassen sich per Drag &amp; Drop frei neu anordnen.",
             "Bei mehr ausgewählten Datentypen erscheinen Vor- und Zurück-Schalter zum Blättern.",
-            "Ein Klick auf eine Karte öffnet eine echte Vollbild-Fokusansicht mit Verlauf und Jahreskalender; dort führt <b>Verläufe öffnen</b> zur Detailansicht. Mit <b>Vollbild beenden</b> kehrst du zurück. Der PDF-Button schreibt ausschließlich an einen selbst gewählten Speicherort.",
-            "Unter den Karten zeigen ein gemeinsamer Mehrfach-Verlauf und Tagesringe letzte lokale Werte mehrerer Typen. Die Ringe sind weder Ziele noch Bewertungen.",
+            "Ein Klick auf eine Karte öffnet eine echte Vollbild-Fokusansicht mit Verlauf, Zeitraumvergleich und Jahreskalender; dort führt <b>Verläufe öffnen</b> zur Detailansicht. Mit <b>Vollbild beenden</b> kehrst du zurück. Der PDF-Button schreibt ausschließlich an einen selbst gewählten Speicherort.",
+            "Unter den Karten zeigen ein gemeinsamer Mehrfach-Verlauf und Tagesringe letzte lokale Werte mehrerer Typen. Die Ringe sind weder Ziele noch Bewertungen. Bei schmaleren Fenstern bleiben die Legenden innerhalb ihrer Karte.",
             "Schritte, Energie, Distanz und Stockwerke werden als Tages-Summe dargestellt. Andere numerische Typen werden als Tages-Durchschnitt dargestellt.",
             "Name, Wert, Einheit und Datum stammen aus dem importierten Export und werden gemäß der gewählten App-Sprache formatiert.",
         ], screenshot="overview.png", caption="Übersicht mit synthetischen Demodaten. Farben helfen beim Wiedererkennen, sie bewerten keine Gesundheit.")
@@ -272,15 +273,16 @@ def manual_de(styles):
     s += section("Verläufe", "Dieser Bereich visualisiert einen aktiven Datentyp als Linie. Du wählst oben zunächst den Zeitraum; anschließend kannst du im Auswahlmenü innerhalb der aktivierten Datentypen wechseln.", styles,
         bullets_list=[
             "<b>7T</b>: letzte 7 Tage.", "<b>30T</b>: letzte 30 Tage.", "<b>3M</b>: letzte 90 Tage.", "<b>1J</b>: letzte 365 Tage.",
-            "Fahre mit der Maus über einen Punkt, um Datum und formatierten Wert direkt zu sehen. Ein Klick markiert den Punkt zusätzlich sichtbar.",
+            "Fahre mit der Maus über einen Punkt, um eine schwebende Wertkarte mit Datum, formatiertem Wert und Mini-Trend zu sehen. Ein Klick markiert den Punkt zusätzlich sichtbar und sanft pulsierend.",
             "Ein lokaler Vergleich zeigt aktuellen und unmittelbar vorherigen Zeitraum nebeneinander. Er ist keine Bewertung oder Diagnose.",
+            "Der lokale Datenkalender liegt als eigener Balken unter dem Diagramm, damit Tageskästchen und Linienanimation klar getrennt bleiben.",
             "Wenn im gewählten Zeitraum weniger als zwei Werte vorhanden sind, meldet die Anzeige, dass keine ausreichenden Werte vorliegen.",
         ], screenshot="trends.png", caption="Verlauf mit synthetischen Demodaten. Punkte sind interaktiv und zeigen ihren Wert nach einem Klick.")
     s += [PageBreak()]
     s += section("Einblicke", "Einblicke verdichtet einen aktivierten Datentyp zu einer lokalen, beschreibenden Karte. Du wählst den Typ im Auswahlmenü. Die Ansicht enthält den letzten Tageswert, dessen Datum, die Änderung gegenüber dem vorherigen Wert und eine kurze Linienvorschau der letzten 14 Tage.", styles,
         bullets_list=[
             "Eine positive oder negative Änderung beschreibt nur den Unterschied zum vorherigen vorhandenen Tageswert.",
-            "Der Datenkalender zeigt lokale Tage als Heatmap. Mit <b>12 Wochen</b> oder <b>1 Jahr</b> änderst du den Zeitraum. Intensivere Farben bedeuten nur einen höheren Wert innerhalb dieses Zeitraums.",
+            "Der Datenkalender liegt als eigener Balken unter der Zusammenfassung und zeigt lokale Tage als Heatmap. Mit <b>12 Wochen</b> oder <b>1 Jahr</b> änderst du den Zeitraum. Intensivere Farben bedeuten nur einen höheren Wert innerhalb dieses Zeitraums.",
             "<b>Lokales Muster</b> beschreibt nur, an welchem Wochentag die meisten lokalen Daten vorliegen — nicht Gesundheit oder Verhalten.",
             "Die Darstellung liefert keine Normalwerte, Warnung, Bewertung oder medizinische Schlussfolgerung.",
             "Ist nur ein datierter Wert vorhanden, weist die App darauf hin.",
@@ -289,12 +291,14 @@ def manual_de(styles):
     s += section("Design-Studio", "Im Design-Studio passt du Sprache und Stil der Oberfläche an. Änderungen werden sofort übernommen und für die jeweilige App-Variante lokal gespeichert.", styles,
         bullets_list=[
             "<b>Sprache:</b> Deutsch oder English. Navigation, Beschriftungen und bekannte Datentypnamen wechseln mit der Auswahl.",
-            "<b>Clear Glass:</b> Gemeinsame Milchglasfläche mit ruhigem Cyan-, Blau-, Violett- und Rosaglow sowie dezenten Lichtpunkten über die ganze App.",
+            "<b>Clear Glass:</b> Gemeinsame Milchglasfläche mit ruhigem Cyan-, Blau-, Violett- und Rosaglow sowie dezenten Lichtpunkten hinter Karten, Texten und Bedienelementen. Dadurch bleiben Werte in allen Bereichen gut lesbar.",
             "<b>Midnight Glass:</b> dunkle, blaue Glasoberfläche.",
             "<b>Aurora:</b> türkisfarbene Variante.",
             "<b>Warmpaper:</b> warme, rötlich-violette Variante.",
-            "Karten erscheinen gestaffelt; bei einem Wechsel von Zeitraum oder Datentyp zeichnet sich das Diagramm erneut weich ein. Seiten- und Sidebar-Wechsel erfolgen sanft.",
+            "Karten erscheinen gestaffelt, reagieren dezent beim Darüberfahren und der Importabschluss zeigt kurz einen Erfolgsschimmer. Bei einem Wechsel von Zeitraum oder Datentyp zeichnet sich das Diagramm erneut weich ein. Seiten- und Sidebar-Wechsel erfolgen sanft.",
+            "Clear Glass ergänzt Glow und Lichtpunkte um sehr dezente wandernde Konturen und transparente Gesundheits-Symbole. Bei 'Bewegung reduzieren' und während des Imports werden Animationen stark reduziert.",
             "Bei aktivierter macOS-Einstellung " + '"Bewegung reduzieren"' + " und während des Imports reduziert bzw. pausiert Clear Glass seine Bewegung.",
+            "HealthAtlas öffnet neu im 16:9-Format und bleibt danach frei skalierbar. Die Darstellung passt sich der gewählten Fenstergröße an.",
         ], screenshot="design-studio.png", caption="Design-Studio. Die dargestellten Themes verändern nur die Anzeige, niemals die Gesundheitsdaten.")
     s += [PageBreak()]
     s += section("Datenschutz und Grenzen", "HealthAtlas ist als lokale Visualisierung konzipiert. Es gibt weder Konto, Analyse, Werbung, Tracking noch versteckten Upload. Die App sendet importierte Gesundheitswerte nicht an HealthAtlas, GitHub, Discord oder einen anderen Dienst.", styles,
@@ -319,13 +323,14 @@ def manual_de(styles):
         ["Bereich", "Option", "Wirkung"],
         ["Kopfzeile", "Theme-Menü", "Wechselt die Darstellung sofort."],
         ["Kopfzeile", "Import", "Öffnet die Auswahl für ZIP oder Export.xml."],
+        ["Übersicht", "Fokus-Kennzahl / Zeitraum", "Wählt die große Kennzahl bzw. beschreibt nur lokale Erfassungstage."],
         ["Übersicht", "4 / 8 / 12 · Dichte", "Legt Kartenzahl und lokale Kartendichte fest."],
         ["Übersicht", "Karte / PDF-Bericht", "Öffnet Fokusansicht bzw. speichert lokal einen PDF-Bericht."],
         ["Übersicht", "Verlauf / Ringe", "Zeigt mehrere lokale Typen; kein Ziel und keine Bewertung."],
         ["Übersicht", "Pfeile", "Blättert durch weitere ausgewählte Karten."],
         ["Verläufe", "7T / 30T / 3M / 1J", "Begrenzt die dargestellten Tage."],
         ["Verläufe", "Datentyp-Menü", "Wechselt die dargestellte Zeitreihe."],
-        ["Verläufe", "Datenpunkt", "Zeigt Datum und Wert des Punktes."],
+        ["Verläufe", "Punkt / Hover", "Hebt den Punkt hervor bzw. zeigt Datum, Wert und Mini-Trend."],
         ["Quellen", "Zeilen-Schalter", "Aktiviert oder entfernt einen Datentyp."],
         ["Quellen", "Suche / Kategorie / Stern / Pfeile", "Filtert, favorisiert und ordnet Datentypen lokal."],
         ["Quellen", "Alle / Keine · Datenqualität", "Aktiviert Typen bzw. zählt nur lokale Abdeckung."],
@@ -367,7 +372,7 @@ def manual_en(styles):
             "Choose <b>Demo/AppleHealthDemo/Export.xml</b> or your own Apple Health export.",
             "Open <b>Sources</b> after import and turn the data types you want on or off.",
             "Explore the selected data in <b>Overview</b>, <b>Trends</b> and <b>Insights</b>.",
-        ], screenshot="import.png", caption="Empty start screen. The shown interface contains no health information.")
+        ], screenshot="en/import.png", caption="Empty start screen. The shown interface contains no health information.")
     s += [PageBreak()]
     s += section("Importing an Apple Health export", "HealthAtlas accepts exactly two local formats: a direct <b>Export.xml</b> file or an Apple Health <b>ZIP</b> archive containing Export.xml. You do not need to unpack the ZIP first; HealthAtlas reads Export.xml directly from the archive.", styles,
         bullets_list=[
@@ -376,7 +381,7 @@ def manual_en(styles):
             "There is no direct HealthKit connection and no cloud import.",
             "For a wrong ZIP, unreadable XML or an oversized file, HealthAtlas explains the issue and imports nothing.",
         ], callout_data=("Export on iPhone", "In Apple Health, open Summary, tap your picture or initials, then select " + '"Export All Health Data"' + ". Apple can change exact interface labels. Source: Apple Support, " + '<font color="#42C5EE">support.apple.com/en-in/guide/iphone/iph5ede58c3d/ios</font>', TEAL))
-    s += section("Navigation and status", "The frosted sidebar remains visible in every theme. It contains all five sections and shows " + '"Private - Local only"' + " at the bottom as a permanent privacy reminder.", styles,
+    s += section("Navigation and status", "The frosted sidebar remains visible in every theme. Before the first local import, its first entry is called " + '"Import"' + "; after a successful import it becomes " + '"Overview"' + ". It shows " + '"Private - Local only"' + " at the bottom as a permanent privacy reminder.", styles,
         bullets_list=[
             "<b>Overview:</b> cards for selected data types.", "<b>Trends:</b> an interactive timeline for one selected type.",
             "<b>Sources:</b> selection of all data types recognised in the import.", "<b>Insights:</b> a descriptive summary for one data type.",
@@ -386,13 +391,14 @@ def manual_en(styles):
     s += [PageBreak()]
     s += section("Overview", "After a successful import, Overview shows only the types enabled in Sources. Every card has a type-specific accent colour and graphic treatment. The displayed numbers use the most recent available daily value.", styles,
         bullets_list=[
+            "Choose a <b>Hero metric</b> at the top. It shows the latest local value, a large short trend and a gently animated orbit. <b>Your period at a glance</b> below only describes how many enabled types contain values across the latest seven locally recorded days — never a goal, rating or diagnosis.",
             "Choose <b>4</b>, <b>8</b> or <b>12</b> to control cards per page. <b>Compact</b>, <b>Standard</b> and <b>Focus</b> change card density locally. Drag and drop cards to freely reorder them.",
             "Previous and next controls appear when more selected types exist than fit on one page.",
-            "Click a card to open a true full-screen focus view with a trend and yearly calendar; <b>Open Trends</b> leads to the detailed view. <b>Exit full screen</b> returns to the app. The PDF button writes only to a location you choose.",
-            "Below the cards, a shared multi-metric timeline and daily rings show recent local values from several types. Rings are neither goals nor ratings.",
+            "Click a card to open a true full-screen focus view with a trend, period comparison and yearly calendar; <b>Open Trends</b> leads to the detailed view. <b>Exit full screen</b> returns to the app. The PDF button writes only to a location you choose.",
+            "Below the cards, a shared multi-metric timeline and daily rings show recent local values from several types. Rings are neither goals nor ratings. At narrower window sizes, legends remain within their card.",
             "Steps, energy, distance and flights climbed are shown as daily sums. Other numeric types are shown as daily averages.",
             "Name, value, unit and date come from the selected export and follow the app language formatting.",
-        ], screenshot="overview.png", caption="Overview with synthetic demo data. Colours aid recognition; they do not assess health.")
+        ], screenshot="en/overview.png", caption="Overview with synthetic demo data. Colours aid recognition; they do not assess health.")
     s += [PageBreak()]
     s += section("Sources", "Sources is the central selection area. It lists every recognised data type with an on/off switch, number of samples and a summary value. The table scrolls vertically when an export contains many types.", styles,
         bullets_list=[
@@ -401,33 +407,36 @@ def manual_en(styles):
             "Search and categories help with large exports. The star marks a favourite; arrows set the order. Favourites appear first in Overview.",
             "For a first personal import, the first four recognised types are selected by default. A compatible earlier selection is reused when its types occur in the new import.",
             "<b>Local data quality</b> counts selection, dated types, local days and samples. It does not rate health data.",
-        ], screenshot="sources.png", caption="Sources with synthetic demo data. This selection controls the content of all other areas.")
+        ], screenshot="en/sources.png", caption="Sources with synthetic demo data. This selection controls the content of all other areas.")
     s += [PageBreak()]
     s += section("Trends", "This section visualises one active data type as a line. Select a period first, then choose one of the enabled types in the menu.", styles,
         bullets_list=[
             "<b>7D</b>: last 7 days.", "<b>30D</b>: last 30 days.", "<b>3M</b>: last 90 days.", "<b>1Y</b>: last 365 days.",
-            "Hover a point to reveal its date and formatted value directly. Clicking also gives that point a visible marker.",
+            "Hover a point to reveal a floating value card with date, formatted value and mini-trend. Clicking also gives that point a gently pulsing marker.",
             "A local comparison places the current and immediately preceding periods side by side. It is not a rating or diagnosis.",
+            "The local data calendar sits in a separate panel below the chart so day cells and line animation remain clearly separated.",
             "If fewer than two values exist in the selected period, the chart reports that there are not enough values.",
-        ], screenshot="trends.png", caption="Trend with synthetic demo data. Points are interactive and reveal their value after a click.")
+        ], screenshot="en/trends.png", caption="Trend with synthetic demo data. Points are interactive and reveal their value after a click.")
     s += [PageBreak()]
     s += section("Insights", "Insights condenses one enabled data type into a local descriptive card. Choose the type from the menu. The view shows the latest daily value, its date, the change from the previous value and a short 14-day line preview.", styles,
         bullets_list=[
             "A positive or negative change only describes the difference from the preceding available daily value.",
-            "The data calendar shows local days as a heatmap. Use <b>12 weeks</b> or <b>1 year</b> to change its period. Stronger colour only means a higher value within that period.",
+            "The data calendar sits in its own panel below the summary and shows local days as a heatmap. Use <b>12 weeks</b> or <b>1 year</b> to change its period. Stronger colour only means a higher value within that period.",
             "<b>Local pattern</b> only describes which weekday has the most locally recorded dates — not health or behaviour.",
             "The screen does not supply normal ranges, alerts, ratings or medical conclusions.",
             "If only one dated value is available, the app states this clearly.",
-        ], screenshot="insights.png", caption="Insights with synthetic demo data. The card is a descriptive summary, not a diagnosis.")
+        ], screenshot="en/insights.png", caption="Insights with synthetic demo data. The card is a descriptive summary, not a diagnosis.")
     s += [PageBreak()]
     s += section("Design Studio", "Use Design Studio to set the interface language and appearance. Changes take effect immediately and are stored locally for the current app variant.", styles,
         bullets_list=[
             "<b>Language:</b> Deutsch or English. Navigation, labels and known data-type names change with the selection.",
-            "<b>Clear Glass:</b> a shared frosted layer with a calm cyan, blue, violet and pink glow plus subtle light points across the whole app.",
+            "<b>Clear Glass:</b> a shared frosted layer with a calm cyan, blue, violet and pink glow plus subtle light points behind cards, text and controls. This keeps values readable throughout the app.",
             "<b>Midnight Glass:</b> a dark blue glass surface.", "<b>Aurora:</b> a teal variation.", "<b>Warmpaper:</b> a warm red-violet variation.",
-            "Cards enter in a staggered sequence; changing a range or data type redraws the chart softly. Page and sidebar changes use gentle transitions.",
+            "Cards enter in a staggered sequence, react subtly on hover, and import completion briefly shows a success shimmer. Changing a range or data type redraws the chart softly. Page and sidebar changes use gentle transitions.",
+            "Clear Glass adds very subtle moving contours and transparent health symbols to its glow and sparks. Reduce Motion and importing substantially reduce animation.",
             "When macOS Reduce Motion is enabled and while importing, Clear Glass reduces or pauses motion.",
-        ], screenshot="design-studio.png", caption="Design Studio. Themes change appearance only, never the health data.")
+            "HealthAtlas opens in 16:9 and remains freely resizable afterwards. The layout adapts to the selected window size.",
+        ], screenshot="en/design-studio.png", caption="Design Studio. Themes change appearance only, never the health data.")
     s += [PageBreak()]
     s += section("Privacy and limits", "HealthAtlas is designed as a local visualisation. It has no account, analytics, advertising, tracking or hidden upload. The app does not send imported health values to HealthAtlas, GitHub, Discord or another service.", styles,
         bullets_list=[
@@ -450,11 +459,11 @@ def manual_en(styles):
     rows = [
         ["Area", "Control", "Outcome"],
         ["Header", "Theme menu", "Changes appearance immediately."], ["Header", "Import", "Opens ZIP or Export.xml picker."],
-        ["Overview", "4 / 8 / 12 · density", "Sets card count and local card density."], ["Overview", "Arrows", "Moves through additional selected cards."],
+        ["Overview", "Hero metric / period", "Selects the large metric or describes only local recording days."], ["Overview", "4 / 8 / 12 · density", "Sets card count and local card density."], ["Overview", "Arrows", "Moves through additional selected cards."],
         ["Overview", "Card / PDF report", "Opens the focus view or saves a local PDF report."],
         ["Overview", "Timeline / rings", "Shows several local types; no goal or rating."],
         ["Trends", "7D / 30D / 3M / 1Y", "Limits displayed days."], ["Trends", "Data type menu", "Changes the displayed timeline."],
-        ["Trends", "Data point", "Shows point date and value."], ["Sources", "Row switch", "Enables or removes one type."],
+        ["Trends", "Data point / hover", "Highlights a point or shows date, value and mini-trend."], ["Sources", "Row switch", "Enables or removes one type."],
         ["Sources", "Search / category / star / arrows", "Filters, favourites and orders types locally."],
         ["Sources", "Show all / none · data quality", "Enables types or counts local coverage only."], ["Insights", "Data type menu / calendar", "Changes the summary and 12 weeks / 1 year."],
         ["Design Studio", "Language", "Switches Deutsch and English."], ["Design Studio", "Theme cards", "Selects Clear Glass, Midnight Glass, Aurora or Warmpaper."],

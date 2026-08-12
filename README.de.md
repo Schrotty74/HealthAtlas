@@ -12,14 +12,19 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 - Dynamische Kennzahlen-Kacheln mit eigener Farbe und grafischem Hintergrund
 - Interaktive Verläufe: Datentyp, 7T/30T/3M/1J, Hover-Werte und einzelne Datenpunkte auswählen
 - Favoriten, lokale Reihenfolge, Kategorien und Suche für große Datentyp-Listen
+- Wählbare Fokus-Kennzahl mit animiertem Ring, großem Verlauf und typabhängiger Grafik
 - Gemeinsamer Mehrfach-Verlauf, visuelle Tagesringe und lokaler Zeitraumvergleich
-- Datenkalender mit 12 Wochen oder einem Jahr, lokale Musterkarte und echte Vollbild-Fokusansicht
+- Eigene Datenkalender-Balken mit 12 Wochen oder einem Jahr unter Verläufen und Einblicken, lokale Musterkarte und echte Vollbild-Fokusansicht mit Zeitraumvergleich
+- Interaktive Verläufe mit schwebender Wertkarte, Datum, Mini-Trend und sanft pulsierendem ausgewählten Punkt
 - Anpassbares Dashboard: Kartenzahl, kompakte/Standard/Fokus-Dichte sowie freie lokale Reihenfolge per Drag & Drop
 - Lokale Datenqualitäts-Übersicht ohne Bewertung der Gesundheitswerte
 - Lokaler PDF-Bericht an einen bewusst gewählten Speicherort
 - Beschreibende lokale Einblicke, niemals Diagnosen oder Behandlungsempfehlungen
 - Deutsche und englische Oberfläche
-- Glass-Themes, dezente Karten-/Diagramm-Animationen und native Milchglas-Sidebar
+- Beschreibende Karte „Dein Zeitraum in Kürze“ für die letzten sieben lokalen Erfassungstage — keine Bewertung und keine Diagnose
+- Geführte Glas-Leerzustände mit direkter Aktion zu Quellen oder lokalem Import
+- Glass-Themes, dezente Karten-/Diagramm-Animationen, Import-Erfolgsschimmer, native Milchglas-Sidebar sowie Glow, Lichtpunkte, Konturen und Gesundheits-Symbole im Clear-Glass-Theme hinter gut lesbaren Inhalten
+- Startfenster im 16:9-Format, danach frei skalierbar
 
 ## Datenschutz an erster Stelle
 
@@ -77,7 +82,7 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 
 ## Screenshots
 
-Alle folgenden Screenshots verwenden ausschließlich die mitgelieferten synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
+Alle folgenden Screenshots zeigen die aktuelle HealthAtlas-Oberfläche mit ausschließlich synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
 
 ### Import
 
