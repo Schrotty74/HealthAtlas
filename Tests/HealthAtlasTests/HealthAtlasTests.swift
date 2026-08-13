@@ -96,6 +96,33 @@ struct HealthAtlasTests {
         #expect(HealthDataCategory.category(for: "HKQuantityTypeIdentifierBodyMass") == .body)
     }
 
+    @Test func chartStylesMatchTheLocalDataType() {
+        let steps = HealthDataTypeSummary(identifier: "HKQuantityTypeIdentifierStepCount", displayName: "Steps", recordCount: 1, sum: 1, average: 1, unit: "count", dailyValues: [])
+        let energy = HealthDataTypeSummary(identifier: "HKQuantityTypeIdentifierActiveEnergyBurned", displayName: "Active Energy", recordCount: 1, sum: 1, average: 1, unit: "kcal", dailyValues: [])
+        let sleep = HealthDataTypeSummary(identifier: "HKCategoryTypeIdentifierSleepAnalysis", displayName: "Sleep", recordCount: 1, sum: 1, average: 1, unit: nil, dailyValues: [])
+        let heart = HealthDataTypeSummary(identifier: "HKQuantityTypeIdentifierHeartRate", displayName: "Heart Rate", recordCount: 1, sum: 1, average: 1, unit: "count/min", dailyValues: [])
+
+        #expect(steps.preferredChartStyle == .bar)
+        #expect(energy.preferredChartStyle == .bar)
+        #expect(sleep.preferredChartStyle == .area)
+        #expect(heart.preferredChartStyle == .line)
+    }
+
+    @Test func localDataCoverageReportsMissingDatesAndSparseTypes() {
+        let calendar = Calendar(identifier: .gregorian)
+        let first = Date(timeIntervalSince1970: 0)
+        let second = calendar.date(byAdding: .day, value: 6, to: first)!
+        let metric = HealthDataTypeSummary(
+            identifier: "HKQuantityTypeIdentifierHeartRate", displayName: "Heart Rate", recordCount: 2, sum: 140, average: 70, unit: "count/min",
+            dailyValues: [HealthDailyValue(date: first, sum: 60, average: 60), HealthDailyValue(date: second, sum: 80, average: 80)]
+        )
+        let coverage = LocalDataCoverage.make(metrics: [metric], days: 7, calendar: calendar)
+
+        #expect(coverage.observedDays == 2)
+        #expect(coverage.missingDays == 5)
+        #expect(coverage.sparseTypes.count == 1)
+    }
+
     @Test func periodComparisonUsesAdjacentLocalPeriods() {
         let metric = HealthDataTypeSummary(
             identifier: "HKQuantityTypeIdentifierHeartRate",

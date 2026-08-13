@@ -140,6 +140,19 @@ struct HealthDataTypeSummary: Equatable, Identifiable {
         return unit.map { "\(formatted) \(localizedUnit($0))" } ?? formatted
     }
 
+    var preferredChartStyle: HealthChartStyle {
+        let identifier = identifier.lowercased()
+        if identifier.contains("sleep") { return .area }
+        if identifier.contains("stepcount") || identifier.contains("energy") { return .bar }
+        return .line
+    }
+
+    func values(inLast days: Int, calendar: Calendar = .current) -> [HealthDailyValue] {
+        guard days > 0, let latest = dailyValues.last?.date,
+              let cutoff = calendar.date(byAdding: .day, value: -(days - 1), to: latest) else { return [] }
+        return dailyValues.filter { $0.date >= cutoff }
+    }
+
     private func localizedUnit(_ unit: String) -> String {
         guard AppLanguage.current == .german else { return unit }
         return switch unit {
@@ -147,6 +160,37 @@ struct HealthDataTypeSummary: Equatable, Identifiable {
         case "count/min": "Anz./min"
         default: unit
         }
+    }
+}
+
+enum HealthChartStyle: Equatable {
+    case line
+    case bar
+    case area
+}
+
+struct LocalDataCoverage: Equatable {
+    let observedDays: Int
+    let missingDays: Int
+    let sparseTypes: [String]
+
+    static func make(metrics: [HealthDataTypeSummary], days: Int = 7, calendar: Calendar = .current) -> LocalDataCoverage {
+        let dates = metrics.flatMap(\.dailyValues).map { calendar.startOfDay(for: $0.date) }
+        let latest = dates.max()
+        let expectedDays: Int
+        if let latest, let start = calendar.date(byAdding: .day, value: -(days - 1), to: latest) {
+            expectedDays = Set((0..<days).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }.map { calendar.startOfDay(for: $0) }).count
+        } else {
+            expectedDays = 0
+        }
+        let observedDays: Int
+        if let latest, let start = calendar.date(byAdding: .day, value: -(days - 1), to: latest) {
+            observedDays = Set(dates.filter { $0 >= start && $0 <= latest }).count
+        } else {
+            observedDays = 0
+        }
+        let sparse = metrics.filter { $0.dailyValues.count <= 2 }.map(\.localizedDisplayName)
+        return LocalDataCoverage(observedDays: observedDays, missingDays: max(0, expectedDays - observedDays), sparseTypes: sparse)
     }
 }
 
