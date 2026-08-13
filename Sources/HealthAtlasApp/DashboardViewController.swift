@@ -12,7 +12,8 @@ private extension Array {
 final class DashboardViewController: NSViewController {
     private let sidebar = SidebarViewController()
     private let workspace = HealthWorkspaceViewController()
-    private let clearGlassAtmosphere = ClearGlassAtmosphereView()
+    private let clearGlassAtmosphere = ClearGlassAtmosphereView(drawsAmbient: true, emitsSparks: false)
+    private let clearGlassSparkOverlay = ClearGlassAtmosphereView(drawsAmbient: false, emitsSparks: true)
 
     override func loadView() {
         let root = NSView()
@@ -22,6 +23,8 @@ final class DashboardViewController: NSViewController {
 
         clearGlassAtmosphere.translatesAutoresizingMaskIntoConstraints = false
         clearGlassAtmosphere.apply(theme: .current)
+        clearGlassSparkOverlay.translatesAutoresizingMaskIntoConstraints = false
+        clearGlassSparkOverlay.apply(theme: .current)
         root.addSubview(clearGlassAtmosphere)
         NSLayoutConstraint.activate([
             clearGlassAtmosphere.leadingAnchor.constraint(equalTo: root.leadingAnchor),
@@ -38,6 +41,7 @@ final class DashboardViewController: NSViewController {
         workspaceView.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(sidebarView)
         root.addSubview(workspaceView)
+        root.addSubview(clearGlassSparkOverlay)
         NSLayoutConstraint.activate([
             sidebarView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             sidebarView.topAnchor.constraint(equalTo: root.topAnchor),
@@ -46,17 +50,27 @@ final class DashboardViewController: NSViewController {
             workspaceView.leadingAnchor.constraint(equalTo: sidebarView.trailingAnchor),
             workspaceView.topAnchor.constraint(equalTo: root.topAnchor),
             workspaceView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
-            workspaceView.trailingAnchor.constraint(equalTo: root.trailingAnchor)
+            workspaceView.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            clearGlassSparkOverlay.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            clearGlassSparkOverlay.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            clearGlassSparkOverlay.topAnchor.constraint(equalTo: root.topAnchor),
+            clearGlassSparkOverlay.bottomAnchor.constraint(equalTo: root.bottomAnchor)
         ])
         sidebar.onSelection = { [weak self] section in self?.workspace.show(section: section) }
         workspace.onRequestSection = { [weak self] section in self?.sidebar.select(section) }
         workspace.onThemeChanged = { [weak self] theme in
             self?.sidebar.apply(theme: theme)
             self?.clearGlassAtmosphere.apply(theme: theme)
+            self?.clearGlassSparkOverlay.apply(theme: theme)
         }
         workspace.onLanguageChanged = { [weak self] in self?.sidebar.apply(theme: .current) }
+        workspace.onImportStateChanged = { [weak self] hasImportedData in
+            self?.sidebar.apply(hasImportedData: hasImportedData)
+        }
+        sidebar.apply(hasImportedData: workspace.hasImportedData)
         workspace.onActivityChanged = { [weak self] isActive in
             self?.clearGlassAtmosphere.setPerformanceSensitive(isActive)
+            self?.clearGlassSparkOverlay.setPerformanceSensitive(isActive)
         }
         if let value = ProcessInfo.processInfo.environment["HEALTHATLAS_SCREENSHOT_SECTION"],
            let section = DashboardSection.allCases.first(where: { String(describing: $0) == value }) {
@@ -66,7 +80,7 @@ final class DashboardViewController: NSViewController {
 }
 
 private enum DashboardSection: Int, CaseIterable {
-    case overview, trends, sources, insights, settings
+    case overview, trends, insights, sources, settings
 
     var symbol: String {
         switch self {
@@ -91,6 +105,7 @@ private enum DashboardSection: Int, CaseIterable {
 
 private final class SidebarSelectionModel: ObservableObject {
     @Published var selectedSection: DashboardSection = .overview
+    @Published var hasImportedData = false
     @Published private(set) var refreshToken = 0
 
     func refresh() {
@@ -115,6 +130,10 @@ private final class SidebarViewController: NSViewController {
         selectionModel.refresh()
     }
 
+    func apply(hasImportedData: Bool) {
+        selectionModel.hasImportedData = hasImportedData
+    }
+
     func select(_ section: DashboardSection) {
         selectionModel.selectedSection = section
         onSelection?(section)
@@ -137,6 +156,7 @@ private struct SidebarLiquidGlassView: View {
 
     var body: some View {
         let selectedSection = model.selectedSection
+        let hasImportedData = model.hasImportedData
         let refreshToken = model.refreshToken
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
@@ -160,7 +180,9 @@ private struct SidebarLiquidGlassView: View {
                         HStack(spacing: 12) {
                             Image(systemName: section.symbol)
                                 .frame(width: 19)
-                            Text(section.title(for: .current))
+                            Text(section == .overview && !hasImportedData
+                                ? AppLanguage.current.text(english: "Import", german: "Import")
+                                : section.title(for: .current))
                             Spacer(minLength: 0)
                         }
                         .font(.system(size: 15, weight: .semibold))
@@ -325,9 +347,34 @@ private final class NativeTransparentSidebarRootView<Content: View>: NSVisualEff
     }
 }
 
+private enum MetricPinArea: CaseIterable {
+    case overview, trends, insights
+
+    var preferenceKey: String {
+        switch self {
+        case .overview: "HealthAtlas.favoriteHealthTypeIDs.overview"
+        case .trends: "HealthAtlas.favoriteHealthTypeIDs.trends"
+        case .insights: "HealthAtlas.favoriteHealthTypeIDs.insights"
+        }
+    }
+
+    func title(for language: AppLanguage) -> String {
+        switch self {
+        case .overview: language.text(english: "Overview", german: "Übersicht")
+        case .trends: language.text(english: "Trends", german: "Verläufe")
+        case .insights: language.text(english: "Insights", german: "Einblicke")
+        }
+    }
+}
+
+private final class FlippedContentView: NSView {
+    override var isFlipped: Bool { true }
+}
+
 private final class HealthWorkspaceViewController: NSViewController {
     var onThemeChanged: ((AppTheme) -> Void)?
     var onLanguageChanged: (() -> Void)?
+    var onImportStateChanged: ((Bool) -> Void)?
     var onActivityChanged: ((Bool) -> Void)?
     var onRequestSection: ((DashboardSection) -> Void)?
     private let backdrop = GradientBackdropView()
@@ -337,6 +384,8 @@ private final class HealthWorkspaceViewController: NSViewController {
     private let statusLabel = NSTextField(labelWithString: "")
     private let importButton = NSButton(title: "", target: nil, action: nil)
     private let themeButton = NSPopUpButton()
+    private let contentScrollView = NSScrollView()
+    private let contentDocumentView = FlippedContentView()
     private let body = NSStackView()
     private var selectedSection: DashboardSection = .overview
     private var importedSummary: ImportedHealthSummary?
@@ -344,17 +393,22 @@ private final class HealthWorkspaceViewController: NSViewController {
     private var selectedTypeIDs = Set<String>()
     private let selectedTypeIDsPreferenceKey = "HealthAtlas.selectedHealthTypeIDs"
     private var favoriteTypeIDs = Set<String>()
+    private var favoritesByArea = Dictionary(uniqueKeysWithValues: MetricPinArea.allCases.map { ($0, Set<String>()) })
     private let favoriteTypeIDsPreferenceKey = "HealthAtlas.favoriteHealthTypeIDs"
     private var metricOrder = [String]()
     private let metricOrderPreferenceKey = "HealthAtlas.healthMetricOrder"
     private var selectedTrendTypeID: String?
     private var selectedTrendDate: Date?
     private var selectedInsightTypeID: String?
+    private var importTimestamp: Date?
     private var trendRangeDays = 30
     private var heatmapRangeDays: Int {
         get {
             let stored = BuildEnvironment.defaults.integer(forKey: "HealthAtlas.heatmapRangeDays")
-            return stored == 365 ? 365 : 84
+            // Earlier Dev builds stored 84 for "12 weeks". Keep that local
+            // preference meaningful by moving it to the renamed 3-month range.
+            if stored == 84 { return 90 }
+            return [7, 28, 90, 182, 365].contains(stored) ? stored : 90
         }
         set { BuildEnvironment.defaults.set(newValue, forKey: "HealthAtlas.heatmapRangeDays") }
     }
@@ -365,6 +419,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         }
         set { BuildEnvironment.defaults.set(newValue, forKey: "HealthAtlas.dashboardDensity") }
     }
+    private var metricOrderKey: String { "HealthAtlas.healthMetricOrder.layout.\(dashboardDensity)" }
     private var overviewPage = 0
     private var isImporting = false
     private var importProgressOverlay: ImportProgressOverlayView?
@@ -378,6 +433,10 @@ private final class HealthWorkspaceViewController: NSViewController {
             return [4, 8, 12].contains(stored) ? stored : 8
         }
         set { BuildEnvironment.defaults.set(newValue, forKey: "HealthAtlas.overviewPageSize") }
+    }
+
+    var hasImportedData: Bool {
+        importedSummary != nil
     }
 
     override func loadView() {
@@ -417,25 +476,43 @@ private final class HealthWorkspaceViewController: NSViewController {
         body.translatesAutoresizingMaskIntoConstraints = false
         body.alignment = .leading
         body.wantsLayer = true
+        contentScrollView.drawsBackground = false
+        contentScrollView.hasVerticalScroller = true
+        contentScrollView.autohidesScrollers = true
+        contentScrollView.translatesAutoresizingMaskIntoConstraints = false
+        contentDocumentView.translatesAutoresizingMaskIntoConstraints = false
+        contentScrollView.documentView = contentDocumentView
         clearGlassEffect.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(clearGlassEffect)
-        view.addSubview(heading)
-        view.addSubview(controls)
-        view.addSubview(body)
+        view.addSubview(contentScrollView)
+        contentDocumentView.addSubview(heading)
+        contentDocumentView.addSubview(controls)
+        contentDocumentView.addSubview(body)
+        let bodyBottom = body.bottomAnchor.constraint(equalTo: contentDocumentView.bottomAnchor, constant: -28)
+        bodyBottom.priority = .defaultLow
         NSLayoutConstraint.activate([
             clearGlassEffect.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             clearGlassEffect.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             clearGlassEffect.topAnchor.constraint(equalTo: view.topAnchor),
             clearGlassEffect.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            heading.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 34),
-            heading.topAnchor.constraint(equalTo: view.topAnchor, constant: 31),
+            contentScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            contentScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            contentScrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            contentScrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            contentDocumentView.leadingAnchor.constraint(equalTo: contentScrollView.contentView.leadingAnchor),
+            contentDocumentView.trailingAnchor.constraint(equalTo: contentScrollView.contentView.trailingAnchor),
+            contentDocumentView.topAnchor.constraint(equalTo: contentScrollView.contentView.topAnchor),
+            contentDocumentView.widthAnchor.constraint(equalTo: contentScrollView.contentView.widthAnchor),
+            contentDocumentView.heightAnchor.constraint(greaterThanOrEqualTo: contentScrollView.contentView.heightAnchor),
+            heading.leadingAnchor.constraint(equalTo: contentDocumentView.leadingAnchor, constant: 34),
+            heading.topAnchor.constraint(equalTo: contentDocumentView.topAnchor, constant: 31),
             heading.trailingAnchor.constraint(lessThanOrEqualTo: controls.leadingAnchor, constant: -18),
-            controls.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -34),
+            controls.trailingAnchor.constraint(equalTo: contentDocumentView.trailingAnchor, constant: -34),
             controls.centerYAnchor.constraint(equalTo: heading.centerYAnchor),
-            body.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 34),
-            body.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -34),
+            body.leadingAnchor.constraint(equalTo: contentDocumentView.leadingAnchor, constant: 34),
+            body.trailingAnchor.constraint(equalTo: contentDocumentView.trailingAnchor, constant: -34),
             body.topAnchor.constraint(equalTo: heading.bottomAnchor, constant: 25),
-            body.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -28)
+            bodyBottom
         ])
         loadScreenshotDemoIfRequested()
         rebuildBody()
@@ -471,13 +548,16 @@ private final class HealthWorkspaceViewController: NSViewController {
         body.alphaValue = shouldAnimateInterface ? 0 : 1
         body.layer?.transform = shouldAnimateInterface ? CATransform3DMakeTranslation(0, 12, 0) : CATransform3DIdentity
         let language = AppLanguage.current
-        titleLabel.stringValue = selectedSection.title(for: language)
+        titleLabel.stringValue = selectedSection == .overview && importedSummary == nil
+            ? language.text(english: "Import", german: "Import")
+            : selectedSection.title(for: language)
         subtitleLabel.stringValue = language.text(english: "A calm, visual view of your health — on this Mac.", german: "Eine ruhige, visuelle Sicht auf deine Gesundheit — auf diesem Mac.")
         statusLabel.stringValue = isScreenshotDemoLoaded
             ? "●  " + language.text(english: "DEMO DATA · Synthetic local data · No account, cloud sync, analytics or tracking", german: "DEMODATEN · Synthetische lokale Daten · Kein Konto, Cloud-Sync, Analytics oder Tracking")
             : "●  " + language.text(english: "LOCAL ONLY · No account, cloud sync, analytics or tracking", german: "NUR LOKAL · Kein Konto, Cloud-Sync, Analytics oder Tracking")
         importButton.title = language.text(english: "Import ZIP or Export.xml…", german: "ZIP oder Export.xml importieren …")
         importButton.isHidden = importedSummary == nil
+        onImportStateChanged?(importedSummary != nil)
         body.addArrangedSubview(statusLabel)
 
         switch selectedSection {
@@ -496,7 +576,7 @@ private final class HealthWorkspaceViewController: NSViewController {
             body.addArrangedSubview(emptyImportState())
             return
         }
-        let selectedTypes = selectedDataTypes()
+        let selectedTypes = selectedDataTypes(for: .overview)
         let sourceMessage = NSTextField(labelWithString: AppLanguage.current.text(
             english: "Apple Health is loaded locally. \(selectedTypes.count) selected data types are shown below.",
             german: "Apple Health ist lokal geladen. \(selectedTypes.count) ausgewählte Datentypen werden unten angezeigt."
@@ -504,21 +584,11 @@ private final class HealthWorkspaceViewController: NSViewController {
         sourceMessage.textColor = NSColor.white.withAlphaComponent(0.72)
         sourceMessage.font = .systemFont(ofSize: 12, weight: .medium)
         body.addArrangedSubview(sourceMessage)
-        let heroMetric = selectedHeroMetric(from: selectedTypes)
-        if let heroMetric {
-            let hero = HeroMetricCardView(metric: heroMetric, metrics: selectedTypes, accent: accent(for: accentKey(for: heroMetric.identifier)), language: AppLanguage.current) { [weak self] identifier in
-                self?.heroMetricID = identifier
-                self?.rebuildBody()
-            }
-            body.addArrangedSubview(hero)
-            hero.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
-            hero.heightAnchor.constraint(equalToConstant: 224).isActive = true
-        }
         let periodStory = LocalPeriodStoryView(metrics: selectedTypes, language: AppLanguage.current)
         body.addArrangedSubview(periodStory)
         periodStory.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
         periodStory.heightAnchor.constraint(equalToConstant: 92).isActive = true
-        let metrics = visibleMetrics().filter { $0.identifier != heroMetric?.identifier }
+        let metrics = visibleMetrics()
         let displayControl = NSSegmentedControl(labels: ["4", "8", "12"], trackingMode: .selectOne, target: self, action: #selector(overviewPageSizeChanged(_:)))
         displayControl.selectedSegment = [4, 8, 12].firstIndex(of: overviewPageSize) ?? 1
         displayControl.segmentStyle = .texturedRounded
@@ -537,10 +607,13 @@ private final class HealthWorkspaceViewController: NSViewController {
         )
         densityControl.selectedSegment = dashboardDensity
         densityControl.segmentStyle = .texturedRounded
+        let resetLayout = NSButton(title: AppLanguage.current.text(english: "Reset layout", german: "Anordnung zurücksetzen"), target: self, action: #selector(resetDashboardLayout))
+        resetLayout.bezelStyle = .rounded
+        resetLayout.contentTintColor = .white
         let displayRow = NSStackView(views: [
             NSTextField(labelWithString: AppLanguage.current.text(english: "Cards shown", german: "Angezeigte Karten")),
             displayControl,
-            densityControl,
+            densityControl, resetLayout,
             exportReport
         ])
         displayRow.spacing = 10
@@ -585,7 +658,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         range.target = self
         range.action = #selector(trendRangeChanged(_:))
         body.addArrangedSubview(range)
-        let selectedTypes = selectedDataTypes()
+        let selectedTypes = selectedDataTypes(for: .trends)
         guard let metric = selectedTrendMetric(from: selectedTypes) else {
             body.addArrangedSubview(emptySelectionState())
             return
@@ -610,14 +683,14 @@ private final class HealthWorkspaceViewController: NSViewController {
         let detail = NSTextField(labelWithString: selectedTrendPoint(from: points)?.detail(for: metric) ?? AppLanguage.current.text(english: "Click a point for its value", german: "Klicke auf einen Punkt für den Wert"))
         detail.font = .systemFont(ofSize: 12, weight: .semibold)
         detail.textColor = .white
-        let graph = TrendGraphView(points: points, tintColor: metricAccent, showsPoints: true, selectedDate: selectedTrendDate, showsDateLabels: true, valueFormatter: metric.formattedValue) { [weak self] point in
+        let graph = TrendGraphView(points: points, tintColor: metricAccent, chartStyle: metric.preferredChartStyle, showsPoints: true, selectedDate: selectedTrendDate, showsDateLabels: true, valueFormatter: metric.formattedValue) { [weak self] point in
             self?.selectedTrendDate = point.date
             self?.rebuildBody()
         }
         let stack = NSStackView(views: [typePicker, name, detail, graph])
         stack.orientation = .vertical
-        stack.spacing = 14
-        stack.edgeInsets = NSEdgeInsets(top: 20, left: 22, bottom: 20, right: 22)
+        stack.spacing = 8
+        stack.edgeInsets = NSEdgeInsets(top: 14, left: 22, bottom: 14, right: 22)
         stack.translatesAutoresizingMaskIntoConstraints = false
         let background = MetricCardBackgroundView(title: metric.localizedDisplayName, accent: metricAccent)
         background.translatesAutoresizingMaskIntoConstraints = false
@@ -628,10 +701,14 @@ private final class HealthWorkspaceViewController: NSViewController {
             background.topAnchor.constraint(equalTo: card.topAnchor), background.bottomAnchor.constraint(equalTo: card.bottomAnchor),
             stack.leadingAnchor.constraint(equalTo: card.leadingAnchor), stack.trailingAnchor.constraint(equalTo: card.trailingAnchor),
             stack.topAnchor.constraint(equalTo: card.topAnchor), stack.bottomAnchor.constraint(equalTo: card.bottomAnchor),
-            graph.heightAnchor.constraint(equalToConstant: 270)
+            graph.heightAnchor.constraint(equalToConstant: 94)
         ])
         body.addArrangedSubview(card)
         card.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        let highlights = TrendHighlightsView(metric: metric, points: points, days: trendRangeDays, language: AppLanguage.current)
+        body.addArrangedSubview(highlights)
+        highlights.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        highlights.heightAnchor.constraint(equalToConstant: 84).isActive = true
         let calendar = localCalendarCard(for: metric, accent: metricAccent)
         body.addArrangedSubview(calendar)
         calendar.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
@@ -654,18 +731,22 @@ private final class HealthWorkspaceViewController: NSViewController {
             ))
             return
         }
+        let management = dataManagementRow()
+        body.addArrangedSubview(management)
         let quality = DataQualityView(summary: importedSummary, selectedIDs: selectedTypeIDs, language: AppLanguage.current)
         body.addArrangedSubview(quality)
         quality.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
-        quality.heightAnchor.constraint(equalToConstant: 106).isActive = true
-        let panel = MetricSelectionPanel(metrics: importedSummary.dataTypes, selectedIDs: selectedTypeIDs, favoriteIDs: favoriteTypeIDs, metricOrder: metricOrder) { [weak self] selection, favorites, order in
+        quality.heightAnchor.constraint(equalToConstant: 146).isActive = true
+        let panel = MetricSelectionPanel(metrics: importedSummary.dataTypes, selectedIDs: selectedTypeIDs, favoritesByArea: favoritesByArea, metricOrder: metricOrder) { [weak self] selection, favorites, order in
             guard let self else { return }
             self.selectedTypeIDs = selection
-            self.favoriteTypeIDs = favorites
+            self.favoritesByArea = favorites
+            self.favoriteTypeIDs = favorites[.overview] ?? []
             self.metricOrder = order
             self.overviewPage = 0
             BuildEnvironment.defaults.set(Array(selection), forKey: self.selectedTypeIDsPreferenceKey)
-            BuildEnvironment.defaults.set(Array(favorites), forKey: self.favoriteTypeIDsPreferenceKey)
+            MetricPinArea.allCases.forEach { area in BuildEnvironment.defaults.set(Array(favorites[area] ?? []), forKey: area.preferenceKey) }
+            BuildEnvironment.defaults.set(order, forKey: self.metricOrderKey)
             BuildEnvironment.defaults.set(order, forKey: self.metricOrderPreferenceKey)
         }
         panel.translatesAutoresizingMaskIntoConstraints = false
@@ -679,7 +760,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         intro.font = .systemFont(ofSize: 12, weight: .bold)
         intro.textColor = .white
         body.addArrangedSubview(intro)
-        let metrics = selectedDataTypes().filter { !$0.dailyValues.isEmpty }
+        let metrics = selectedDataTypes(for: .insights).filter { !$0.dailyValues.isEmpty }
         guard let metric = selectedInsightMetric(from: metrics) else {
             body.addArrangedSubview(emptySelectionState())
             return
@@ -692,51 +773,22 @@ private final class HealthWorkspaceViewController: NSViewController {
         body.addArrangedSubview(picker)
 
         let metricAccent = accent(for: accentKey(for: metric.identifier))
-        let card = GlassCardView(accent: metricAccent)
-        let background = MetricCardBackgroundView(title: metric.localizedDisplayName, accent: metricAccent)
-        background.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(background)
-        let latest = metric.latestValueText
-        let changeText: String
-        if metric.dailyValues.count >= 2 {
-            let current = metric.displayValue(for: metric.dailyValues[metric.dailyValues.count - 1])
-            let previous = metric.displayValue(for: metric.dailyValues[metric.dailyValues.count - 2])
-            let difference = current - previous
-            let sign = difference >= 0 ? "+" : ""
-            changeText = AppLanguage.current.text(english: "Change from previous value: \(sign)\(metric.formattedValue(difference))", german: "Änderung zum vorherigen Wert: \(sign)\(metric.formattedValue(difference))")
-        } else {
-            changeText = AppLanguage.current.text(english: "Only one dated value is available.", german: "Es liegt ein datierter Wert vor.")
+        let snapshot = InsightSnapshotView(metric: metric, accent: metricAccent, language: AppLanguage.current)
+        body.addArrangedSubview(snapshot)
+        snapshot.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        snapshot.heightAnchor.constraint(equalToConstant: 144).isActive = true
+        let facts = NSStackView()
+        facts.orientation = .horizontal
+        facts.distribution = .fillEqually
+        facts.spacing = 12
+        if let comparison = HealthPeriodComparison.make(values: metric.dailyValues, metric: metric, days: 30) {
+            facts.addArrangedSubview(PeriodComparisonView(comparison: comparison, metric: metric, days: 30, accent: metricAccent, language: AppLanguage.current))
         }
-        let title = NSTextField(labelWithString: metric.localizedDisplayName)
-        title.font = .systemFont(ofSize: 22, weight: .bold)
-        title.textColor = .white
-        title.setContentCompressionResistancePriority(.required, for: .vertical)
-        let value = NSTextField(labelWithString: latest)
-        value.font = .systemFont(ofSize: 38, weight: .bold)
-        value.textColor = .white
-        value.setContentCompressionResistancePriority(.required, for: .vertical)
-        let detail = NSTextField(labelWithString: "\(metric.latestDetailText) · \(changeText)")
-        detail.font = .systemFont(ofSize: 13, weight: .medium)
-        detail.textColor = NSColor.white.withAlphaComponent(0.78)
-        detail.setContentCompressionResistancePriority(.required, for: .vertical)
-        let graph = TrendGraphView(points: metric.dailyValues.suffix(14).map { HealthTrendPoint(date: $0.date, value: metric.displayValue(for: $0)) }, tintColor: metricAccent, showsPoints: false, selectedDate: nil, valueFormatter: metric.formattedValue) { _ in }
-        graph.setContentCompressionResistancePriority(.required, for: .vertical)
-        let stack = NSStackView(views: [title, value, detail, graph])
-        stack.orientation = .vertical
-        stack.spacing = 14
-        stack.edgeInsets = NSEdgeInsets(top: 34, left: 24, bottom: 26, right: 24)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(stack)
-        NSLayoutConstraint.activate([
-            background.leadingAnchor.constraint(equalTo: card.leadingAnchor), background.trailingAnchor.constraint(equalTo: card.trailingAnchor), background.topAnchor.constraint(equalTo: card.topAnchor), background.bottomAnchor.constraint(equalTo: card.bottomAnchor),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor), stack.trailingAnchor.constraint(equalTo: card.trailingAnchor), stack.topAnchor.constraint(equalTo: card.topAnchor), stack.bottomAnchor.constraint(equalTo: card.bottomAnchor),
-            graph.heightAnchor.constraint(equalToConstant: 180), card.heightAnchor.constraint(equalToConstant: 360)
-        ])
-        body.addArrangedSubview(card)
-        card.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
-        let calendar = localCalendarCard(for: metric, accent: metricAccent)
-        body.addArrangedSubview(calendar)
-        calendar.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        facts.addArrangedSubview(InsightCoverageView(metric: metric, accent: metricAccent, language: AppLanguage.current))
+        facts.translatesAutoresizingMaskIntoConstraints = false
+        body.addArrangedSubview(facts)
+        facts.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        facts.heightAnchor.constraint(equalToConstant: 110).isActive = true
         let pattern = LocalPatternView(metric: metric, accent: metricAccent, language: AppLanguage.current)
         body.addArrangedSubview(pattern)
         pattern.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
@@ -749,8 +801,15 @@ private final class HealthWorkspaceViewController: NSViewController {
         let title = NSTextField(labelWithString: AppLanguage.current.text(english: "Local activity calendar", german: "Lokaler Datenkalender"))
         title.font = .systemFont(ofSize: 13, weight: .bold)
         title.textColor = .white
-        let range = NSSegmentedControl(labels: [AppLanguage.current.text(english: "12 weeks", german: "12 Wochen"), AppLanguage.current.text(english: "1 year", german: "1 Jahr")], trackingMode: .selectOne, target: self, action: #selector(heatmapRangeChanged(_:)))
-        range.selectedSegment = heatmapRangeDays == 365 ? 1 : 0
+        let rangeDays = [7, 28, 90, 182, 365]
+        let range = NSSegmentedControl(labels: [
+            AppLanguage.current.text(english: "1 week", german: "1 Woche"),
+            AppLanguage.current.text(english: "4 weeks", german: "4 Wochen"),
+            AppLanguage.current.text(english: "3 months", german: "3 Monate"),
+            AppLanguage.current.text(english: "6 months", german: "6 Monate"),
+            AppLanguage.current.text(english: "1 year", german: "1 Jahr")
+        ], trackingMode: .selectOne, target: self, action: #selector(heatmapRangeChanged(_:)))
+        range.selectedSegment = rangeDays.firstIndex(of: heatmapRangeDays) ?? 2
         range.segmentStyle = .texturedRounded
         let header = NSStackView(views: [title, range])
         header.orientation = .horizontal
@@ -766,8 +825,8 @@ private final class HealthWorkspaceViewController: NSViewController {
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: card.leadingAnchor), stack.trailingAnchor.constraint(equalTo: card.trailingAnchor),
             stack.topAnchor.constraint(equalTo: card.topAnchor), stack.bottomAnchor.constraint(equalTo: card.bottomAnchor),
-            heatmap.heightAnchor.constraint(equalToConstant: heatmapRangeDays == 365 ? 82 : 112),
-            card.heightAnchor.constraint(equalToConstant: heatmapRangeDays == 365 ? 138 : 168)
+            heatmap.heightAnchor.constraint(equalToConstant: heatmapRangeDays >= 182 ? 82 : 112),
+            card.heightAnchor.constraint(equalToConstant: heatmapRangeDays >= 182 ? 138 : 168)
         ])
         return card
     }
@@ -839,23 +898,31 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 
     @objc private func trendTypeChanged(_ sender: NSPopUpButton) {
-        selectedTrendTypeID = selectedDataTypes().first(where: { $0.localizedDisplayName == sender.titleOfSelectedItem })?.identifier
+        selectedTrendTypeID = selectedDataTypes(for: .trends).first(where: { $0.localizedDisplayName == sender.titleOfSelectedItem })?.identifier
         selectedTrendDate = nil
         rebuildBody()
     }
 
     @objc private func insightTypeChanged(_ sender: NSPopUpButton) {
-        selectedInsightTypeID = selectedDataTypes().first(where: { $0.localizedDisplayName == sender.titleOfSelectedItem })?.identifier
+        selectedInsightTypeID = selectedDataTypes(for: .insights).first(where: { $0.localizedDisplayName == sender.titleOfSelectedItem })?.identifier
         rebuildBody()
     }
 
     @objc private func heatmapRangeChanged(_ sender: NSSegmentedControl) {
-        heatmapRangeDays = sender.selectedSegment == 1 ? 365 : 84
+        heatmapRangeDays = [7, 28, 90, 182, 365][sender.selectedSegment]
         rebuildBody()
     }
 
     @objc private func dashboardDensityChanged(_ sender: NSSegmentedControl) {
         dashboardDensity = sender.selectedSegment
+        loadMetricOrderForCurrentLayout()
+        rebuildBody()
+    }
+
+    @objc private func resetDashboardLayout() {
+        BuildEnvironment.defaults.removeObject(forKey: metricOrderKey)
+        guard let importedSummary else { return }
+        metricOrder = importedSummary.dataTypes.map(\.identifier)
         rebuildBody()
     }
 
@@ -890,14 +957,15 @@ private final class HealthWorkspaceViewController: NSViewController {
         }
     }
 
-    private func selectedDataTypes() -> [HealthDataTypeSummary] {
+    private func selectedDataTypes(for area: MetricPinArea = .overview) -> [HealthDataTypeSummary] {
         guard let importedSummary else { return [] }
         let orderIndex = Dictionary(uniqueKeysWithValues: metricOrder.enumerated().map { ($0.element, $0.offset) })
+        let favorites = favoritesByArea[area] ?? []
         return importedSummary.dataTypes
             .filter { selectedTypeIDs.contains($0.identifier) }
             .sorted {
-                let leftFavorite = favoriteTypeIDs.contains($0.identifier)
-                let rightFavorite = favoriteTypeIDs.contains($1.identifier)
+                let leftFavorite = favorites.contains($0.identifier)
+                let rightFavorite = favorites.contains($1.identifier)
                 if leftFavorite != rightFavorite { return leftFavorite }
                 return (orderIndex[$0.identifier] ?? .max) < (orderIndex[$1.identifier] ?? .max)
             }
@@ -917,7 +985,8 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 
     private func trendPoints(for metric: HealthDataTypeSummary) -> [HealthTrendPoint] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -trendRangeDays + 1, to: Date()) ?? .distantPast
+        guard let latest = metric.dailyValues.last?.date else { return [] }
+        let cutoff = Calendar.current.date(byAdding: .day, value: -trendRangeDays + 1, to: latest) ?? .distantPast
         return metric.dailyValues
             .filter { $0.date >= cutoff }
             .map { HealthTrendPoint(date: $0.date, value: metric.displayValue(for: $0)) }
@@ -1079,7 +1148,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         grid.orientation = .vertical
         grid.spacing = 12
         grid.alignment = .leading
-        let columns = dashboardDensity == 0 ? 5 : (dashboardDensity == 2 ? 2 : 4)
+        let columns = dashboardDensity == 2 ? 2 : 4
         for rowMetrics in metrics.chunked(into: columns) {
             let row = metricRow(metrics: rowMetrics)
             grid.addArrangedSubview(row)
@@ -1135,7 +1204,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         let target = order.firstIndex(of: destination) ?? destinationIndex
         order.insert(moved, at: target)
         metricOrder = order
-        BuildEnvironment.defaults.set(order, forKey: metricOrderPreferenceKey)
+        BuildEnvironment.defaults.set(order, forKey: metricOrderKey)
         rebuildBody()
     }
 
@@ -1154,6 +1223,61 @@ private final class HealthWorkspaceViewController: NSViewController {
 
     @objc private func exportLocalReport() {
         guard let importedSummary else { return }
+        presentReportConfiguration(for: importedSummary)
+    }
+
+    private func presentReportConfiguration(for importedSummary: ImportedHealthSummary) {
+        let language = AppLanguage.current
+        let alert = NSAlert()
+        alert.messageText = language.text(english: "Configure local PDF report", german: "Lokalen PDF-Bericht konfigurieren")
+        alert.informativeText = language.text(english: "Choose a local period, data types and the report theme. Nothing is uploaded.", german: "Wähle einen lokalen Zeitraum, Datentypen und das Bericht-Theme. Es wird nichts hochgeladen.")
+        alert.addButton(withTitle: language.text(english: "Continue", german: "Weiter"))
+        alert.addButton(withTitle: language.text(english: "Cancel", german: "Abbrechen"))
+        let period = NSSegmentedControl(labels: ["7D", "30D", "3M", language.text(english: "All", german: "Alle")], trackingMode: .selectOne, target: nil, action: nil)
+        period.selectedSegment = 1
+        period.segmentStyle = .texturedRounded
+        let theme = NSPopUpButton()
+        theme.addItems(withTitles: AppTheme.allCases.map(\.displayName))
+        theme.selectItem(withTitle: AppTheme.current.displayName)
+        let typeButtons = importedSummary.dataTypes.map { metric -> NSButton in
+            let button = NSButton(checkboxWithTitle: metric.localizedDisplayName, target: nil, action: nil)
+            button.identifier = NSUserInterfaceItemIdentifier(metric.identifier)
+            button.state = selectedTypeIDs.contains(metric.identifier) ? .on : .off
+            button.contentTintColor = .white
+            return button
+        }
+        let typeStack = NSStackView(views: typeButtons)
+        typeStack.orientation = .vertical
+        typeStack.alignment = .leading
+        typeStack.spacing = 4
+        let scroll = NSScrollView()
+        scroll.drawsBackground = false
+        scroll.hasVerticalScroller = typeButtons.count > 6
+        scroll.documentView = typeStack
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([scroll.heightAnchor.constraint(equalToConstant: min(190, CGFloat(max(1, typeButtons.count)) * 24))])
+        let periodLabel = NSTextField(labelWithString: language.text(english: "Period", german: "Zeitraum"))
+        let themeLabel = NSTextField(labelWithString: language.text(english: "Theme", german: "Theme"))
+        [periodLabel, themeLabel].forEach { $0.font = .systemFont(ofSize: 12, weight: .semibold) }
+        let stack = NSStackView(views: [periodLabel, period, themeLabel, theme, NSTextField(labelWithString: language.text(english: "Data types", german: "Datentypen")), scroll])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 8
+        stack.frame = NSRect(x: 0, y: 0, width: 360, height: 330)
+        alert.accessoryView = stack
+        alert.beginSheetModal(for: view.window!) { [weak self] response in
+            guard response == .alertFirstButtonReturn, let self else { return }
+            let days = [7, 30, 90, 0][period.selectedSegment]
+            let chosen = importedSummary.dataTypes.filter { metric in
+                typeButtons.first(where: { $0.identifier?.rawValue == metric.identifier })?.state == .on
+            }
+            guard !chosen.isEmpty else { return }
+            let configuration = LocalReportConfiguration(days: days, themeName: theme.titleOfSelectedItem ?? AppTheme.current.displayName)
+            self.saveLocalReport(summary: importedSummary, metrics: chosen, configuration: configuration)
+        }
+    }
+
+    private func saveLocalReport(summary: ImportedHealthSummary, metrics: [HealthDataTypeSummary], configuration: LocalReportConfiguration) {
         let savePanel = NSSavePanel()
         savePanel.title = AppLanguage.current.text(english: "Save local HealthAtlas report", german: "Lokalen HealthAtlas-Bericht sichern")
         savePanel.message = AppLanguage.current.text(english: "The report is created only at the location you select.", german: "Der Bericht wird nur am von dir gewählten Ort erstellt.")
@@ -1163,7 +1287,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         savePanel.beginSheetModal(for: view.window!) { [weak self] response in
             guard response == .OK, let url = savePanel.url, let self else { return }
             do {
-                try LocalHealthReport(summary: importedSummary, metrics: self.selectedDataTypes(), language: AppLanguage.current).write(to: url)
+                try LocalHealthReport(summary: summary, metrics: metrics, language: AppLanguage.current, configuration: configuration).write(to: url)
                 self.showReportResult(success: true, destination: url)
             } catch {
                 self.showReportResult(success: false, destination: url)
@@ -1283,6 +1407,59 @@ private final class HealthWorkspaceViewController: NSViewController {
         }
     }
 
+    private func dataManagementRow() -> NSView {
+        let language = AppLanguage.current
+        let replace = NSButton(title: language.text(english: "Replace import…", german: "Import ersetzen …"), target: self, action: #selector(importFile))
+        replace.bezelStyle = .rounded
+        replace.contentTintColor = .white
+        let delete = NSButton(title: language.text(english: "Delete all local data…", german: "Alle lokalen Daten löschen …"), target: self, action: #selector(confirmDeleteLocalData))
+        delete.bezelStyle = .rounded
+        delete.contentTintColor = .systemRed
+        let timestamp = importTimestamp.map { date in
+            language.text(english: "Imported in this session: \(date.formatted(date: .abbreviated, time: .shortened))", german: "In dieser Sitzung importiert: \(date.formatted(date: .abbreviated, time: .shortened))")
+        } ?? language.text(english: "No local import in this session", german: "Kein lokaler Import in dieser Sitzung")
+        let label = NSTextField(labelWithString: timestamp)
+        label.font = .systemFont(ofSize: 11, weight: .medium)
+        label.textColor = NSColor.white.withAlphaComponent(0.70)
+        let row = NSStackView(views: [replace, delete, label])
+        row.orientation = .horizontal
+        row.spacing = 10
+        row.alignment = .centerY
+        return row
+    }
+
+    @objc private func confirmDeleteLocalData() {
+        let language = AppLanguage.current
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = language.text(english: "Delete all local health data?", german: "Alle lokalen Gesundheitsdaten löschen?")
+        alert.informativeText = language.text(english: "This removes the imported session data and HealthAtlas selections, pins and saved dashboard layouts on this Mac. Themes and language remain unchanged.", german: "Dadurch werden die importierten Sitzungsdaten sowie HealthAtlas-Auswahl, Pins und gespeicherte Dashboard-Anordnungen auf diesem Mac gelöscht. Theme und Sprache bleiben erhalten.")
+        alert.addButton(withTitle: language.text(english: "Delete local data", german: "Lokale Daten löschen"))
+        alert.addButton(withTitle: language.text(english: "Cancel", german: "Abbrechen"))
+        alert.beginSheetModal(for: view.window!) { [weak self] response in
+            guard response == .alertFirstButtonReturn else { return }
+            self?.deleteLocalHealthData()
+        }
+    }
+
+    private func deleteLocalHealthData() {
+        importedSummary = nil
+        importTimestamp = nil
+        selectedTypeIDs = []
+        favoriteTypeIDs = []
+        favoritesByArea = Dictionary(uniqueKeysWithValues: MetricPinArea.allCases.map { ($0, Set<String>()) })
+        metricOrder = []
+        selectedTrendTypeID = nil
+        selectedInsightTypeID = nil
+        selectedTrendDate = nil
+        overviewPage = 0
+        let keys = [selectedTypeIDsPreferenceKey, favoriteTypeIDsPreferenceKey, metricOrderPreferenceKey, heroMetricID == nil ? "" : "HealthAtlas.heroMetricID"]
+            + MetricPinArea.allCases.map(\.preferenceKey)
+            + ["HealthAtlas.healthMetricOrder.layout.0", "HealthAtlas.healthMetricOrder.layout.1", "HealthAtlas.healthMetricOrder.layout.2"]
+        keys.filter { !$0.isEmpty }.forEach { BuildEnvironment.defaults.removeObject(forKey: $0) }
+        rebuildBody()
+    }
+
     private func beginImport(from url: URL) {
         guard !isImporting else { return }
         isImporting = true
@@ -1334,8 +1511,9 @@ private final class HealthWorkspaceViewController: NSViewController {
             guard let self else { return }
             self.isImporting = false
             self.onActivityChanged?(false)
-            if case .imported = result, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
-                self.showImportSuccessShimmer { self.showImportResult(result) }
+            if case let .imported(summary) = result, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+                self.applyImportedSummary(summary)
+                self.showImportSuccessShimmer()
             } else {
                 self.showImportResult(result)
             }
@@ -1353,20 +1531,18 @@ private final class HealthWorkspaceViewController: NSViewController {
         }
     }
 
-    private func showImportSuccessShimmer(completion: @escaping () -> Void) {
-        let shimmer = ImportSuccessShimmerView(language: AppLanguage.current)
+    private func showImportSuccessShimmer() {
+        let shimmer = ImportSuccessShimmerView(language: AppLanguage.current) { [weak self] in
+            self?.view.window?.makeFirstResponder(nil)
+        }
         shimmer.translatesAutoresizingMaskIntoConstraints = false
         shimmer.alphaValue = 0
         view.addSubview(shimmer)
         NSLayoutConstraint.activate([
             shimmer.centerXAnchor.constraint(equalTo: view.centerXAnchor), shimmer.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            shimmer.widthAnchor.constraint(equalToConstant: 330), shimmer.heightAnchor.constraint(equalToConstant: 128)
+            shimmer.widthAnchor.constraint(equalToConstant: 460), shimmer.heightAnchor.constraint(equalToConstant: 176)
         ])
         NSAnimationContext.runAnimationGroup { context in context.duration = 0.16; shimmer.animator().alphaValue = 1 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.72) {
-            NSAnimationContext.runAnimationGroup { context in context.duration = 0.18; shimmer.animator().alphaValue = 0 }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.19) { shimmer.removeFromSuperview(); completion() }
-        }
     }
 
     private func showImportResult(_ result: LocalImportResult) {
@@ -1404,13 +1580,17 @@ private final class HealthWorkspaceViewController: NSViewController {
 
     private func applyImportedSummary(_ summary: ImportedHealthSummary, selectAll: Bool = false) {
         importedSummary = summary
+        importTimestamp = Date()
         let savedIDs = Set(BuildEnvironment.defaults.stringArray(forKey: selectedTypeIDsPreferenceKey) ?? [])
         let validSavedIDs = Set(summary.dataTypes.map(\.identifier)).intersection(savedIDs)
         let validIDs = Set(summary.dataTypes.map(\.identifier))
-        favoriteTypeIDs = Set(BuildEnvironment.defaults.stringArray(forKey: favoriteTypeIDsPreferenceKey) ?? []).intersection(validIDs)
-        let savedOrder = BuildEnvironment.defaults.stringArray(forKey: metricOrderPreferenceKey) ?? []
-        metricOrder = savedOrder.filter { validIDs.contains($0) }
-        metricOrder.append(contentsOf: summary.dataTypes.map(\.identifier).filter { !metricOrder.contains($0) })
+        let legacyFavorites = Set(BuildEnvironment.defaults.stringArray(forKey: favoriteTypeIDsPreferenceKey) ?? []).intersection(validIDs)
+        favoritesByArea = Dictionary(uniqueKeysWithValues: MetricPinArea.allCases.map { area in
+            let saved = Set(BuildEnvironment.defaults.stringArray(forKey: area.preferenceKey) ?? [])
+            return (area, (saved.isEmpty ? legacyFavorites : saved).intersection(validIDs))
+        })
+        favoriteTypeIDs = favoritesByArea[.overview] ?? []
+        loadMetricOrderForCurrentLayout(validIDs: validIDs, fallback: summary.dataTypes.map(\.identifier))
         selectedTypeIDs = selectAll
             ? Set(summary.dataTypes.map(\.identifier))
             : (validSavedIDs.isEmpty ? Set(summary.dataTypes.prefix(4).map(\.identifier)) : validSavedIDs)
@@ -1418,6 +1598,14 @@ private final class HealthWorkspaceViewController: NSViewController {
         selectedTrendDate = nil
         overviewPage = 0
         rebuildBody()
+    }
+
+    private func loadMetricOrderForCurrentLayout(validIDs: Set<String>? = nil, fallback: [String]? = nil) {
+        let available = validIDs ?? Set(importedSummary?.dataTypes.map(\.identifier) ?? [])
+        let defaultOrder = fallback ?? importedSummary?.dataTypes.map(\.identifier) ?? []
+        let saved = BuildEnvironment.defaults.stringArray(forKey: metricOrderKey) ?? []
+        metricOrder = saved.filter { available.contains($0) }
+        metricOrder.append(contentsOf: defaultOrder.filter { !metricOrder.contains($0) })
     }
 }
 
@@ -1465,7 +1653,10 @@ private final class ImportProgressOverlayView: NSVisualEffectView {
 }
 
 private final class ImportSuccessShimmerView: NSVisualEffectView {
-    init(language: AppLanguage) {
+    private let onDismiss: () -> Void
+
+    init(language: AppLanguage, onDismiss: @escaping () -> Void) {
+        self.onDismiss = onDismiss
         super.init(frame: .zero)
         material = .hudWindow
         blendingMode = .withinWindow
@@ -1476,15 +1667,31 @@ private final class ImportSuccessShimmerView: NSVisualEffectView {
         layer?.borderColor = NSColor.systemGreen.withAlphaComponent(0.72).cgColor
         let icon = NSImageView(image: NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil) ?? NSImage())
         icon.contentTintColor = .systemGreen
-        let title = NSTextField(labelWithString: language.text(english: "Imported locally", german: "Lokal importiert"))
+        let title = NSTextField(labelWithString: language.text(english: "Import successful", german: "Import erfolgreich"))
         title.font = .systemFont(ofSize: 18, weight: .bold); title.textColor = .white
-        let detail = NSTextField(labelWithString: language.text(english: "Your selected data stays on this Mac", german: "Deine ausgewählten Daten bleiben auf diesem Mac"))
-        detail.font = .systemFont(ofSize: 12, weight: .medium); detail.textColor = NSColor.white.withAlphaComponent(0.74)
-        let labels = NSStackView(views: [title, detail]); labels.orientation = .vertical; labels.spacing = 5
+        let detail = NSTextField(wrappingLabelWithString: language.text(english: "Your selected data stays on this Mac. You can choose the displayed types in Sources.", german: "Deine ausgewählten Daten bleiben auf diesem Mac. Unter Quellen wählst du die angezeigten Datentypen."))
+        detail.font = .systemFont(ofSize: 12, weight: .medium); detail.textColor = NSColor.white.withAlphaComponent(0.74); detail.maximumNumberOfLines = 2
+        let labels = NSStackView(views: [title, detail]); labels.orientation = .vertical; labels.alignment = .leading; labels.spacing = 5
         let stack = NSStackView(views: [icon, labels]); stack.orientation = .horizontal; stack.alignment = .centerY; stack.spacing = 13; stack.translatesAutoresizingMaskIntoConstraints = false
+        let dismiss = NSButton(title: language.text(english: "Close", german: "Schließen"), target: self, action: #selector(dismissSuccess))
+        dismiss.bezelStyle = .rounded
+        dismiss.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
-        NSLayoutConstraint.activate([icon.widthAnchor.constraint(equalToConstant: 34), icon.heightAnchor.constraint(equalToConstant: 34), stack.centerXAnchor.constraint(equalTo: centerXAnchor), stack.centerYAnchor.constraint(equalTo: centerYAnchor)])
+        addSubview(dismiss)
+        NSLayoutConstraint.activate([
+            icon.widthAnchor.constraint(equalToConstant: 34), icon.heightAnchor.constraint(equalToConstant: 34),
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 30), stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -30),
+            stack.topAnchor.constraint(equalTo: topAnchor, constant: 34), detail.widthAnchor.constraint(lessThanOrEqualToConstant: 340),
+            dismiss.topAnchor.constraint(equalTo: stack.bottomAnchor, constant: 18), dismiss.centerXAnchor.constraint(equalTo: centerXAnchor),
+            dismiss.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24)
+        ])
     }
+
+    @objc private func dismissSuccess() {
+        onDismiss()
+        removeFromSuperview()
+    }
+
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }
 
@@ -1492,24 +1699,33 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
     private let table = NSTableView()
     private var metrics: [HealthDataTypeSummary]
     private var selectedIDs: Set<String>
-    private var favoriteIDs: Set<String>
+    private var favoritesByArea: [MetricPinArea: Set<String>]
+    private var selectedPinArea: MetricPinArea = .overview
     private var metricOrder: [String]
     private var searchTerm = ""
     private var selectedCategory: HealthDataCategory?
-    private let onChange: (Set<String>, Set<String>, [String]) -> Void
+    private let onChange: (Set<String>, [MetricPinArea: Set<String>], [String]) -> Void
 
-    private var visibleMetrics: [HealthDataTypeSummary] {
-        metrics.filter { metric in
+    private var visibleMetrics: [HealthDataTypeSummary] = []
+
+    private func refreshVisibleMetrics() {
+        visibleMetrics = metrics.filter { metric in
             let matchesCategory = selectedCategory.map { HealthDataCategory.category(for: metric.identifier) == $0 } ?? true
             let matchesSearch = searchTerm.isEmpty || metric.localizedDisplayName.localizedCaseInsensitiveContains(searchTerm)
             return matchesCategory && matchesSearch
+        }.sorted { lhs, rhs in
+            let lhsCategory = HealthDataCategory.category(for: lhs.identifier)
+            let rhsCategory = HealthDataCategory.category(for: rhs.identifier)
+            if lhsCategory != rhsCategory { return lhsCategory.sortOrder < rhsCategory.sortOrder }
+            return lhs.localizedDisplayName.localizedStandardCompare(rhs.localizedDisplayName) == .orderedAscending
         }
+        table.reloadData()
     }
 
-    init(metrics: [HealthDataTypeSummary], selectedIDs: Set<String>, favoriteIDs: Set<String>, metricOrder: [String], onChange: @escaping (Set<String>, Set<String>, [String]) -> Void) {
+    init(metrics: [HealthDataTypeSummary], selectedIDs: Set<String>, favoritesByArea: [MetricPinArea: Set<String>], metricOrder: [String], onChange: @escaping (Set<String>, [MetricPinArea: Set<String>], [String]) -> Void) {
         self.metrics = metrics
         self.selectedIDs = selectedIDs
-        self.favoriteIDs = favoriteIDs
+        self.favoritesByArea = favoritesByArea
         self.metricOrder = metricOrder
         self.onChange = onChange
         super.init(accent: .systemCyan)
@@ -1526,7 +1742,11 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         search.placeholderString = AppLanguage.current.text(english: "Search data types", german: "Datentypen suchen")
         search.target = self
         search.action = #selector(searchChanged(_:))
-        let controls = NSStackView(views: [all, none, categoryButton, search])
+        let pinPicker = NSSegmentedControl(labels: MetricPinArea.allCases.map { $0.title(for: .current) }, trackingMode: .selectOne, target: self, action: #selector(pinAreaChanged(_:)))
+        pinPicker.selectedSegment = 0
+        pinPicker.segmentStyle = .texturedRounded
+        pinPicker.toolTip = AppLanguage.current.text(english: "Choose where the star pins a data type", german: "Wähle, wo der Stern einen Datentyp anpinnt")
+        let controls = NSStackView(views: [all, none, categoryButton, search, pinPicker])
         controls.spacing = 8
         controls.translatesAutoresizingMaskIntoConstraints = false
 
@@ -1534,15 +1754,28 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = true
         scroll.translatesAutoresizingMaskIntoConstraints = false
-        table.headerView = nil
+        table.headerView = NSTableHeaderView()
         table.rowHeight = 31
+        table.gridStyleMask = [.solidHorizontalGridLineMask]
+        table.gridColor = NSColor.white.withAlphaComponent(0.08)
         table.backgroundColor = .clear
         table.delegate = self
         table.dataSource = self
+        let columnTitles = [
+            "show": AppLanguage.current.text(english: "Show", german: "Anzeigen"),
+            "favorite": AppLanguage.current.text(english: "Pin", german: "Pin"),
+            "dataType": AppLanguage.current.text(english: "Data type", german: "Datentyp"),
+            "category": AppLanguage.current.text(english: "Category", german: "Kategorie"),
+            "samples": AppLanguage.current.text(english: "Values", german: "Werte"),
+            "value": AppLanguage.current.text(english: "Local value", german: "Lokaler Wert"),
+            "order": AppLanguage.current.text(english: "Order", german: "Reihenfolge")
+        ]
         ["show", "favorite", "dataType", "category", "samples", "value", "order"].forEach { id in
             let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(id))
+            column.title = columnTitles[id] ?? id
             column.width = switch id {
-            case "show", "favorite": 44
+            case "show": 104
+            case "favorite": 56
             case "dataType": 220
             case "category": 88
             case "order": 74
@@ -1553,6 +1786,7 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         scroll.documentView = table
         addSubview(controls)
         addSubview(scroll)
+        refreshVisibleMetrics()
         NSLayoutConstraint.activate([
             controls.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16), controls.topAnchor.constraint(equalTo: topAnchor, constant: 14),
             scroll.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12), scroll.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
@@ -1572,12 +1806,13 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
             return checkbox
         }
         if id == "favorite" {
-            let favorite = NSButton(title: favoriteIDs.contains(metric.identifier) ? "★" : "☆", target: self, action: #selector(toggleFavorite(_:)))
+            let favorites = favoritesByArea[selectedPinArea] ?? []
+            let favorite = NSButton(title: favorites.contains(metric.identifier) ? "★" : "☆", target: self, action: #selector(toggleFavorite(_:)))
             favorite.tag = row
             favorite.isBordered = false
             favorite.font = .systemFont(ofSize: 17, weight: .medium)
-            favorite.contentTintColor = favoriteIDs.contains(metric.identifier) ? .systemYellow : .white.withAlphaComponent(0.55)
-            favorite.toolTip = AppLanguage.current.text(english: "Mark as favourite", german: "Als Favorit markieren")
+            favorite.contentTintColor = favorites.contains(metric.identifier) ? .systemYellow : .white.withAlphaComponent(0.55)
+            favorite.toolTip = AppLanguage.current.text(english: "Pin in \(selectedPinArea.title(for: .current))", german: "In \(selectedPinArea.title(for: .current)) anpinnen")
             return favorite
         }
         if id == "order" {
@@ -1596,9 +1831,18 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         default: text = metric.valueText
         }
         let label = NSTextField(labelWithString: text)
-        label.font = .systemFont(ofSize: 12, weight: id == "dataType" ? .semibold : .regular)
-        label.textColor = .white.withAlphaComponent(id == "dataType" ? 0.92 : 0.68)
-        return label
+        let category = HealthDataCategory.category(for: metric.identifier)
+        label.font = .systemFont(ofSize: 12, weight: id == "dataType" ? .semibold : (id == "category" ? .medium : .regular))
+        label.textColor = id == "category" ? category.sourcesColor : .white.withAlphaComponent(id == "dataType" ? 0.92 : 0.68)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        let container = NSView()
+        container.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            label.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor),
+            label.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+        return container
     }
     @objc private func toggleMetric(_ sender: NSButton) {
         let id = visibleMetrics[sender.tag].identifier
@@ -1607,16 +1851,22 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
     }
     @objc private func toggleFavorite(_ sender: NSButton) {
         let id = visibleMetrics[sender.tag].identifier
-        if favoriteIDs.contains(id) { favoriteIDs.remove(id) } else { favoriteIDs.insert(id) }
+        var favorites = favoritesByArea[selectedPinArea] ?? []
+        if favorites.contains(id) { favorites.remove(id) } else { favorites.insert(id) }
+        favoritesByArea[selectedPinArea] = favorites
         table.reloadData()
         publishChange()
     }
+    @objc private func pinAreaChanged(_ sender: NSSegmentedControl) {
+        selectedPinArea = MetricPinArea.allCases[sender.selectedSegment]
+        table.reloadData()
+    }
     @objc private func moveMetricUp(_ sender: NSButton) { moveMetric(at: sender.tag, direction: -1) }
     @objc private func moveMetricDown(_ sender: NSButton) { moveMetric(at: sender.tag, direction: 1) }
-    @objc private func searchChanged(_ sender: NSSearchField) { searchTerm = sender.stringValue; table.reloadData() }
+    @objc private func searchChanged(_ sender: NSSearchField) { searchTerm = sender.stringValue; refreshVisibleMetrics() }
     @objc private func categoryChanged(_ sender: NSPopUpButton) {
         selectedCategory = sender.indexOfSelectedItem == 0 ? nil : HealthDataCategory.allCases[sender.indexOfSelectedItem - 1]
-        table.reloadData()
+        refreshVisibleMetrics()
     }
     @objc private func showAllMetrics() { selectedIDs = Set(metrics.map(\.identifier)); table.reloadData(); publishChange() }
     @objc private func selectNone() { selectedIDs = []; table.reloadData(); publishChange() }
@@ -1628,12 +1878,33 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         guard metricOrder.indices.contains(destination) else { return }
         metricOrder.swapAt(index, destination)
         metrics.sort { (metricOrder.firstIndex(of: $0.identifier) ?? .max) < (metricOrder.firstIndex(of: $1.identifier) ?? .max) }
-        table.reloadData()
+        refreshVisibleMetrics()
         publishChange()
     }
 
     private func publishChange() {
-        onChange(selectedIDs, favoriteIDs, metricOrder)
+        onChange(selectedIDs, favoritesByArea, metricOrder)
+    }
+}
+
+private extension HealthDataCategory {
+    var sourcesColor: NSColor {
+        switch self {
+        case .activity: .systemGreen
+        case .body: .systemOrange
+        case .cycleTracking: .systemPink
+        case .hearing: .systemIndigo
+        case .heart: .systemRed
+        case .mindfulness: .systemPurple
+        case .mobility: .systemTeal
+        case .nutrition: .systemYellow
+        case .respiratory: .systemCyan
+        case .sleep: .systemBlue
+        case .symptoms: .systemBrown
+        case .vitals: .systemMint
+        case .selfCare: .systemGray
+        case .other: .secondaryLabelColor
+        }
     }
 }
 
@@ -1720,6 +1991,16 @@ private final class ClearGlassAtmosphereView: NSView {
     private var lastSparkAt: TimeInterval = 0
     private var nextSparkDelay: TimeInterval = 0.28
     private var isPerformanceSensitive = false
+    private let drawsAmbient: Bool
+    private let emitsSparks: Bool
+
+    init(drawsAmbient: Bool, emitsSparks: Bool) {
+        self.drawsAmbient = drawsAmbient
+        self.emitsSparks = emitsSparks
+        super.init(frame: .zero)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override var isOpaque: Bool { false }
 
@@ -1776,7 +2057,7 @@ private final class ClearGlassAtmosphereView: NSView {
         phase += 0.00022
         let now = ProcessInfo.processInfo.systemUptime
         sparks.removeAll { now - $0.bornAt >= $0.lifetime }
-        if now - lastSparkAt >= nextSparkDelay {
+        if emitsSparks, now - lastSparkAt >= nextSparkDelay {
             for _ in 0..<Int.random(in: 3 ... 6) {
                 sparks.append(makeSpark(now: now))
             }
@@ -1801,46 +2082,39 @@ private final class ClearGlassAtmosphereView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         guard theme == .clearGlass, !bounds.isEmpty else { return }
 
-        NSColor(calibratedRed: 0.09, green: 0.18, blue: 0.40, alpha: 0.055).setFill()
-        bounds.fill()
+        if drawsAmbient {
+            NSColor(calibratedRed: 0.09, green: 0.18, blue: 0.40, alpha: 0.055).setFill()
+            bounds.fill()
 
-        let colors: [NSColor] = [.systemCyan, .systemTeal, .systemBlue, .systemPurple, .systemPink]
-        for index in colors.indices {
-            let travel = (phase + CGFloat(index) * 0.27).truncatingRemainder(dividingBy: 1)
-            let center = NSPoint(
-                x: bounds.width * (travel * 1.62 - 0.32),
-                y: bounds.height * (travel * 1.38 - 0.19)
-            )
-            let radius = max(bounds.width, bounds.height) * (0.56 + CGFloat(index % 2) * 0.12)
-            NSGradient(
-                starting: colors[index].withAlphaComponent(0.21),
-                ending: colors[index].withAlphaComponent(0)
-            )?.draw(fromCenter: center, radius: 0, toCenter: center, radius: radius, options: [])
-        }
-
-        // Barely visible, window-wide contours and health glyphs give Clear
-        // Glass depth without assigning different backgrounds to individual panes.
-        for index in 0..<3 {
-            let line = NSBezierPath()
-            line.lineWidth = 0.8
-            let baseline = bounds.height * (0.16 + CGFloat(index) * 0.31)
-            for x in stride(from: CGFloat(0), through: bounds.width, by: 18) {
-                let y = baseline + sin(x / max(bounds.width, 1) * .pi * 2.4 + phase * 8 + CGFloat(index) * 1.8) * 18
-                x == 0 ? line.move(to: NSPoint(x: x, y: y)) : line.line(to: NSPoint(x: x, y: y))
+            let colors: [NSColor] = [.systemCyan, .systemTeal, .systemBlue, .systemPurple, .systemPink]
+            for index in colors.indices {
+                let travel = (phase + CGFloat(index) * 0.27).truncatingRemainder(dividingBy: 1)
+                let center = NSPoint(x: bounds.width * (travel * 1.62 - 0.32), y: bounds.height * (travel * 1.38 - 0.19))
+                let radius = max(bounds.width, bounds.height) * (0.56 + CGFloat(index % 2) * 0.12)
+                NSGradient(starting: colors[index].withAlphaComponent(0.21), ending: colors[index].withAlphaComponent(0))?.draw(fromCenter: center, radius: 0, toCenter: center, radius: radius, options: [])
             }
-            let contourColors: [NSColor] = [.systemCyan, .systemPurple, .systemPink]
-            contourColors[index].withAlphaComponent(0.055).setStroke()
-            line.stroke()
-        }
-        let glyphs = ["heart.fill", "waveform.path.ecg", "figure.walk", "moon.stars.fill"]
-        for (index, glyph) in glyphs.enumerated() {
-            let x = bounds.width * [0.16, 0.46, 0.72, 0.88][index]
-            let y = bounds.height * [0.74, 0.28, 0.64, 0.18][index] + sin(phase * 5 + CGFloat(index)) * 8
-            let image = NSImage(systemSymbolName: glyph, accessibilityDescription: nil)
-            image?.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 32, weight: .regular))?.draw(in: NSRect(x: x - 16, y: y - 16, width: 32, height: 32), from: .zero, operation: .sourceOver, fraction: 0.045)
+
+            for index in 0..<3 {
+                let line = NSBezierPath(); line.lineWidth = 0.8
+                let baseline = bounds.height * (0.16 + CGFloat(index) * 0.31)
+                for x in stride(from: CGFloat(0), through: bounds.width, by: 18) {
+                    let y = baseline + sin(x / max(bounds.width, 1) * .pi * 2.4 + phase * 8 + CGFloat(index) * 1.8) * 18
+                    x == 0 ? line.move(to: NSPoint(x: x, y: y)) : line.line(to: NSPoint(x: x, y: y))
+                }
+                let contourColors: [NSColor] = [.systemCyan, .systemPurple, .systemPink]
+                contourColors[index].withAlphaComponent(0.055).setStroke()
+                line.stroke()
+            }
+            let glyphs = ["heart.fill", "waveform.path.ecg", "figure.walk", "moon.stars.fill"]
+            for (index, glyph) in glyphs.enumerated() {
+                let x = bounds.width * [0.16, 0.46, 0.72, 0.88][index]
+                let y = bounds.height * [0.74, 0.28, 0.64, 0.18][index] + sin(phase * 5 + CGFloat(index)) * 8
+                let image = NSImage(systemSymbolName: glyph, accessibilityDescription: nil)
+                image?.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 32, weight: .regular))?.draw(in: NSRect(x: x - 16, y: y - 16, width: 32, height: 32), from: .zero, operation: .sourceOver, fraction: 0.045)
+            }
         }
 
-        guard !shouldReduceMotion, !isPerformanceSensitive else { return }
+        guard emitsSparks, !shouldReduceMotion, !isPerformanceSensitive else { return }
         let now = ProcessInfo.processInfo.systemUptime
         for spark in sparks {
             let age = CGFloat((now - spark.bornAt) / spark.lifetime)
@@ -2043,7 +2317,7 @@ private final class HeroMetricCardView: GlassCardView {
         value.font = .systemFont(ofSize: 34, weight: .bold); value.textColor = .white
         let detail = NSTextField(labelWithString: metric.latestDetailText)
         detail.font = .systemFont(ofSize: 12, weight: .medium); detail.textColor = NSColor.white.withAlphaComponent(0.74)
-        let graph = TrendGraphView(points: metric.dailyValues.suffix(28).map { HealthTrendPoint(date: $0.date, value: metric.displayValue(for: $0)) }, tintColor: accent, showsPoints: false, selectedDate: nil, valueFormatter: metric.formattedValue) { _ in }
+        let graph = TrendGraphView(points: metric.dailyValues.suffix(28).map { HealthTrendPoint(date: $0.date, value: metric.displayValue(for: $0)) }, tintColor: accent, chartStyle: metric.preferredChartStyle, showsPoints: false, selectedDate: nil, valueFormatter: metric.formattedValue) { _ in }
         let orbit = HeroMetricOrbitView(accent: accent, title: metric.localizedDisplayName)
         orbit.translatesAutoresizingMaskIntoConstraints = false
         let stack = NSStackView(views: [label, picker, value, detail, graph]); stack.orientation = .vertical; stack.spacing = 7; stack.translatesAutoresizingMaskIntoConstraints = false
@@ -2239,15 +2513,17 @@ private final class MetricCardBackgroundView: NSView {
     private let accent: NSColor
     private var phase: CGFloat = 0
     private var timer: Timer?
+    private let icon: NSImageView
 
     init(title: String, accent: NSColor) {
         self.title = title.lowercased()
         self.accent = accent
+        icon = NSImageView(image: NSImage(systemSymbolName: Self.symbolName(for: title), accessibilityDescription: nil) ?? NSImage())
         super.init(frame: .zero)
-        let icon = NSImageView(image: NSImage(systemSymbolName: Self.symbolName(for: title), accessibilityDescription: nil) ?? NSImage())
         icon.contentTintColor = accent
         icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 34, weight: .medium)
         icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.wantsLayer = true
         addSubview(icon)
         NSLayoutConstraint.activate([
             icon.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -22),
@@ -2261,7 +2537,7 @@ private final class MetricCardBackgroundView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        guard AppTheme.current != .clearGlass, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
+        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
         guard window != nil, timer == nil else { return }
         timer = Timer.scheduledTimer(timeInterval: 1.0 / 24.0, target: self, selector: #selector(advance), userInfo: nil, repeats: true)
         RunLoop.main.add(timer!, forMode: .common)
@@ -2274,6 +2550,20 @@ private final class MetricCardBackgroundView: NSView {
 
     @objc private func advance() {
         phase += 0.11
+        if title.contains("herz") || title.contains("heart") {
+            // Hearts pulse in place. Translating and rotating a small symbol
+            // makes it look like jitter rather than a calm heartbeat.
+            let pulse = max(0, sin(phase * 1.15))
+            let scale = 1 + pulse * 0.075
+            icon.layer?.setAffineTransform(CGAffineTransform(scaleX: scale, y: scale))
+            icon.alphaValue = 0.84 + pulse * 0.16
+            needsDisplay = true
+            return
+        }
+        let lift = sin(phase * 0.74) * 4
+        let turn = sin(phase * 0.37) * 0.045
+        icon.layer?.setAffineTransform(CGAffineTransform(translationX: 0, y: lift).rotated(by: turn))
+        icon.alphaValue = 0.78 + CGFloat((sin(phase * 0.74) + 1) * 0.11)
         needsDisplay = true
     }
 
@@ -2288,18 +2578,20 @@ private final class MetricCardBackgroundView: NSView {
         waveform.lineWidth = 2
         let baseline = bounds.height * 0.34
         let width = max(bounds.width, 1)
+        // Keep the visual spacing of heartbeats stable in both compact cards
+        // and wide trend panels instead of stretching a fixed number of beats.
+        let heartBeatsAcross = max(CGFloat(2.6), width / 190)
         for x in stride(from: CGFloat(0), through: bounds.width, by: 4) {
             let position = x / width
             let y: CGFloat
             if title.contains("herz") || title.contains("heart") {
-                // Calm ECG-like pulse: short sharp beat, then a quiet baseline.
-                let beat = (position * 2.6 + phase * 0.17).truncatingRemainder(dividingBy: 1)
-                switch beat {
-                case 0.18..<0.24: y = baseline - (beat - 0.18) / 0.06 * 22
-                case 0.24..<0.31: y = baseline + (beat - 0.24) / 0.07 * 9
-                case 0.31..<0.38: y = baseline - (0.38 - beat) / 0.07 * 10
-                default: y = baseline
-                }
+                // A smooth, continuous ECG pulse. The earlier piecewise line
+                // changed abruptly between samples and shimmered in small cards.
+                let beat = (position * heartBeatsAcross).truncatingRemainder(dividingBy: 1)
+                let peak = exp(-pow((beat - 0.21) / 0.026, 2)) * 22
+                let dip = exp(-pow((beat - 0.275) / 0.032, 2)) * 9
+                let recovery = exp(-pow((beat - 0.345) / 0.036, 2)) * 10
+                y = baseline - peak + dip - recovery
             } else if title.contains("schritt") || title.contains("step") || title.contains("walking") || title.contains("distance") || title.contains("distanz") {
                 // Moving cadence, deliberately less clinical than an ECG.
                 y = baseline + sin(position * .pi * 6 + phase * 0.62) * 5 + sin(position * .pi * 12 + phase * 0.62) * 2
@@ -2320,6 +2612,20 @@ private final class MetricCardBackgroundView: NSView {
         }
         accent.withAlphaComponent(0.52).setStroke()
         waveform.stroke()
+        if title.contains("herz") || title.contains("heart") {
+            // Keep the ECG path stable and animate one soft impulse along it.
+            // This reads as a heartbeat without shifting the whole line.
+            let position = (phase * 0.12).truncatingRemainder(dividingBy: 1)
+            let beat = (position * heartBeatsAcross).truncatingRemainder(dividingBy: 1)
+            let peak = exp(-pow((beat - 0.21) / 0.026, 2)) * 22
+            let dip = exp(-pow((beat - 0.275) / 0.032, 2)) * 9
+            let recovery = exp(-pow((beat - 0.345) / 0.036, 2)) * 10
+            let point = NSPoint(x: position * width, y: baseline - peak + dip - recovery)
+            accent.withAlphaComponent(0.18).setFill()
+            NSBezierPath(ovalIn: NSRect(x: point.x - 7, y: point.y - 7, width: 14, height: 14)).fill()
+            accent.withAlphaComponent(0.92).setFill()
+            NSBezierPath(ovalIn: NSRect(x: point.x - 2.5, y: point.y - 2.5, width: 5, height: 5)).fill()
+        }
     }
 
     static func symbolName(for title: String) -> String {
@@ -2411,7 +2717,47 @@ private final class DataQualityView: GlassCardView {
             let column = NSStackView(views: [name, value]); column.orientation = .vertical; column.spacing = 2
             values.addArrangedSubview(column)
         }
-        let stack = NSStackView(views: [heading, note, values]); stack.orientation = .vertical; stack.spacing = 7; stack.edgeInsets = NSEdgeInsets(top: 14, left: 18, bottom: 14, right: 18); stack.translatesAutoresizingMaskIntoConstraints = false
+        let selectedMetrics = summary.dataTypes.filter { selectedIDs.contains($0.identifier) }
+        let coverage = LocalDataCoverage.make(metrics: selectedMetrics)
+        let missingText = coverage.missingDays == 0
+            ? language.text(english: "Values exist on each of the last 7 local dates.", german: "Werte liegen an allen letzten 7 lokalen Tagen vor.")
+            : language.text(english: "\(coverage.missingDays) of the last 7 local dates have no selected value.", german: "An \(coverage.missingDays) der letzten 7 lokalen Tage liegt kein ausgewählter Wert vor.")
+        let sparseText = coverage.sparseTypes.isEmpty
+            ? language.text(english: "No selected type has only one or two dated values.", german: "Kein ausgewählter Typ hat nur einen oder zwei datierte Werte.")
+            : language.text(english: "Only one or two dated values: \(coverage.sparseTypes.joined(separator: ", ")).", german: "Nur ein oder zwei datierte Werte: \(coverage.sparseTypes.joined(separator: ", ")).")
+        let coverageLabel = NSTextField(wrappingLabelWithString: "• \(missingText)\n• \(sparseText)")
+        coverageLabel.font = .systemFont(ofSize: 10.5, weight: .medium)
+        coverageLabel.textColor = NSColor.white.withAlphaComponent(0.76)
+        coverageLabel.maximumNumberOfLines = 2
+        let stack = NSStackView(views: [heading, note, values, coverageLabel]); stack.orientation = .vertical; stack.spacing = 7; stack.edgeInsets = NSEdgeInsets(top: 14, left: 18, bottom: 14, right: 18); stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
+        NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo: leadingAnchor), stack.trailingAnchor.constraint(equalTo: trailingAnchor), stack.topAnchor.constraint(equalTo: topAnchor), stack.bottomAnchor.constraint(equalTo: bottomAnchor)])
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
+private final class TrendHighlightsView: GlassCardView {
+    init(metric: HealthDataTypeSummary, points: [HealthTrendPoint], days: Int, language: AppLanguage) {
+        super.init(accent: .systemCyan)
+        let title = NSTextField(labelWithString: language.text(english: "Local trend highlights", german: "Lokale Trend-Hinweise"))
+        title.font = .systemFont(ofSize: 12, weight: .bold)
+        title.textColor = .white
+        let maximum = points.max(by: { $0.value < $1.value })
+        let latest = points.map(\.date).max()
+        let recordedDays = Set(points.map { Calendar.current.startOfDay(for: $0.date) }).count
+        let first = maximum.map { point in
+            language.text(english: "Highest local value: \(metric.formattedValue(point.value)) on \(point.date.formatted(date: .abbreviated, time: .omitted)).", german: "Höchster lokaler Wert: \(metric.formattedValue(point.value)) am \(point.date.formatted(date: .abbreviated, time: .omitted)).")
+        } ?? language.text(english: "No local value is available in this period.", german: "In diesem Zeitraum liegt kein lokaler Wert vor.")
+        let relevantDays: Int
+        if let latest, let start = Calendar.current.date(byAdding: .day, value: -(days - 1), to: latest) {
+            relevantDays = Calendar.current.dateComponents([.day], from: start, to: latest).day.map { $0 + 1 } ?? days
+        } else { relevantDays = days }
+        let second = language.text(english: "Data exists on \(recordedDays) of \(relevantDays) local days.", german: "Daten liegen an \(recordedDays) von \(relevantDays) lokalen Tagen vor.")
+        let detail = NSTextField(wrappingLabelWithString: "\(first)\n\(second)")
+        detail.font = .systemFont(ofSize: 11, weight: .medium)
+        detail.textColor = NSColor.white.withAlphaComponent(0.78)
+        detail.maximumNumberOfLines = 2
+        let stack = NSStackView(views: [title, detail]); stack.orientation = .vertical; stack.spacing = 6; stack.edgeInsets = NSEdgeInsets(top: 13, left: 18, bottom: 12, right: 18); stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo: leadingAnchor), stack.trailingAnchor.constraint(equalTo: trailingAnchor), stack.topAnchor.constraint(equalTo: topAnchor), stack.bottomAnchor.constraint(equalTo: bottomAnchor)])
     }
@@ -2533,6 +2879,49 @@ private final class CombinedHealthTimelineCanvasView: NSView {
     override func mouseDown(with event: NSEvent) { if let identifier = metrics.first?.identifier { onSelect(identifier) } }
 }
 
+private final class InsightSnapshotView: GlassCardView {
+    init(metric: HealthDataTypeSummary, accent: NSColor, language: AppLanguage) {
+        super.init(accent: accent)
+        let eyebrow = NSTextField(labelWithString: language.text(english: "LOCAL SNAPSHOT", german: "LOKALE MOMENTAUFNAHME"))
+        eyebrow.font = .systemFont(ofSize: 10, weight: .bold); eyebrow.textColor = accent
+        let title = NSTextField(labelWithString: metric.localizedDisplayName)
+        title.font = .systemFont(ofSize: 16, weight: .bold); title.textColor = .white
+        let value = NSTextField(labelWithString: metric.latestValueText)
+        value.font = .systemFont(ofSize: 30, weight: .bold); value.textColor = .white
+        let latestDate = metric.dailyValues.last?.date.formatted(date: .long, time: .omitted) ?? "—"
+        let datedDays = Set(metric.dailyValues.map { Calendar.current.startOfDay(for: $0.date) }).count
+        let detail = NSTextField(wrappingLabelWithString: language.text(english: "Latest local value from \(latestDate). Values are recorded on \(datedDays) local days.", german: "Letzter lokaler Wert vom \(latestDate). Werte liegen an \(datedDays) lokalen Tagen vor."))
+        detail.font = .systemFont(ofSize: 12, weight: .medium); detail.textColor = NSColor.white.withAlphaComponent(0.76); detail.maximumNumberOfLines = 2
+        let stack = NSStackView(views: [eyebrow, title, value, detail])
+        stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 4; stack.edgeInsets = NSEdgeInsets(top: 17, left: 22, bottom: 16, right: 22); stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor), stack.trailingAnchor.constraint(equalTo: trailingAnchor), stack.topAnchor.constraint(equalTo: topAnchor), stack.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
+private final class InsightCoverageView: GlassCardView {
+    init(metric: HealthDataTypeSummary, accent: NSColor, language: AppLanguage) {
+        super.init(accent: accent)
+        let coverage = LocalDataCoverage.make(metrics: [metric])
+        let title = NSTextField(labelWithString: language.text(english: "Local coverage", german: "Lokale Abdeckung"))
+        title.font = .systemFont(ofSize: 12, weight: .bold); title.textColor = .white
+        let recorded = NSTextField(labelWithString: language.text(english: "\(coverage.observedDays) of 7 local days", german: "\(coverage.observedDays) von 7 lokalen Tagen"))
+        recorded.font = .systemFont(ofSize: 19, weight: .bold); recorded.textColor = .white
+        let missing = coverage.missingDays == 0
+            ? language.text(english: "No missing date in this local period.", german: "Kein fehlendes Datum in diesem lokalen Zeitraum.")
+            : language.text(english: "\(coverage.missingDays) local dates have no value.", german: "An \(coverage.missingDays) lokalen Tagen liegt kein Wert vor.")
+        let detail = NSTextField(wrappingLabelWithString: missing)
+        detail.font = .systemFont(ofSize: 11, weight: .medium); detail.textColor = NSColor.white.withAlphaComponent(0.74); detail.maximumNumberOfLines = 2
+        let stack = NSStackView(views: [title, recorded, detail]); stack.orientation = .vertical; stack.spacing = 6; stack.edgeInsets = NSEdgeInsets(top: 15, left: 18, bottom: 14, right: 18); stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
+        NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo: leadingAnchor), stack.trailingAnchor.constraint(equalTo: trailingAnchor), stack.topAnchor.constraint(equalTo: topAnchor), stack.bottomAnchor.constraint(equalTo: bottomAnchor)])
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
 private final class LocalPatternView: GlassCardView {
     init(metric: HealthDataTypeSummary, accent: NSColor, language: AppLanguage) {
         super.init(accent: accent)
@@ -2550,6 +2939,32 @@ private final class LocalPatternView: GlassCardView {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }
 
+private final class MetricFocusBackdropView: NSView {
+    private let accent: NSColor
+    private let symbolName: String
+
+    init(accent: NSColor, title: String) {
+        self.accent = accent
+        symbolName = MetricCardBackgroundView.symbolName(for: title)
+        super.init(frame: .zero)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    override var isOpaque: Bool { false }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let topGlow = NSPoint(x: bounds.midX, y: bounds.maxY * 0.76)
+        NSGradient(starting: accent.withAlphaComponent(0.14), ending: accent.withAlphaComponent(0))?.draw(fromCenter: topGlow, radius: 0, toCenter: topGlow, radius: max(bounds.width, bounds.height) * 0.46, options: [])
+        let sideGlow = NSPoint(x: bounds.width * 0.08, y: bounds.height * 0.26)
+        NSGradient(starting: accent.withAlphaComponent(0.07), ending: accent.withAlphaComponent(0))?.draw(fromCenter: sideGlow, radius: 0, toCenter: sideGlow, radius: bounds.width * 0.36, options: [])
+        guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil) else { return }
+        let configuration = NSImage.SymbolConfiguration(pointSize: min(bounds.width, bounds.height) * 0.30, weight: .ultraLight)
+        let symbol = image.withSymbolConfiguration(configuration) ?? image
+        let rect = NSRect(x: bounds.midX - bounds.height * 0.22, y: bounds.midY - bounds.height * 0.22, width: bounds.height * 0.44, height: bounds.height * 0.44)
+        symbol.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 0.035)
+    }
+}
+
 private final class MetricFocusViewController: NSViewController {
     var onOpenTrend: (() -> Void)?
     private let metric: HealthDataTypeSummary
@@ -2559,25 +2974,55 @@ private final class MetricFocusViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override func loadView() {
         let root = GlassCardView(accent: accent); root.frame = NSRect(x: 0, y: 0, width: 960, height: 640); view = root
-        let title = NSTextField(labelWithString: metric.localizedDisplayName); title.font = .systemFont(ofSize: 28, weight: .bold); title.textColor = .white
-        let latest = NSTextField(labelWithString: metric.latestValueText); latest.font = .systemFont(ofSize: 42, weight: .bold); latest.textColor = .white
+        let backdrop = MetricFocusBackdropView(accent: accent, title: metric.localizedDisplayName)
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        root.addSubview(backdrop)
+        let eyebrow = NSTextField(labelWithString: language.text(english: "LOCAL FOCUS", german: "LOKALER FOKUS")); eyebrow.font = .systemFont(ofSize: 11, weight: .bold); eyebrow.textColor = accent
+        let title = NSTextField(labelWithString: metric.localizedDisplayName); title.font = .systemFont(ofSize: 30, weight: .bold); title.textColor = .white
+        let latest = NSTextField(labelWithString: metric.latestValueText); latest.font = .systemFont(ofSize: 46, weight: .bold); latest.textColor = .white
         let note = NSTextField(labelWithString: language.text(english: "Local focus view · descriptive values only", german: "Lokale Fokusansicht · nur beschreibende Werte")); note.font = .systemFont(ofSize: 12, weight: .medium); note.textColor = NSColor.white.withAlphaComponent(0.72)
         let orbit = HeroMetricOrbitView(accent: accent, title: metric.localizedDisplayName)
         orbit.translatesAutoresizingMaskIntoConstraints = false
-        let graph = TrendGraphView(points: metric.dailyValues.suffix(90).map { HealthTrendPoint(date: $0.date, value: metric.displayValue(for: $0)) }, tintColor: accent, showsPoints: true, selectedDate: nil, valueFormatter: metric.formattedValue) { _ in }
+        let graph = TrendGraphView(points: metric.dailyValues.suffix(90).map { HealthTrendPoint(date: $0.date, value: metric.displayValue(for: $0)) }, tintColor: accent, chartStyle: metric.preferredChartStyle, showsPoints: true, selectedDate: nil, valueFormatter: metric.formattedValue) { _ in }
+        let graphCard = focusGraphCard(graph)
         let heatmap = CalendarHeatmapView(values: metric.dailyValues, metric: metric, tintColor: accent, days: 365)
         let comparison = HealthPeriodComparison.make(values: metric.dailyValues, metric: metric, days: 30).map { PeriodComparisonView(comparison: $0, metric: metric, days: 30, accent: accent, language: language) }
         let openTrend = NSButton(title: language.text(english: "Open Trends", german: "Verläufe öffnen"), target: self, action: #selector(openTrends)); openTrend.bezelStyle = .rounded; openTrend.contentTintColor = .white
         let close = NSButton(title: language.text(english: "Exit full screen", german: "Vollbild beenden"), target: self, action: #selector(closeFocus)); close.bezelStyle = .rounded; close.contentTintColor = .white
         let buttons = NSStackView(views: [openTrend, close]); buttons.spacing = 10
-        let headerLabels = NSStackView(views: [title, latest, note]); headerLabels.orientation = .vertical; headerLabels.spacing = 8
-        let header = NSStackView(views: [headerLabels, orbit]); header.orientation = .horizontal; header.distribution = .fill; header.alignment = .centerY
-        let views: [NSView] = [header] + (comparison.map { [$0] } ?? []) + [graph, heatmap, buttons]
-        let stack = NSStackView(views: views); stack.orientation = .vertical; stack.spacing = 13; stack.edgeInsets = NSEdgeInsets(top: 30, left: 34, bottom: 28, right: 34); stack.translatesAutoresizingMaskIntoConstraints = false
+        let headerLabels = NSStackView(views: [eyebrow, title, latest, note]); headerLabels.orientation = .vertical; headerLabels.alignment = .centerX; headerLabels.spacing = 7
+        let header = NSStackView(views: [headerLabels, orbit]); header.orientation = .horizontal; header.spacing = 24; header.alignment = .centerY
+        let calendarCard = GlassCardView(accent: accent)
+        let calendarTitle = NSTextField(labelWithString: language.text(english: "Local recording calendar", german: "Lokaler Erfassungskalender")); calendarTitle.font = .systemFont(ofSize: 12, weight: .bold); calendarTitle.textColor = .white
+        let calendarNote = NSTextField(labelWithString: language.text(english: "One square per local day", german: "Ein Feld pro lokalem Tag")); calendarNote.font = .systemFont(ofSize: 10, weight: .medium); calendarNote.textColor = NSColor.white.withAlphaComponent(0.62)
+        let calendarStack = NSStackView(views: [calendarTitle, calendarNote, heatmap]); calendarStack.orientation = .vertical; calendarStack.spacing = 7; calendarStack.edgeInsets = NSEdgeInsets(top: 15, left: 18, bottom: 15, right: 18); calendarStack.translatesAutoresizingMaskIntoConstraints = false
+        calendarCard.addSubview(calendarStack)
+        NSLayoutConstraint.activate([calendarStack.leadingAnchor.constraint(equalTo: calendarCard.leadingAnchor), calendarStack.trailingAnchor.constraint(equalTo: calendarCard.trailingAnchor), calendarStack.topAnchor.constraint(equalTo: calendarCard.topAnchor), calendarStack.bottomAnchor.constraint(equalTo: calendarCard.bottomAnchor)])
+        let lowerRow = NSStackView(views: (comparison.map { [$0, calendarCard] } ?? [calendarCard])); lowerRow.orientation = .horizontal; lowerRow.distribution = .fillEqually; lowerRow.spacing = 14
+        let views: [NSView] = [header, graphCard, lowerRow, buttons]
+        let stack = NSStackView(views: views); stack.orientation = .vertical; stack.alignment = .centerX; stack.spacing = 16; stack.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(stack)
-        var constraints = [stack.leadingAnchor.constraint(equalTo: root.leadingAnchor), stack.trailingAnchor.constraint(equalTo: root.trailingAnchor), stack.topAnchor.constraint(equalTo: root.topAnchor), stack.bottomAnchor.constraint(equalTo: root.bottomAnchor), graph.heightAnchor.constraint(equalToConstant: 270), heatmap.heightAnchor.constraint(equalToConstant: 120), orbit.widthAnchor.constraint(equalToConstant: 104), orbit.heightAnchor.constraint(equalToConstant: 104)]
-        if let comparison { constraints.append(comparison.heightAnchor.constraint(equalToConstant: 82)) }
+        var constraints = [
+            backdrop.leadingAnchor.constraint(equalTo: root.leadingAnchor), backdrop.trailingAnchor.constraint(equalTo: root.trailingAnchor), backdrop.topAnchor.constraint(equalTo: root.topAnchor), backdrop.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+            stack.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 54), stack.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -54),
+            stack.centerYAnchor.constraint(equalTo: root.centerYAnchor, constant: 8), stack.topAnchor.constraint(greaterThanOrEqualTo: root.topAnchor, constant: 36), stack.bottomAnchor.constraint(lessThanOrEqualTo: root.bottomAnchor, constant: -30),
+            graphCard.widthAnchor.constraint(equalTo: stack.widthAnchor), graphCard.heightAnchor.constraint(equalToConstant: 270),
+            lowerRow.widthAnchor.constraint(equalTo: stack.widthAnchor), lowerRow.heightAnchor.constraint(equalToConstant: 156),
+            heatmap.heightAnchor.constraint(equalToConstant: 94), orbit.widthAnchor.constraint(equalToConstant: 124), orbit.heightAnchor.constraint(equalToConstant: 124)
+        ]
+        if let comparison { constraints.append(comparison.widthAnchor.constraint(equalTo: calendarCard.widthAnchor)) }
         NSLayoutConstraint.activate(constraints)
+    }
+
+    private func focusGraphCard(_ graph: NSView) -> NSView {
+        let card = GlassCardView(accent: accent)
+        let title = NSTextField(labelWithString: language.text(english: "Local course", german: "Lokaler Verlauf")); title.font = .systemFont(ofSize: 13, weight: .bold); title.textColor = .white
+        let detail = NSTextField(labelWithString: language.text(english: "Latest 90 recorded local days", german: "Letzte 90 erfasste lokale Tage")); detail.font = .systemFont(ofSize: 10, weight: .medium); detail.textColor = NSColor.white.withAlphaComponent(0.62)
+        let header = NSStackView(views: [title, detail]); header.orientation = .vertical; header.spacing = 3
+        let stack = NSStackView(views: [header, graph]); stack.orientation = .vertical; stack.spacing = 10; stack.edgeInsets = NSEdgeInsets(top: 16, left: 20, bottom: 17, right: 20); stack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(stack)
+        NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo: card.leadingAnchor), stack.trailingAnchor.constraint(equalTo: card.trailingAnchor), stack.topAnchor.constraint(equalTo: card.topAnchor), stack.bottomAnchor.constraint(equalTo: card.bottomAnchor)])
+        return card
     }
     @objc private func openTrends() { onOpenTrend?() }
     @objc private func closeFocus() { close() }
@@ -2590,7 +3035,7 @@ private final class MetricFocusWindowController: NSWindowController, NSWindowDel
     static func present(_ content: MetricFocusViewController) {
         activeController?.window?.close()
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1120, height: 760),
+            contentRect: NSRect(x: 0, y: 0, width: 1280, height: 720),
             styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -2599,6 +3044,7 @@ private final class MetricFocusWindowController: NSWindowController, NSWindowDel
         window.isOpaque = false
         window.backgroundColor = .clear
         window.collectionBehavior.insert(.fullScreenPrimary)
+        window.minSize = NSSize(width: 960, height: 540)
         window.contentViewController = content
         let controller = MetricFocusWindowController(window: window)
         controller.window?.delegate = controller
@@ -2614,14 +3060,26 @@ private final class MetricFocusWindowController: NSWindowController, NSWindowDel
 }
 
 @MainActor
+private struct LocalReportConfiguration {
+    /// Zero means all locally imported dates.
+    let days: Int
+    let themeName: String
+
+    func periodTitle(language: AppLanguage) -> String {
+        guard days > 0 else { return language.text(english: "All imported local dates", german: "Alle importierten lokalen Tage") }
+        return language.text(english: "Last \(days) local days", german: "Letzte \(days) lokale Tage")
+    }
+}
+
 private struct LocalHealthReport {
     let summary: ImportedHealthSummary
     let metrics: [HealthDataTypeSummary]
     let language: AppLanguage
+    let configuration: LocalReportConfiguration
 
-    func write(to url: URL) throws {
+    @MainActor func write(to url: URL) throws {
         let height = max(842, 250 + CGFloat(metrics.count) * 44)
-        let reportView = LocalHealthReportView(summary: summary, metrics: metrics, language: language, frame: NSRect(x: 0, y: 0, width: 595, height: height))
+        let reportView = LocalHealthReportView(summary: summary, metrics: metrics, language: language, configuration: configuration, frame: NSRect(x: 0, y: 0, width: 595, height: height))
         try reportView.dataWithPDF(inside: reportView.bounds).write(to: url, options: .atomic)
     }
 }
@@ -2630,11 +3088,13 @@ private final class LocalHealthReportView: NSView {
     private let summary: ImportedHealthSummary
     private let metrics: [HealthDataTypeSummary]
     private let language: AppLanguage
+    private let configuration: LocalReportConfiguration
 
-    init(summary: ImportedHealthSummary, metrics: [HealthDataTypeSummary], language: AppLanguage, frame: NSRect) {
+    init(summary: ImportedHealthSummary, metrics: [HealthDataTypeSummary], language: AppLanguage, configuration: LocalReportConfiguration, frame: NSRect) {
         self.summary = summary
         self.metrics = metrics
         self.language = language
+        self.configuration = configuration
         super.init(frame: frame)
     }
 
@@ -2642,36 +3102,55 @@ private final class LocalHealthReportView: NSView {
     override var isFlipped: Bool { true }
 
     override func draw(_ dirtyRect: NSRect) {
-        NSColor(calibratedRed: 0.025, green: 0.06, blue: 0.16, alpha: 1).setFill()
+        let palette = reportPalette
+        palette.background.setFill()
         bounds.fill()
-        NSColor.systemCyan.withAlphaComponent(0.25).setFill()
+        palette.accent.withAlphaComponent(0.25).setFill()
         NSBezierPath(ovalIn: NSRect(x: 330, y: -130, width: 360, height: 360)).fill()
         let title = language.text(english: "HealthAtlas local report", german: "HealthAtlas Lokaler Bericht")
         let subtitle = language.text(english: "Created locally • no upload • descriptive values only", german: "Lokal erstellt • kein Upload • nur beschreibende Werte")
         title.draw(at: NSPoint(x: 42, y: 46), withAttributes: [.font: NSFont.systemFont(ofSize: 28, weight: .bold), .foregroundColor: NSColor.white])
         subtitle.draw(at: NSPoint(x: 42, y: 86), withAttributes: [.font: NSFont.systemFont(ofSize: 12, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.72)])
         let date = Date().formatted(date: .long, time: .shortened)
-        date.draw(at: NSPoint(x: 42, y: 116), withAttributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium), .foregroundColor: NSColor.systemCyan])
+        date.draw(at: NSPoint(x: 42, y: 116), withAttributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium), .foregroundColor: palette.accent])
+        let configurationText = "\(configuration.periodTitle(language: language)) · \(configuration.themeName)"
+        configurationText.draw(at: NSPoint(x: 42, y: 136), withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.66)])
         let heading = language.text(english: "Selected data types", german: "Ausgewählte Datentypen")
         heading.draw(at: NSPoint(x: 42, y: 164), withAttributes: [.font: NSFont.systemFont(ofSize: 16, weight: .bold), .foregroundColor: NSColor.white])
         let lineAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 13, weight: .medium), .foregroundColor: NSColor.white]
         let detailAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 11, weight: .regular), .foregroundColor: NSColor.white.withAlphaComponent(0.68)]
         for (index, metric) in metrics.enumerated() {
             let y = 204 + CGFloat(index) * 44
-            NSColor.systemCyan.withAlphaComponent(0.16).setFill()
+            palette.accent.withAlphaComponent(0.16).setFill()
             NSBezierPath(roundedRect: NSRect(x: 38, y: y - 7, width: 519, height: 34), xRadius: 8, yRadius: 8).fill()
             metric.localizedDisplayName.draw(at: NSPoint(x: 52, y: y), withAttributes: lineAttributes)
-            metric.latestValueText.draw(at: NSPoint(x: 370, y: y), withAttributes: lineAttributes)
-            metric.latestDetailText.draw(at: NSPoint(x: 52, y: y + 18), withAttributes: detailAttributes)
+            let values = configuration.days > 0 ? metric.values(inLast: configuration.days) : metric.dailyValues
+            let latest = values.last.map { metric.formattedValue(metric.displayValue(for: $0)) } ?? "—"
+            let latestDate = values.last?.date.formatted(date: .abbreviated, time: .omitted) ?? "—"
+            latest.draw(at: NSPoint(x: 370, y: y), withAttributes: lineAttributes)
+            latestDate.draw(at: NSPoint(x: 52, y: y + 18), withAttributes: detailAttributes)
         }
         let footer = language.text(english: "HealthAtlas does not diagnose, evaluate or transmit health data.", german: "HealthAtlas diagnostiziert, bewertet oder überträgt keine Gesundheitsdaten.")
         footer.draw(at: NSPoint(x: 42, y: bounds.height - 42), withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.58)])
+    }
+
+    private var reportPalette: (background: NSColor, accent: NSColor) {
+        guard let theme = AppTheme.allCases.first(where: { $0.displayName == configuration.themeName }) else {
+            return (NSColor(calibratedRed: 0.025, green: 0.06, blue: 0.16, alpha: 1), NSColor.systemCyan)
+        }
+        return switch theme {
+        case .clearGlass: (NSColor(calibratedRed: 0.10, green: 0.18, blue: 0.34, alpha: 1), NSColor.systemCyan)
+        case .midnightGlass: (NSColor(calibratedRed: 0.025, green: 0.06, blue: 0.16, alpha: 1), NSColor.systemCyan)
+        case .aurora: (NSColor(calibratedRed: 0.02, green: 0.15, blue: 0.19, alpha: 1), NSColor.systemTeal)
+        case .warmPaper: (NSColor(calibratedRed: 0.19, green: 0.08, blue: 0.12, alpha: 1), NSColor.systemOrange)
+        }
     }
 }
 
 private final class TrendGraphView: NSView {
     private let points: [HealthTrendPoint]
     private let tintColor: NSColor
+    private let chartStyle: HealthChartStyle
     private let showsPoints: Bool
     private let selectedDate: Date?
     private let showsDateLabels: Bool
@@ -2683,9 +3162,10 @@ private final class TrendGraphView: NSView {
     private var trackingArea: NSTrackingArea?
     private var hoveredTarget: (location: NSPoint, point: HealthTrendPoint)?
     private var selectedPulsePhase: CGFloat = 0
-    init(points: [HealthTrendPoint], tintColor: NSColor, showsPoints: Bool = false, selectedDate: Date?, showsDateLabels: Bool = false, valueFormatter: @escaping (Double) -> String = { $0.formatted(.number.precision(.fractionLength(0...1))) }, onSelect: @escaping (HealthTrendPoint) -> Void) {
+    init(points: [HealthTrendPoint], tintColor: NSColor, chartStyle: HealthChartStyle = .line, showsPoints: Bool = false, selectedDate: Date?, showsDateLabels: Bool = false, valueFormatter: @escaping (Double) -> String = { $0.formatted(.number.precision(.fractionLength(0...1))) }, onSelect: @escaping (HealthTrendPoint) -> Void) {
         self.points = points
         self.tintColor = tintColor
+        self.chartStyle = chartStyle
         self.showsPoints = showsPoints
         self.selectedDate = selectedDate
         self.showsDateLabels = showsDateLabels
@@ -2738,14 +3218,35 @@ private final class TrendGraphView: NSView {
         let line = NSBezierPath(); line.lineWidth = 3; line.lineJoinStyle = .round
         hitTargets = []
         let visibleCount = max(2, Int(ceil(CGFloat(points.count) * progress)))
+        var locations = [NSPoint]()
         for (index, trendPoint) in points.prefix(visibleCount).enumerated() {
             let normalized = (trendPoint.value - minimum) / span
             let location = NSPoint(x: inset.minX + inset.width * CGFloat(index) / CGFloat(points.count - 1), y: inset.maxY - inset.height * CGFloat(normalized))
             index == 0 ? line.move(to: location) : line.line(to: location)
+            locations.append(location)
             hitTargets.append((location, trendPoint))
-            if showsPoints && index <= visibleCount - 1 { tintColor.setFill(); NSBezierPath(ovalIn: NSRect(x: location.x - 5, y: location.y - 5, width: 10, height: 10)).fill() }
+            if showsPoints && chartStyle != .bar { tintColor.setFill(); NSBezierPath(ovalIn: NSRect(x: location.x - 5, y: location.y - 5, width: 10, height: 10)).fill() }
         }
-        tintColor.setStroke(); line.stroke()
+        switch chartStyle {
+        case .line:
+            tintColor.setStroke(); line.stroke()
+        case .area:
+            let fill = line.copy() as! NSBezierPath
+            if let first = locations.first, let last = locations.last {
+                fill.line(to: NSPoint(x: last.x, y: inset.maxY))
+                fill.line(to: NSPoint(x: first.x, y: inset.maxY))
+                fill.close()
+                tintColor.withAlphaComponent(0.22).setFill(); fill.fill()
+            }
+            tintColor.setStroke(); line.stroke()
+        case .bar:
+            let width = max(4, min(26, inset.width / CGFloat(max(visibleCount, 1)) * 0.62))
+            for location in locations {
+                let rect = NSRect(x: location.x - width / 2, y: location.y, width: width, height: max(2, inset.maxY - location.y))
+                tintColor.withAlphaComponent(0.68).setFill()
+                NSBezierPath(roundedRect: rect, xRadius: min(4, width / 2), yRadius: min(4, width / 2)).fill()
+            }
+        }
         if showsDateLabels, let first = points.first?.date, let last = points.last?.date {
             let middle = points[points.count / 2].date
             let formatter = DateFormatter()

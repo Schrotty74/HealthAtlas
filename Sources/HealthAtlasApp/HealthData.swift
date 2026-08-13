@@ -33,25 +33,43 @@ struct HealthMetric {
 }
 
 enum HealthDataCategory: String, CaseIterable {
-    case activity, heart, sleep, body, hearing, other
+    case activity, body, cycleTracking, hearing, heart, mindfulness, mobility, nutrition, respiratory, sleep, symptoms, vitals, selfCare, other
 
     static func category(for identifier: String) -> HealthDataCategory {
         let value = identifier.lowercased()
-        if value.contains("heart") || value.contains("cardio") || value.contains("blood") { return .heart }
+        if value.contains("dietary") || value.contains("food") || value.contains("water") || value.contains("alcohol") { return .nutrition }
+        if value.contains("menstrual") || value.contains("pregnancy") || value.contains("cervical") || value.contains("ovulation") || value.contains("contraceptive") || value.contains("lactation") || value.contains("vaginal") || value.contains("breastpain") || value.contains("hotflashes") || value.contains("menopausal") || value.contains("intermenstrual") { return .cycleTracking }
+        if value.contains("symptom") || value.contains("cramp") || value.contains("acne") || value.contains("appetite") || value.contains("bloating") || value.contains("chills") || value.contains("constipation") || value.contains("cough") || value.contains("diarrhea") || value.contains("dizziness") || value.contains("dryskin") || value.contains("fainting") || value.contains("fatigue") || value.contains("fever") || value.contains("ache") || value.contains("hairloss") || value.contains("headache") || value.contains("heartburn") || value.contains("lowerbackpain") || value.contains("nausea") || value.contains("nightsweats") || value.contains("pelvicpain") || value.contains("runnynose") || value.contains("sorethroat") || value.contains("vomiting") || value.contains("wheezing") { return .symptoms }
+        if value.contains("respiratory") || value.contains("oxygen") || value.contains("inhaler") || value.contains("forcedexpiratory") || value.contains("forcedvital") || value.contains("peakexpiratory") || value.contains("shortnessofbreath") { return .respiratory }
+        if value.contains("walking") || value.contains("sixminutewalk") || value.contains("stair") || value.contains("fall") || value.contains("wheelchair") { return .mobility }
+        if value.contains("heart") || value.contains("cardio") || value.contains("atrial") || value.contains("bloodpressure") || value.contains("irregularrhythm") { return .heart }
         if value.contains("sleep") { return .sleep }
         if value.contains("bodymass") || value.contains("bodyfat") || value.contains("leanbody") || value.contains("bmi") || value.contains("height") { return .body }
         if value.contains("audio") || value.contains("hearing") { return .hearing }
-        if value.contains("step") || value.contains("distance") || value.contains("energy") || value.contains("walking") || value.contains("running") || value.contains("flight") || value.contains("workout") || value.contains("activity") { return .activity }
+        if value.contains("mindful") || value.contains("stateofmind") { return .mindfulness }
+        if value.contains("toothbrushing") || value.contains("handwashing") { return .selfCare }
+        if value.contains("bloodglucose") || value.contains("temperature") || value.contains("electrodermal") || value.contains("insulin") || value.contains("peripheralperfusion") { return .vitals }
+        if value.contains("step") || value.contains("distance") || value.contains("energy") || value.contains("running") || value.contains("flight") || value.contains("workout") || value.contains("activity") || value.contains("cycling") || value.contains("swimming") || value.contains("rowing") || value.contains("skating") || value.contains("skiing") || value.contains("paddle") || value.contains("pushcount") || value.contains("stand") || value.contains("exercise") { return .activity }
         return .other
     }
+
+    var sortOrder: Int { HealthDataCategory.allCases.firstIndex(of: self) ?? .max }
 
     func displayName(for language: AppLanguage) -> String {
         switch self {
         case .activity: language.text(english: "Activity", german: "Aktivität")
-        case .heart: language.text(english: "Heart", german: "Herz")
-        case .sleep: language.text(english: "Sleep", german: "Schlaf")
         case .body: language.text(english: "Body", german: "Körper")
+        case .cycleTracking: language.text(english: "Cycle Tracking", german: "Zyklusprotokoll")
         case .hearing: language.text(english: "Hearing", german: "Hören")
+        case .heart: language.text(english: "Heart", german: "Herz")
+        case .mindfulness: language.text(english: "Mindfulness", german: "Achtsamkeit")
+        case .mobility: language.text(english: "Mobility", german: "Mobilität")
+        case .nutrition: language.text(english: "Nutrition", german: "Ernährung")
+        case .respiratory: language.text(english: "Respiratory", german: "Atmung")
+        case .sleep: language.text(english: "Sleep", german: "Schlaf")
+        case .symptoms: language.text(english: "Symptoms", german: "Symptome")
+        case .vitals: language.text(english: "Vitals", german: "Vitalwerte")
+        case .selfCare: language.text(english: "Self Care", german: "Selbstpflege")
         case .other: language.text(english: "Other", german: "Weitere")
         }
     }
@@ -140,6 +158,19 @@ struct HealthDataTypeSummary: Equatable, Identifiable {
         return unit.map { "\(formatted) \(localizedUnit($0))" } ?? formatted
     }
 
+    var preferredChartStyle: HealthChartStyle {
+        let identifier = identifier.lowercased()
+        if identifier.contains("sleep") { return .area }
+        if identifier.contains("stepcount") || identifier.contains("energy") { return .bar }
+        return .line
+    }
+
+    func values(inLast days: Int, calendar: Calendar = .current) -> [HealthDailyValue] {
+        guard days > 0, let latest = dailyValues.last?.date,
+              let cutoff = calendar.date(byAdding: .day, value: -(days - 1), to: latest) else { return [] }
+        return dailyValues.filter { $0.date >= cutoff }
+    }
+
     private func localizedUnit(_ unit: String) -> String {
         guard AppLanguage.current == .german else { return unit }
         return switch unit {
@@ -147,6 +178,37 @@ struct HealthDataTypeSummary: Equatable, Identifiable {
         case "count/min": "Anz./min"
         default: unit
         }
+    }
+}
+
+enum HealthChartStyle: Equatable {
+    case line
+    case bar
+    case area
+}
+
+struct LocalDataCoverage: Equatable {
+    let observedDays: Int
+    let missingDays: Int
+    let sparseTypes: [String]
+
+    static func make(metrics: [HealthDataTypeSummary], days: Int = 7, calendar: Calendar = .current) -> LocalDataCoverage {
+        let dates = metrics.flatMap(\.dailyValues).map { calendar.startOfDay(for: $0.date) }
+        let latest = dates.max()
+        let expectedDays: Int
+        if let latest, let start = calendar.date(byAdding: .day, value: -(days - 1), to: latest) {
+            expectedDays = Set((0..<days).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }.map { calendar.startOfDay(for: $0) }).count
+        } else {
+            expectedDays = 0
+        }
+        let observedDays: Int
+        if let latest, let start = calendar.date(byAdding: .day, value: -(days - 1), to: latest) {
+            observedDays = Set(dates.filter { $0 >= start && $0 <= latest }).count
+        } else {
+            observedDays = 0
+        }
+        let sparse = metrics.filter { $0.dailyValues.count <= 2 }.map(\.localizedDisplayName)
+        return LocalDataCoverage(observedDays: observedDays, missingDays: max(0, expectedDays - observedDays), sparseTypes: sparse)
     }
 }
 
@@ -257,8 +319,7 @@ private final class AppleHealthXMLDelegate: NSObject, XMLParserDelegate {
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
         let supportedElements: Set<String> = ["Record", "Correlation", "Workout", "ActivitySummary", "ClinicalRecord", "Audiogram", "VisionPrescription"]
         guard supportedElements.contains(elementName) else { return }
-        let identifier = elementName == "Record" ? attributeDict["type"] : elementName
-        guard let identifier else { return }
+        let identifier = attributeDict["type"] ?? elementName
         if elementName == "Record" { recordCount += 1 }
         var accumulator = accumulators[identifier] ?? HealthDataTypeAccumulator(identifier: identifier)
         accumulator.append(

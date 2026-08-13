@@ -49,4 +49,463 @@
   <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="HealthAtlas Demo" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-06-18 23:30:00 +0200" endDate="2026-06-19 07:05:00 +0200" />
   <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="HealthAtlas Demo" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-06-19 23:20:00 +0200" endDate="2026-06-20 06:50:00 +0200" />
   <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="HealthAtlas Demo" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-06-20 23:10:00 +0200" endDate="2026-06-21 06:55:00 +0200" />
+  <!-- Broad, fully fictional data-type fixture for local HealthAtlas UI testing. -->
++  <Record type="HKQuantityTypeIdentifierDistanceCycling" sourceName="HealthAtlas Demo" unit="km" value="11" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceCycling" sourceName="HealthAtlas Demo" unit="km" value="13.1" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceCycling" sourceName="HealthAtlas Demo" unit="km" value="11.7" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceCycling" sourceName="HealthAtlas Demo" unit="km" value="13.8" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceCycling" sourceName="HealthAtlas Demo" unit="km" value="12.4" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceCycling" sourceName="HealthAtlas Demo" unit="km" value="11" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceCycling" sourceName="HealthAtlas Demo" unit="km" value="13.1" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceSwimming" sourceName="HealthAtlas Demo" unit="km" value="0.7" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceSwimming" sourceName="HealthAtlas Demo" unit="km" value="1" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceSwimming" sourceName="HealthAtlas Demo" unit="km" value="0.8" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceSwimming" sourceName="HealthAtlas Demo" unit="km" value="0.6" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceSwimming" sourceName="HealthAtlas Demo" unit="km" value="0.9" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceSwimming" sourceName="HealthAtlas Demo" unit="km" value="0.7" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceSwimming" sourceName="HealthAtlas Demo" unit="km" value="1" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierFlightsClimbed" sourceName="HealthAtlas Demo" unit="count" value="9" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierFlightsClimbed" sourceName="HealthAtlas Demo" unit="count" value="7" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierFlightsClimbed" sourceName="HealthAtlas Demo" unit="count" value="10" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierFlightsClimbed" sourceName="HealthAtlas Demo" unit="count" value="8" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierFlightsClimbed" sourceName="HealthAtlas Demo" unit="count" value="11" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierFlightsClimbed" sourceName="HealthAtlas Demo" unit="count" value="9" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierFlightsClimbed" sourceName="HealthAtlas Demo" unit="count" value="7" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleExerciseTime" sourceName="HealthAtlas Demo" unit="min" value="45" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleExerciseTime" sourceName="HealthAtlas Demo" unit="min" value="39" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleExerciseTime" sourceName="HealthAtlas Demo" unit="min" value="48" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleExerciseTime" sourceName="HealthAtlas Demo" unit="min" value="42" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleExerciseTime" sourceName="HealthAtlas Demo" unit="min" value="36" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleExerciseTime" sourceName="HealthAtlas Demo" unit="min" value="45" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleExerciseTime" sourceName="HealthAtlas Demo" unit="min" value="39" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleMoveTime" sourceName="HealthAtlas Demo" unit="min" value="59" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleMoveTime" sourceName="HealthAtlas Demo" unit="min" value="55" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleMoveTime" sourceName="HealthAtlas Demo" unit="min" value="51" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleMoveTime" sourceName="HealthAtlas Demo" unit="min" value="57" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleMoveTime" sourceName="HealthAtlas Demo" unit="min" value="53" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleMoveTime" sourceName="HealthAtlas Demo" unit="min" value="59" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleMoveTime" sourceName="HealthAtlas Demo" unit="min" value="55" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleStandTime" sourceName="HealthAtlas Demo" unit="min" value="584" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleStandTime" sourceName="HealthAtlas Demo" unit="min" value="608" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleStandTime" sourceName="HealthAtlas Demo" unit="min" value="592" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleStandTime" sourceName="HealthAtlas Demo" unit="min" value="616" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleStandTime" sourceName="HealthAtlas Demo" unit="min" value="600" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleStandTime" sourceName="HealthAtlas Demo" unit="min" value="584" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleStandTime" sourceName="HealthAtlas Demo" unit="min" value="608" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="HealthAtlas Demo" unit="mL/kg*min" value="38.8" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="HealthAtlas Demo" unit="mL/kg*min" value="39.4" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="HealthAtlas Demo" unit="mL/kg*min" value="39" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="HealthAtlas Demo" unit="mL/kg*min" value="38.6" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="HealthAtlas Demo" unit="mL/kg*min" value="39.2" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="HealthAtlas Demo" unit="mL/kg*min" value="38.8" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="HealthAtlas Demo" unit="mL/kg*min" value="39.4" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="2.7" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="2.62" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="2.74" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="2.66" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="2.78" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="2.7" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="2.62" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningPower" sourceName="HealthAtlas Demo" unit="W" value="188" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningPower" sourceName="HealthAtlas Demo" unit="W" value="182" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningPower" sourceName="HealthAtlas Demo" unit="W" value="191" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningPower" sourceName="HealthAtlas Demo" unit="W" value="185" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningPower" sourceName="HealthAtlas Demo" unit="W" value="179" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningPower" sourceName="HealthAtlas Demo" unit="W" value="188" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningPower" sourceName="HealthAtlas Demo" unit="W" value="182" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="1.34" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="1.3" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="1.26" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="1.32" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="1.28" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="1.34" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingSpeed" sourceName="HealthAtlas Demo" unit="m/s" value="1.3" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingStepLength" sourceName="HealthAtlas Demo" unit="cm" value="65.4" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingStepLength" sourceName="HealthAtlas Demo" unit="cm" value="66.3" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingStepLength" sourceName="HealthAtlas Demo" unit="cm" value="65.7" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingStepLength" sourceName="HealthAtlas Demo" unit="cm" value="66.6" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingStepLength" sourceName="HealthAtlas Demo" unit="cm" value="66" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingStepLength" sourceName="HealthAtlas Demo" unit="cm" value="65.4" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingStepLength" sourceName="HealthAtlas Demo" unit="cm" value="66.3" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierSixMinuteWalkTestDistance" sourceName="HealthAtlas Demo" unit="m" value="518" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierSixMinuteWalkTestDistance" sourceName="HealthAtlas Demo" unit="m" value="524" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierSixMinuteWalkTestDistance" sourceName="HealthAtlas Demo" unit="m" value="520" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierSixMinuteWalkTestDistance" sourceName="HealthAtlas Demo" unit="m" value="516" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierSixMinuteWalkTestDistance" sourceName="HealthAtlas Demo" unit="m" value="522" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierSixMinuteWalkTestDistance" sourceName="HealthAtlas Demo" unit="m" value="518" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierSixMinuteWalkTestDistance" sourceName="HealthAtlas Demo" unit="m" value="524" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBasalEnergyBurned" sourceName="HealthAtlas Demo" unit="kcal" value="1520" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBasalEnergyBurned" sourceName="HealthAtlas Demo" unit="kcal" value="1496" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBasalEnergyBurned" sourceName="HealthAtlas Demo" unit="kcal" value="1532" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBasalEnergyBurned" sourceName="HealthAtlas Demo" unit="kcal" value="1508" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBasalEnergyBurned" sourceName="HealthAtlas Demo" unit="kcal" value="1544" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBasalEnergyBurned" sourceName="HealthAtlas Demo" unit="kcal" value="1520" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBasalEnergyBurned" sourceName="HealthAtlas Demo" unit="kcal" value="1496" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="HealthAtlas Demo" unit="count/min" value="55.4" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="HealthAtlas Demo" unit="count/min" value="54.6" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="HealthAtlas Demo" unit="count/min" value="55.8" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="HealthAtlas Demo" unit="count/min" value="55" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="HealthAtlas Demo" unit="count/min" value="54.2" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="HealthAtlas Demo" unit="count/min" value="55.4" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="HealthAtlas Demo" unit="count/min" value="54.6" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingHeartRateAverage" sourceName="HealthAtlas Demo" unit="count/min" value="92" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingHeartRateAverage" sourceName="HealthAtlas Demo" unit="count/min" value="91" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingHeartRateAverage" sourceName="HealthAtlas Demo" unit="count/min" value="90" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingHeartRateAverage" sourceName="HealthAtlas Demo" unit="count/min" value="91.5" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingHeartRateAverage" sourceName="HealthAtlas Demo" unit="count/min" value="90.5" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingHeartRateAverage" sourceName="HealthAtlas Demo" unit="count/min" value="92" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingHeartRateAverage" sourceName="HealthAtlas Demo" unit="count/min" value="91" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="HealthAtlas Demo" unit="ms" value="46.6" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="HealthAtlas Demo" unit="ms" value="48.7" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="HealthAtlas Demo" unit="ms" value="47.3" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="HealthAtlas Demo" unit="ms" value="49.4" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="HealthAtlas Demo" unit="ms" value="48" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="HealthAtlas Demo" unit="ms" value="46.6" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="HealthAtlas Demo" unit="ms" value="48.7" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateRecoveryOneMinute" sourceName="HealthAtlas Demo" unit="count/min" value="23.7" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateRecoveryOneMinute" sourceName="HealthAtlas Demo" unit="count/min" value="24.6" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateRecoveryOneMinute" sourceName="HealthAtlas Demo" unit="count/min" value="24" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateRecoveryOneMinute" sourceName="HealthAtlas Demo" unit="count/min" value="23.4" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateRecoveryOneMinute" sourceName="HealthAtlas Demo" unit="count/min" value="24.3" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateRecoveryOneMinute" sourceName="HealthAtlas Demo" unit="count/min" value="23.7" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeartRateRecoveryOneMinute" sourceName="HealthAtlas Demo" unit="count/min" value="24.6" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="HealthAtlas Demo" unit="%" value="97" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="HealthAtlas Demo" unit="%" value="96.9" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="HealthAtlas Demo" unit="%" value="97.05" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="HealthAtlas Demo" unit="%" value="96.95" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="HealthAtlas Demo" unit="%" value="97.1" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="HealthAtlas Demo" unit="%" value="97" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="HealthAtlas Demo" unit="%" value="96.9" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="HealthAtlas Demo" unit="count/min" value="15.15" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="HealthAtlas Demo" unit="count/min" value="14.85" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="HealthAtlas Demo" unit="count/min" value="15.3" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="HealthAtlas Demo" unit="count/min" value="15" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="HealthAtlas Demo" unit="count/min" value="14.7" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="HealthAtlas Demo" unit="count/min" value="15.15" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="HealthAtlas Demo" unit="count/min" value="14.85" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyTemperature" sourceName="HealthAtlas Demo" unit="degC" value="36.64" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyTemperature" sourceName="HealthAtlas Demo" unit="degC" value="36.6" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyTemperature" sourceName="HealthAtlas Demo" unit="degC" value="36.56" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyTemperature" sourceName="HealthAtlas Demo" unit="degC" value="36.62" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyTemperature" sourceName="HealthAtlas Demo" unit="degC" value="36.58" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyTemperature" sourceName="HealthAtlas Demo" unit="degC" value="36.64" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyTemperature" sourceName="HealthAtlas Demo" unit="degC" value="36.6" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureSystolic" sourceName="HealthAtlas Demo" unit="mmHg" value="116.4" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureSystolic" sourceName="HealthAtlas Demo" unit="mmHg" value="118.8" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureSystolic" sourceName="HealthAtlas Demo" unit="mmHg" value="117.2" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureSystolic" sourceName="HealthAtlas Demo" unit="mmHg" value="119.6" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureSystolic" sourceName="HealthAtlas Demo" unit="mmHg" value="118" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureSystolic" sourceName="HealthAtlas Demo" unit="mmHg" value="116.4" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureSystolic" sourceName="HealthAtlas Demo" unit="mmHg" value="118.8" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureDiastolic" sourceName="HealthAtlas Demo" unit="mmHg" value="75.5" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureDiastolic" sourceName="HealthAtlas Demo" unit="mmHg" value="77" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureDiastolic" sourceName="HealthAtlas Demo" unit="mmHg" value="76" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureDiastolic" sourceName="HealthAtlas Demo" unit="mmHg" value="75" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureDiastolic" sourceName="HealthAtlas Demo" unit="mmHg" value="76.5" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureDiastolic" sourceName="HealthAtlas Demo" unit="mmHg" value="75.5" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodPressureDiastolic" sourceName="HealthAtlas Demo" unit="mmHg" value="77" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAtrialFibrillationBurden" sourceName="HealthAtlas Demo" unit="%" value="1.2" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAtrialFibrillationBurden" sourceName="HealthAtlas Demo" unit="%" value="1.1" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAtrialFibrillationBurden" sourceName="HealthAtlas Demo" unit="%" value="1.25" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAtrialFibrillationBurden" sourceName="HealthAtlas Demo" unit="%" value="1.15" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAtrialFibrillationBurden" sourceName="HealthAtlas Demo" unit="%" value="1.3" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAtrialFibrillationBurden" sourceName="HealthAtlas Demo" unit="%" value="1.2" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAtrialFibrillationBurden" sourceName="HealthAtlas Demo" unit="%" value="1.1" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeight" sourceName="HealthAtlas Demo" unit="cm" value="176" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeight" sourceName="HealthAtlas Demo" unit="cm" value="176" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeight" sourceName="HealthAtlas Demo" unit="cm" value="176" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeight" sourceName="HealthAtlas Demo" unit="cm" value="176" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeight" sourceName="HealthAtlas Demo" unit="cm" value="176" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeight" sourceName="HealthAtlas Demo" unit="cm" value="176" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeight" sourceName="HealthAtlas Demo" unit="cm" value="176" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyMassIndex" sourceName="HealthAtlas Demo" unit="count" value="22.74" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyMassIndex" sourceName="HealthAtlas Demo" unit="count" value="22.7" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyMassIndex" sourceName="HealthAtlas Demo" unit="count" value="22.66" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyMassIndex" sourceName="HealthAtlas Demo" unit="count" value="22.72" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyMassIndex" sourceName="HealthAtlas Demo" unit="count" value="22.68" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyMassIndex" sourceName="HealthAtlas Demo" unit="count" value="22.74" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyMassIndex" sourceName="HealthAtlas Demo" unit="count" value="22.7" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="HealthAtlas Demo" unit="%" value="18.34" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="HealthAtlas Demo" unit="%" value="18.43" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="HealthAtlas Demo" unit="%" value="18.37" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="HealthAtlas Demo" unit="%" value="18.46" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="HealthAtlas Demo" unit="%" value="18.4" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="HealthAtlas Demo" unit="%" value="18.34" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="HealthAtlas Demo" unit="%" value="18.43" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierLeanBodyMass" sourceName="HealthAtlas Demo" unit="kg" value="57.15" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierLeanBodyMass" sourceName="HealthAtlas Demo" unit="kg" value="57.3" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierLeanBodyMass" sourceName="HealthAtlas Demo" unit="kg" value="57.2" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierLeanBodyMass" sourceName="HealthAtlas Demo" unit="kg" value="57.1" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierLeanBodyMass" sourceName="HealthAtlas Demo" unit="kg" value="57.25" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierLeanBodyMass" sourceName="HealthAtlas Demo" unit="kg" value="57.15" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierLeanBodyMass" sourceName="HealthAtlas Demo" unit="kg" value="57.3" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWaistCircumference" sourceName="HealthAtlas Demo" unit="cm" value="78" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWaistCircumference" sourceName="HealthAtlas Demo" unit="cm" value="77.92" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWaistCircumference" sourceName="HealthAtlas Demo" unit="cm" value="78.04" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWaistCircumference" sourceName="HealthAtlas Demo" unit="cm" value="77.96" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWaistCircumference" sourceName="HealthAtlas Demo" unit="cm" value="78.08" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWaistCircumference" sourceName="HealthAtlas Demo" unit="cm" value="78" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWaistCircumference" sourceName="HealthAtlas Demo" unit="cm" value="77.92" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryEnergyConsumed" sourceName="HealthAtlas Demo" unit="kcal" value="2130" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryEnergyConsumed" sourceName="HealthAtlas Demo" unit="kcal" value="2070" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryEnergyConsumed" sourceName="HealthAtlas Demo" unit="kcal" value="2160" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryEnergyConsumed" sourceName="HealthAtlas Demo" unit="kcal" value="2100" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryEnergyConsumed" sourceName="HealthAtlas Demo" unit="kcal" value="2040" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryEnergyConsumed" sourceName="HealthAtlas Demo" unit="kcal" value="2130" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryEnergyConsumed" sourceName="HealthAtlas Demo" unit="kcal" value="2070" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryProtein" sourceName="HealthAtlas Demo" unit="g" value="100" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryProtein" sourceName="HealthAtlas Demo" unit="g" value="96" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryProtein" sourceName="HealthAtlas Demo" unit="g" value="92" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryProtein" sourceName="HealthAtlas Demo" unit="g" value="98" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryProtein" sourceName="HealthAtlas Demo" unit="g" value="94" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryProtein" sourceName="HealthAtlas Demo" unit="g" value="100" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryProtein" sourceName="HealthAtlas Demo" unit="g" value="96" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCarbohydrates" sourceName="HealthAtlas Demo" unit="g" value="232" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCarbohydrates" sourceName="HealthAtlas Demo" unit="g" value="244" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCarbohydrates" sourceName="HealthAtlas Demo" unit="g" value="236" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCarbohydrates" sourceName="HealthAtlas Demo" unit="g" value="248" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCarbohydrates" sourceName="HealthAtlas Demo" unit="g" value="240" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCarbohydrates" sourceName="HealthAtlas Demo" unit="g" value="232" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCarbohydrates" sourceName="HealthAtlas Demo" unit="g" value="244" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatTotal" sourceName="HealthAtlas Demo" unit="g" value="71" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatTotal" sourceName="HealthAtlas Demo" unit="g" value="74" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatTotal" sourceName="HealthAtlas Demo" unit="g" value="72" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatTotal" sourceName="HealthAtlas Demo" unit="g" value="70" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatTotal" sourceName="HealthAtlas Demo" unit="g" value="73" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatTotal" sourceName="HealthAtlas Demo" unit="g" value="71" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatTotal" sourceName="HealthAtlas Demo" unit="g" value="74" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFiber" sourceName="HealthAtlas Demo" unit="g" value="28" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFiber" sourceName="HealthAtlas Demo" unit="g" value="27" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFiber" sourceName="HealthAtlas Demo" unit="g" value="28.5" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFiber" sourceName="HealthAtlas Demo" unit="g" value="27.5" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFiber" sourceName="HealthAtlas Demo" unit="g" value="29" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFiber" sourceName="HealthAtlas Demo" unit="g" value="28" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFiber" sourceName="HealthAtlas Demo" unit="g" value="27" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySugar" sourceName="HealthAtlas Demo" unit="g" value="47" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySugar" sourceName="HealthAtlas Demo" unit="g" value="45" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySugar" sourceName="HealthAtlas Demo" unit="g" value="48" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySugar" sourceName="HealthAtlas Demo" unit="g" value="46" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySugar" sourceName="HealthAtlas Demo" unit="g" value="44" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySugar" sourceName="HealthAtlas Demo" unit="g" value="47" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySugar" sourceName="HealthAtlas Demo" unit="g" value="45" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryWater" sourceName="HealthAtlas Demo" unit="mL" value="1900" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryWater" sourceName="HealthAtlas Demo" unit="mL" value="1850" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryWater" sourceName="HealthAtlas Demo" unit="mL" value="1800" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryWater" sourceName="HealthAtlas Demo" unit="mL" value="1875" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryWater" sourceName="HealthAtlas Demo" unit="mL" value="1825" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryWater" sourceName="HealthAtlas Demo" unit="mL" value="1900" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryWater" sourceName="HealthAtlas Demo" unit="mL" value="1850" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCaffeine" sourceName="HealthAtlas Demo" unit="mg" value="89" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCaffeine" sourceName="HealthAtlas Demo" unit="mg" value="98" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCaffeine" sourceName="HealthAtlas Demo" unit="mg" value="92" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCaffeine" sourceName="HealthAtlas Demo" unit="mg" value="101" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCaffeine" sourceName="HealthAtlas Demo" unit="mg" value="95" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCaffeine" sourceName="HealthAtlas Demo" unit="mg" value="89" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCaffeine" sourceName="HealthAtlas Demo" unit="mg" value="98" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodGlucose" sourceName="HealthAtlas Demo" unit="mg/dL" value="92" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodGlucose" sourceName="HealthAtlas Demo" unit="mg/dL" value="95" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodGlucose" sourceName="HealthAtlas Demo" unit="mg/dL" value="93" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodGlucose" sourceName="HealthAtlas Demo" unit="mg/dL" value="91" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodGlucose" sourceName="HealthAtlas Demo" unit="mg/dL" value="94" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodGlucose" sourceName="HealthAtlas Demo" unit="mg/dL" value="92" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodGlucose" sourceName="HealthAtlas Demo" unit="mg/dL" value="95" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierUVExposure" sourceName="HealthAtlas Demo" unit="count" value="2.4" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierUVExposure" sourceName="HealthAtlas Demo" unit="count" value="2.2" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierUVExposure" sourceName="HealthAtlas Demo" unit="count" value="2.5" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierUVExposure" sourceName="HealthAtlas Demo" unit="count" value="2.3" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierUVExposure" sourceName="HealthAtlas Demo" unit="count" value="2.6" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierUVExposure" sourceName="HealthAtlas Demo" unit="count" value="2.4" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierUVExposure" sourceName="HealthAtlas Demo" unit="count" value="2.2" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeadphoneAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="68.4" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeadphoneAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="67.6" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeadphoneAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="68.8" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeadphoneAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="68" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeadphoneAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="67.2" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeadphoneAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="68.4" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierHeadphoneAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="67.6" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEnvironmentalAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="63" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEnvironmentalAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="62" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEnvironmentalAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="61" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEnvironmentalAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="62.5" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEnvironmentalAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="61.5" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEnvironmentalAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="63" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEnvironmentalAudioExposure" sourceName="HealthAtlas Demo" unit="dBASPL" value="62" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleSleepingWristTemperature" sourceName="HealthAtlas Demo" unit="degC" value="33.04" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleSleepingWristTemperature" sourceName="HealthAtlas Demo" unit="degC" value="33.13" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleSleepingWristTemperature" sourceName="HealthAtlas Demo" unit="degC" value="33.07" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleSleepingWristTemperature" sourceName="HealthAtlas Demo" unit="degC" value="33.16" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleSleepingWristTemperature" sourceName="HealthAtlas Demo" unit="degC" value="33.1" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleSleepingWristTemperature" sourceName="HealthAtlas Demo" unit="degC" value="33.04" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleSleepingWristTemperature" sourceName="HealthAtlas Demo" unit="degC" value="33.13" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppleStandHour" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppleStandHour" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppleStandHour" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppleStandHour" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppleStandHour" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppleStandHour" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppleStandHour" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMindfulSession" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMindfulSession" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMindfulSession" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMindfulSession" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMindfulSession" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMindfulSession" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMindfulSession" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierToothbrushingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierToothbrushingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierToothbrushingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierToothbrushingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierToothbrushingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierToothbrushingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierToothbrushingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHandwashingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-01 12:00:00 +0200" endDate="2026-07-01 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHandwashingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-02 12:00:00 +0200" endDate="2026-07-02 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHandwashingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-03 12:00:00 +0200" endDate="2026-07-03 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHandwashingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-04 12:00:00 +0200" endDate="2026-07-04 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHandwashingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-05 12:00:00 +0200" endDate="2026-07-05 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHandwashingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-06 12:00:00 +0200" endDate="2026-07-06 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHandwashingEvent" sourceName="HealthAtlas Demo" value="1" startDate="2026-07-07 12:00:00 +0200" endDate="2026-07-07 12:01:00 +0200" />
+  <!-- Additional fictional coverage of current Apple Health Record identifiers; no personal export data. -->
+  <Record type="HKCategoryTypeIdentifierAbdominalCramps" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAcne" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppetiteChanges" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierAppleWalkingSteadinessEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierBladderIncontinence" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierBleedingAfterMenopause" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierBleedingAfterPregnancy" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierBleedingDuringPregnancy" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierBloating" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierBreastPain" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierCervicalMucusQuality" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierChestTightnessOrPain" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierChills" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierConstipation" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierContraceptive" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierCoughing" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierDiarrhea" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierDizziness" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierDrySkin" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierEnvironmentalAudioExposureEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierFainting" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierFatigue" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierFever" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierGeneralizedBodyAche" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHairLoss" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHeadache" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHeadphoneAudioExposureEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHeartburn" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHighHeartRateEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHotFlashes" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierHypertensionEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierInfrequentMenstrualCycles" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierIntermenstrualBleeding" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierIrregularHeartRhythmEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierIrregularMenstrualCycles" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierLactation" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierLossOfSmell" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierLossOfTaste" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierLowCardioFitnessEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierLowHeartRateEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierLowerBackPain" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMemoryLapse" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMenopausalState" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMenstrualFlow" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierMoodChanges" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierNausea" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierNightSweats" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierOvulationTestResult" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierPelvicPain" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierPersistentIntermenstrualBleeding" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierPregnancy" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierPregnancyTestResult" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierProgesteroneTestResult" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierProlongedMenstrualPeriods" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierRapidPoundingOrFlutteringHeartbeat" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierRunnyNose" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierSexualActivity" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierShortnessOfBreath" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierSinusCongestion" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierSkippedHeartbeat" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierSleepApneaEvent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierSleepChanges" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierSoreThroat" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierVaginalDryness" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierVomiting" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKCategoryTypeIdentifierWheezing" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Correlation type="HKCorrelationTypeIdentifierBloodPressure" sourceName="HealthAtlas Demo (synthetic)" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Correlation type="HKCorrelationTypeIdentifierFood" sourceName="HealthAtlas Demo (synthetic)" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierAppleWalkingSteadiness" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBasalBodyTemperature" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierBloodAlcoholContent" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierCrossCountrySkiingSpeed" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierCyclingCadence" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierCyclingFunctionalThresholdPower" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierCyclingPower" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierCyclingSpeed" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryBiotin" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCalcium" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryChloride" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCholesterol" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryChromium" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryCopper" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatMonounsaturated" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatPolyunsaturated" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFatSaturated" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryFolate" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryIodine" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryIron" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryMagnesium" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryManganese" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryMolybdenum" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryNiacin" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryPantothenicAcid" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryPhosphorus" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryPotassium" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryRiboflavin" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySelenium" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietarySodium" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryThiamin" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryVitaminA" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryVitaminB12" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryVitaminB6" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryVitaminC" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryVitaminD" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryVitaminE" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryVitaminK" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDietaryZinc" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceCrossCountrySkiing" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceDownhillSnowSports" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistancePaddleSports" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceRowing" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceSkatingSports" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierDistanceWheelchair" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierElectrodermalActivity" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEnvironmentalSoundReduction" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierEstimatedWorkoutEffortScore" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierForcedExpiratoryVolume1" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierForcedVitalCapacity" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierInhalerUsage" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierInsulinDelivery" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierNikeFuel" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierNumberOfAlcoholicBeverages" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierNumberOfTimesFallen" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierPaddleSportsSpeed" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierPeakExpiratoryFlowRate" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierPeripheralPerfusionIndex" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierPhysicalEffort" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierPushCount" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRowingSpeed" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningGroundContactTime" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningStrideLength" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierRunningVerticalOscillation" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierStairAscentSpeed" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierStairDescentSpeed" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierSwimmingStrokeCount" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierTimeInDaylight" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierUnderwaterDepth" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingAsymmetryPercentage" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWalkingDoubleSupportPercentage" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWaterTemperature" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
+  <Record type="HKQuantityTypeIdentifierWorkoutEffortScore" sourceName="HealthAtlas Demo (synthetic)" value="1" unit="count" startDate="2026-07-08 12:00:00 +0200" endDate="2026-07-08 12:01:00 +0200" />
 </HealthData>

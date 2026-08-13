@@ -11,15 +11,18 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 - Frei wählbare, erkannte Datentypen für die Anzeige
 - Dynamische Kennzahlen-Kacheln mit eigener Farbe und grafischem Hintergrund
 - Interaktive Verläufe: Datentyp, 7T/30T/3M/1J, Hover-Werte und einzelne Datenpunkte auswählen
-- Favoriten, lokale Reihenfolge, Kategorien und Suche für große Datentyp-Listen
-- Wählbare Fokus-Kennzahl mit animiertem Ring, großem Verlauf und typabhängiger Grafik
+- Getrennte Pins für Übersicht, Verläufe und Einblicke sowie lokale Reihenfolge, Kategorien und Suche für große Datentyp-Listen
+- Klickbare Kennzahlen-Karten mit eigener Vollbild-Fokusansicht, Verlauf, Zeitraumvergleich und Jahreskalender
 - Gemeinsamer Mehrfach-Verlauf, visuelle Tagesringe und lokaler Zeitraumvergleich
-- Eigene Datenkalender-Balken mit 12 Wochen oder einem Jahr unter Verläufen und Einblicken, lokale Musterkarte und echte Vollbild-Fokusansicht mit Zeitraumvergleich
+- Lokaler Datenkalender in Verläufen mit 1 Woche, 4 Wochen, 3 Monaten, 6 Monaten oder 1 Jahr sowie echte Vollbild-Fokusansicht mit Zeitraumvergleich
 - Interaktive Verläufe mit schwebender Wertkarte, Datum, Mini-Trend und sanft pulsierendem ausgewählten Punkt
-- Anpassbares Dashboard: Kartenzahl, kompakte/Standard/Fokus-Dichte sowie freie lokale Reihenfolge per Drag & Drop
+- Anpassbares Dashboard: Kartenzahl, kompakte/Standard/Fokus-Dichte sowie gespeicherte lokale Kartenanordnung je Layout
 - Lokale Datenqualitäts-Übersicht ohne Bewertung der Gesundheitswerte
-- Lokaler PDF-Bericht an einen bewusst gewählten Speicherort
-- Beschreibende lokale Einblicke, niemals Diagnosen oder Behandlungsempfehlungen
+- Konfigurierbarer lokaler PDF-Bericht: Zeitraum, ausgewählte Datentypen und Bericht-Theme; nur an einen bewusst gewählten Speicherort
+- Zum lokalen Datentyp passende Diagramme: Balken für Schritte und Energie, Bereichsdiagramm für Schlaf, Linien für andere numerische Werte und lokale Zeitraum-Ringe
+- Lokale Datenverwaltung mit Import ersetzen, Bestätigung zum vollständigen Löschen und sichtbarem Importzeitpunkt der aktuellen Sitzung
+- Reine Abdeckungs-Hinweise zu fehlenden lokalen Tagen, wenigen Werten und sachlichen Trend-Höhepunkten — niemals Gesundheitsbewertung oder Diagnose
+- Beschreibende lokale Einblicke mit Momentaufnahme, lokaler Abdeckung und Erfassungsmuster — niemals Diagnosen oder Behandlungsempfehlungen
 - Deutsche und englische Oberfläche
 - Beschreibende Karte „Dein Zeitraum in Kürze“ für die letzten sieben lokalen Erfassungstage — keine Bewertung und keine Diagnose
 - Geführte Glas-Leerzustände mit direkter Aktion zu Quellen oder lokalem Import
@@ -67,7 +70,7 @@ Apple-Health-ZIP-Archive mit `Export.xml` und direkte `Export.xml`-Dateien werde
 
 ## Demo ohne persönliche Daten
 
-Für einen sicheren Test liegt eine vollständig synthetische Apple-Health-Datei im Repository: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). Sie enthält fiktive Schritte, Herzfrequenz, Körpergewicht, aktive Energie, Geh-/Laufdistanz und Schlafanalyse über mehrere Tage.
+Für einen sicheren Test liegt eine vollständig synthetische Apple-Health-Datei im Repository: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). Sie enthält fiktive Werte für alle aktuell unterstützten, nicht veralteten Apple-Health-Exporttypen; persönliche Exportwerte werden nicht übernommen.
 
 In HealthAtlas **Apple Health importieren …** wählen und diese Datei öffnen. Unter **Quellen** Datentypen wählen, unter **Übersicht** Kartenzahl und Dichte festlegen und unter **Verläufe** Datentyp, Zeitraum und einzelne Punkte ausprobieren. Es werden keine persönlichen Daten benötigt oder hochgeladen.
 
@@ -82,7 +85,7 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 
 ## Screenshots
 
-Alle folgenden Screenshots verwenden ausschließlich die mitgelieferten synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
+Alle folgenden Screenshots zeigen die aktuelle HealthAtlas-Oberfläche mit ausschließlich synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
 
 ### Import
 
