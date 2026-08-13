@@ -3,6 +3,18 @@ import Testing
 @testable import HealthAtlasApp
 
 struct HealthAtlasTests {
+    @Test func syntheticDemoCoversEveryCurrentAppleRecordIdentifier() throws {
+        let projectRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let demoURL = projectRoot.appendingPathComponent("Demo/AppleHealthDemo/Export.xml")
+        let summary = AppleHealthImporter.importXML(data: try Data(contentsOf: demoURL), fileName: "Export.xml")
+
+        #expect(summary?.recordCount == 495)
+        #expect(summary?.dataTypes.count == 193)
+    }
+
     @Test func appleHealthParserListsEveryRecognisedRecordType() {
         let xml = """
         <?xml version="1.0" encoding="UTF-8"?>
@@ -94,6 +106,9 @@ struct HealthAtlasTests {
         #expect(HealthDataCategory.category(for: "HKCategoryTypeIdentifierSleepAnalysis") == .sleep)
         #expect(HealthDataCategory.category(for: "HKQuantityTypeIdentifierStepCount") == .activity)
         #expect(HealthDataCategory.category(for: "HKQuantityTypeIdentifierBodyMass") == .body)
+        #expect(HealthDataCategory.category(for: "HKQuantityTypeIdentifierDietaryProtein") == .nutrition)
+        #expect(HealthDataCategory.category(for: "HKQuantityTypeIdentifierWalkingSpeed") == .mobility)
+        #expect(HealthDataCategory.category(for: "HKCategoryTypeIdentifierHeadache") == .symptoms)
     }
 
     @Test func chartStylesMatchTheLocalDataType() {

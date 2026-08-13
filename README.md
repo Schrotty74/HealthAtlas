@@ -11,17 +11,20 @@ It starts empty, imports only a file you choose, and turns selected health data 
 - Native macOS app built with Swift, SwiftUI and AppKit
 - Local import of Apple Health `Export.xml` files and ZIP archives containing one
 - Select exactly which recognised data types appear in the app
-- A selectable hero metric with animated orbit, large trend line and type-specific visual treatment
+- Clickable metric cards with a dedicated full-screen focus view, trend, period comparison and yearly calendar
 - Responsive metric cards with individual colour and graphic treatments; click a card for a detailed local focus view
 - Interactive trends: select a data type, 7D/30D/3M/1Y range, floating hover cards with date, value and mini-trend, plus gently pulsing selected points
 - A descriptive “Your period at a glance” card for the latest locally recorded seven days — never a rating or diagnosis
-- Favourites, local ordering, categories and search for large data-type lists
+- Separate pins for Overview, Trends and Insights, plus local ordering, categories and search for large data-type lists
 - Shared multi-metric timeline, visual daily rings and local period comparison
-- Separate data-calendar panels for 12 weeks or one year in Trends and Insights, a local pattern card and a true full-screen focus view
-- Configurable dashboard: card count, compact/standard/focus density and free local drag-and-drop ordering
+- A local data calendar in Trends for 1 week, 4 weeks, 3 months, 6 months or 1 year, plus a true full-screen focus view with period comparison
+- Configurable dashboard: card count, compact/standard/focus density and a saved local card order for each layout
 - Local data-quality overview without rating health values
-- Local PDF report written only to a location explicitly selected by the person
-- Descriptive local insights; never diagnoses or treatment recommendations
+- Configurable local PDF report: period, selected data types and report theme; written only to a location explicitly selected by the person
+- Chart types matched to local data: bars for steps and energy, area charts for sleep, lines for other numeric values, and local period rings
+- Local data management with replace import, delete-all confirmation and a visible import time for the current session
+- Coverage-only notes for missing local days, sparse data types and factual trend highlights — never a health rating or diagnosis
+- Descriptive local insights with a snapshot, local coverage and recording pattern; never diagnoses or treatment recommendations
 - German and English UI
 - Guided frosted-glass empty states that lead directly to Sources or local import
 - Glass themes, subtle card and chart animations, native frosted sidebar, import-success shimmer, and a calm Clear Glass atmosphere with glow, sparks, contours and health symbols behind readable content
@@ -66,7 +69,7 @@ There is no direct HealthKit or cloud-service connection.
 
 ## Demo without personal data
 
-The repository includes a fully synthetic Apple Health file for safe testing: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). It contains fictional steps, heart rate, body mass, active energy, walking/running distance and sleep-analysis records across several days.
+The repository includes a fully synthetic Apple Health file for safe testing: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). It contains fictional values for every currently supported, non-deprecated Apple Health export type; no personal export values are included.
 
 In HealthAtlas, choose **Import Apple Health…** and select that file. Use **Sources** to choose data types, **Overview** to select card count and density, and **Trends** to try data types, periods and individual points. No personal data is required or uploaded.
 
