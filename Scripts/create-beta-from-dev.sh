@@ -79,7 +79,11 @@ require_gh() {
 }
 
 worktree_tree() {
-    local changed_paths=("${(@f)$( { git diff --name-only HEAD --; git diff --cached --name-only; git ls-files --others --exclude-standard; } | sort -u)}")
+    local changed_paths=()
+    local changed_path
+    while IFS= read -r changed_path; do
+        [[ -n "$changed_path" ]] && changed_paths+=("$changed_path")
+    done < <({ git diff --name-only HEAD --; git diff --cached --name-only; git ls-files --others --exclude-standard; } | sort -u)
     (( ${#changed_paths[@]} > 0 )) && git add -A -- "${changed_paths[@]}"
     git write-tree
 }
