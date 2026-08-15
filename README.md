@@ -1,8 +1,8 @@
-# HealthAtlas
+# HealthAtlas for macOS – Private Apple Health Export Analyzer
 
 [Deutsch](README.de.md)
 
-HealthAtlas is a privacy-first macOS app for turning a local Apple Health export into clear, visual insights.
+HealthAtlas is a privacy-first macOS Apple Health export viewer and analyzer for turning a local Apple Health export into clear, visual insights.
 
 It starts empty, imports only a file you choose, and turns selected health data into a calm, modern dashboard. HealthAtlas focuses on trends and personal patterns instead of raw tables.
 
