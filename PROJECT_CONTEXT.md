@@ -1,7 +1,6 @@
 # HealthAtlas – Projektkontext
 
-> Haupt-Wissensquelle für neue Codex-Chats. Stand: 2026-08-10.
-> Zuerst diese Datei, danach [NEXT_STEPS.md](NEXT_STEPS.md), [README.md](README.md) und bei deutschen Texten [README.de.md](README.de.md) lesen. Für synthetische Testdaten siehe [Demo/README.md](Demo/README.md).
+Stand: 2026-08-10.
 
 ## Ziel und Zweck
 
@@ -74,7 +73,7 @@ Die Login-Shell ist zsh. Für Bash-Skripte auf diesem Mac die Homebrew-Bash verw
 
 Die aktuelle veröffentlichte Vorabversion ist `0.1.0-beta.2` mit ZIP, DMG und
 SHA-256-Dateien. Der Arbeitsstand für diese Dokumente ist `main`; Änderungen an
-den Übergabedokumenten nur dort veröffentlichen, sofern nicht ausdrücklich etwas
+den Dokumenten nur dort veröffentlichen, sofern nicht ausdrücklich etwas
 anderes beauftragt wird.
 
 Builds, Releases, Tags, Commits, Pushes und Backups niemals ohne ausdrücklichen Auftrag starten.
