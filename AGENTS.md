@@ -1,22 +1,28 @@
 # AGENTS.md
 
-Vor jeder Projektarbeit zuerst `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` lesen.
+Dieser Branch ist der veröffentlichte **Beta-Quellstand** von HealthAtlas. `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` sind auf diesem Branch nicht vorhanden; sie dürfen deshalb hier nicht als Pflichtdateien vorausgesetzt werden.
+
+Vor Projektarbeit zuerst diese Datei, `README.md`, bei Bedarf `README.de.md`, anschließend die für den Auftrag relevanten Quellen, Skripte und Konfigurationen lesen.
 
 ## Verbindliche Arbeitsregeln
 
-- `PROJECT_CONTEXT.md` ist die dauerhafte Quelle für den aktuellen Projektkontext.
-- `NEXT_STEPS.md` enthält nur tatsächlich offene Aufgaben, bestätigte Bugs und konkrete nächste Schritte.
-- Bei relevanten Änderungen an Funktionen, Architektur, Datenformaten, Datenschutz, Build/Release oder offenen Aufgaben die betroffenen Kontextdateien im selben Auftrag aktualisieren.
-- Erledigte Punkte aus `NEXT_STEPS.md` entfernen oder nach vorhandenen Projektregeln archivieren.
-- Weitere projektspezifische Regeln und Dokumente beachten.
+- Den tatsächlichen Stand dieses Beta-Branches als Quelle für Aussagen über die Beta verwenden. Keine Funktionen, Tests, Builds oder Release-Zustände aus anderen Branches ungeprüft übernehmen.
+- `beta` bleibt ein Release-Branch. Neue Entwicklungsarbeit gehört nicht beiläufig auf diesen Branch.
 - Bestehende Architektur, Datenformate, Einstellungen und Benutzerabläufe erhalten, sofern eine Änderung nicht ausdrücklich verlangt oder technisch notwendig ist.
 - Keine unnötigen Refactorings, neuen Abhängigkeiten oder Funktionsentfernungen ohne klaren Auftrag.
-- Keine Projektzustände, Testergebnisse, Builds, Scans, Prüfungen oder offenen Punkte erfinden. Einen Erfolg nur behaupten, wenn die betreffende Prüfung tatsächlich ausgeführt wurde.
+- Keine Projektzustände, Testergebnisse, Builds, Prüfungen oder offenen Punkte erfinden. Einen Erfolg nur behaupten, wenn die betreffende Prüfung tatsächlich ausgeführt wurde.
 - Fragen nicht automatisch als Änderungsauftrag behandeln. Dateien, Builds, Tests oder Veröffentlichungsaktionen nur ausführen, wenn der Auftrag dies verlangt oder sie für die ausdrücklich beauftragte Änderung notwendig sind.
 - Erklärungen verständlich formulieren und keine besonderen technischen Vorkenntnisse voraussetzen. Keine persönlichen Aussagen über Fähigkeiten, Kenntnisse, Gewohnheiten oder Arbeitsweise des Entwicklers dokumentieren.
-- Bei Git-Projekten dokumentierte Branch-Grenzen beachten. Branches nicht ohne ausdrücklichen Auftrag wechseln oder zusammenführen.
+- Branch-Grenzen beachten. `beta`, `dev` und `main` nicht ohne ausdrücklichen Auftrag wechseln, zusammenführen oder fortschreiben.
 - Keine Versionen, Buildnummern, Commits, Pushes, Tags, Releases oder Veröffentlichungen ohne ausdrücklichen Auftrag erstellen oder ändern.
 - Keine Regeln zur Vorbereitung oder Fortsetzung eines neuen Chats aufnehmen. Solche Anweisungen gehören ausschließlich in `CHAT_TEMPLATE.md` beziehungsweise in einen separaten Start-Prompt.
+
+## HealthAtlas-spezifische Grenzen
+
+- Ausschließlich synthetische Apple-Health-Daten für Tests, Screenshots und öffentliche Dokumentation verwenden.
+- Keine HealthKit-Integration, Cloud-Synchronisierung, Diagnose- oder Behandlungsaussagen als bestehende Funktion darstellen oder ohne ausdrücklichen Produktauftrag beginnen.
+- Die datensparsame KI-Ersthilfe darf keine Gesundheitsdaten oder lokalen Exportinhalte automatisch an externe Dienste übertragen.
+- Öffentliche Beta-Artefakte und Dokumentation müssen vor Veröffentlichung nach dem vorhandenen Datenschutz-/Release-Workflow geprüft werden.
 
 ## Datenschutzregel für das öffentliche Repository
 
@@ -46,6 +52,4 @@ Pfade in öffentlicher Dokumentation müssen neutral sein, zum Beispiel `/Users/
 
 Informationen über die lokale Entwicklungsumgebung werden nur dokumentiert, wenn sie technisch für das Projekt erforderlich sind. Persönliche oder gerätespezifische Details werden nach Möglichkeit durch allgemeine technische Anforderungen ersetzt.
 
-Vor Commit, Push oder Veröffentlichung ist zu prüfen, dass keine privaten oder sensiblen Daten enthalten sind. Vor finalen Veröffentlichungen gelten zusätzlich die im Projekt dokumentierten erweiterten Datenschutz- und Release-Prüfungen.
-
-Wenn unklar ist, ob eine Information öffentlich sein darf, wird sie nicht veröffentlicht, bis dies eindeutig geklärt ist.
+Vor Commit, Push oder Veröffentlichung ist zu prüfen, dass keine privaten oder sensiblen Daten enthalten sind. Wenn unklar ist, ob eine Information öffentlich sein darf, wird sie nicht veröffentlicht, bis dies eindeutig geklärt ist.
