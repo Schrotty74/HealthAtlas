@@ -16,18 +16,16 @@ Bitte lies vor Beginn vollständig:
 4. `README.md` und bei deutschen Texten `README.de.md`
 5. Bei Demo- oder Testdatenarbeit `Demo/README.md`
 
+Die verbindlichen allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md` und gelten vollständig.
+
 Prüfe vor Aussagen oder Änderungen den tatsächlichen Projektzustand. Halte `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` bei wichtigen Änderungen aktuell.
 
-Schutzregeln:
+HealthAtlas-spezifisch:
 
-- Keine persönlichen Apple-Health-Exporte, lokalen Benutzerpfade, Zugangsdaten, Zertifikate, Teams, Tokens oder Backups lesen, speichern, dokumentieren oder committen.
 - Nur synthetische Demodaten für Tests, Screenshots und das Repository nutzen.
-- Keine Builds, Releases, Tags, Commits, Pushes, Backups oder Veröffentlichungen ohne ausdrücklichen Auftrag starten.
 - Keine HealthKit-Integration, Cloud-Synchronisierung, Diagnose- oder Behandlungsaussagen beginnen, sofern dies nicht ausdrücklich beauftragt wurde.
 - Bestehende Architektur und Release-Skripte nicht unnötig umstellen.
-- Fehlende Informationen als unbekannt kennzeichnen statt sie zu erfinden.
 - Vor App-Arbeit Dokumentation, Manifeste, Lockfiles, Build-Skripte und CI-Konfiguration prüfen. Projektgebundene Abhängigkeiten niemals global installieren; Änderungen an der allgemeinen Entwicklungsumgebung nur nach den vorhandenen Projektregeln.
-- Vor Änderungen den Umfang kurz nennen. Nach Änderungen Dateien, Prüfungen und offene Punkte kompakt nennen.
 
 Aktueller Auftrag:
 
