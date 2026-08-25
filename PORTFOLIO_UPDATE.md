@@ -11,6 +11,6 @@ Update the relevant project card or detail page when its name, description,
 status, screenshots, repository link, live-app link, download URL or supported
 platforms changed.
 
-Do not publish private user data, personal exports, logs, backups, licence keys
-or screenshots containing real data. Use only synthetic demo data in public
-portfolio material.
+The repository-wide privacy and publication rules in `AGENTS.md` apply to all
+portfolio material. Public screenshots and example data must use only synthetic,
+anonymized or clearly fictional data.
