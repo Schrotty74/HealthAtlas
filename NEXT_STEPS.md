@@ -1,6 +1,6 @@
 # HealthAtlas – Nächste Schritte
 
-Stand: 2026-08-10. Bei größeren Änderungen aktualisieren. Kontext und feste Regeln stehen in [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+Stand: 2026-08-10. Bei größeren Änderungen aktualisieren. Kontext und projektspezifische Regeln stehen in [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md); allgemeine Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md`.
 
 ## Priorität 1 – Vor der nächsten Beta gezielt prüfen
 
@@ -10,7 +10,7 @@ Stand: 2026-08-10. Bei größeren Änderungen aktualisieren. Kontext und feste R
   Daten anzeigen; bei leeren Daten muss eine verständliche Erklärung erscheinen.
 - Gatekeeper-Öffnen der Beta auf einem Mac ohne bereits gewährte Ausnahme testen.
 - `swift test` und `Scripts/privacy-check.sh` vor einem weiteren Release erneut
-  ausführen. Keine privaten Apple-Health-Exporte für Tests oder Screenshots nutzen.
+  ausführen.
 
 ## Priorität 2 – Geplante visuelle Weiterentwicklung
 
@@ -30,4 +30,3 @@ Diese Punkte sind Wünsche aus der bisherigen Produktarbeit, keine bereits zuges
 
 - Keine reale HealthKit-Integration beginnen.
 - Keine medizinischen Bewertungen, Diagnosen oder Behandlungshinweise entwickeln.
-- Keine Releases, Tags, Pushes, Backups oder globalen Abhängigkeitsinstallationen ohne ausdrücklichen Auftrag starten.
