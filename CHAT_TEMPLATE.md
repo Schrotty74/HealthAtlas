@@ -1,33 +1,27 @@
-# Chat-Startvorlage – HealthAtlas
+# Chat-Startvorlage – HealthAtlas Beta
 
-Ich arbeite am Projekt **HealthAtlas**.
-
-Projekt-Root:
-`Repository-Root`
+Ich arbeite am **Beta-Branch** von HealthAtlas.
 
 Repository:
 https://github.com/Schrotty74/HealthAtlas
 
-Bitte lies vor Beginn vollständig:
+Dieser Branch ist ein veröffentlichter Beta-Quellstand. `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` sind hier nicht vorhanden und werden nicht vorausgesetzt.
+
+Bitte lies vor Beginn:
 
 1. `AGENTS.md`
-2. `PROJECT_CONTEXT.md`
-3. `NEXT_STEPS.md`
-4. `README.md` und bei deutschen Texten `README.de.md`
-5. Bei Demo- oder Testdatenarbeit `Demo/README.md`
+2. `README.md`
+3. bei deutschen Texten `README.de.md`
+4. anschließend nur die für den Auftrag relevanten Quellen, Skripte und Konfigurationen
 
-Prüfe vor Aussagen oder Änderungen den tatsächlichen Projektzustand. Halte `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` bei wichtigen Änderungen aktuell.
+Die verbindlichen allgemeinen und Beta-spezifischen Arbeits-, Branch-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md` und gelten vollständig.
 
-Schutzregeln:
+HealthAtlas-Beta-spezifisch:
 
-- Keine persönlichen Apple-Health-Exporte, lokalen Benutzerpfade, Zugangsdaten, Zertifikate, Teams, Tokens oder Backups lesen, speichern, dokumentieren oder committen.
-- Nur synthetische Demodaten für Tests, Screenshots und das Repository nutzen.
-- Keine Builds, Releases, Tags, Commits, Pushes, Backups oder Veröffentlichungen ohne ausdrücklichen Auftrag starten.
-- Keine HealthKit-Integration, Cloud-Synchronisierung, Diagnose- oder Behandlungsaussagen beginnen, sofern dies nicht ausdrücklich beauftragt wurde.
-- Bestehende Architektur und Release-Skripte nicht unnötig umstellen.
-- Fehlende Informationen als unbekannt kennzeichnen statt sie zu erfinden.
-- Vor App-Arbeit Dokumentation, Manifeste, Lockfiles, Build-Skripte und CI-Konfiguration prüfen. Projektgebundene Abhängigkeiten niemals global installieren; Änderungen an der allgemeinen Entwicklungsumgebung nur nach den vorhandenen Projektregeln.
-- Vor Änderungen den Umfang kurz nennen. Nach Änderungen Dateien, Prüfungen und offene Punkte kompakt nennen.
+- Den tatsächlichen Stand dieses Branches höher gewichten als frühere Chats oder andere Branches.
+- Keine neue Entwicklungsarbeit beiläufig in `beta` beginnen.
+- Für Tests, Screenshots und öffentliche Inhalte ausschließlich synthetische Apple-Health-Daten verwenden.
+- Bestehende Release- und Datenschutzabläufe nicht umgehen.
 
 Aktueller Auftrag:
 
