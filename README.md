@@ -125,6 +125,10 @@ HealthAtlas is an early beta. Test data, interface and local-import behavior
 are ready for feedback; medical integration, diagnosis features and public
 distribution are explicitly out of scope.
 
+## Community
+
+Questions, feedback and discussions are welcome on [Discord](https://discord.gg/Zy93AaYFaj).
+
 ## Repo activity
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/5794869c28ec7fa1c826d7670ee193444623e93a.svg "Repobeats analytics image")
