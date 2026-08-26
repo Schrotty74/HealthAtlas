@@ -128,6 +128,10 @@ HealthAtlas is an early beta. Test data, interface and local-import behavior
 are ready for feedback; medical integration, diagnosis features and public
 distribution are explicitly out of scope.
 
+## Community
+
+Questions, feedback and discussions are welcome on [Discord](https://discord.gg/Zy93AaYFaj).
+
 ## License
 
 License information will be added before the first public release.
