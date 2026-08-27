@@ -123,14 +123,14 @@ last_beta_tag() {
 categorized_release_changes() {
     local base_ref="$1" target_ref="$2"
     local changed_paths
-    changed_paths="$(git diff --name-only "$base_ref" "$target_ref" -- Sources Tests HealthAtlas.xcodeproj README.md README.de.md output/pdf Scripts 2>/dev/null | sort -u)"
+    changed_paths="$(git diff --name-only "$base_ref" "$target_ref" -- Sources Tests HealthAtlas.xcodeproj HealthAtlas/Info.plist README.md README.de.md output/pdf Scripts 2>/dev/null | sort -u)"
     [[ -n "$changed_paths" ]] || return 1
 
     printf '## Changes\n\n'
     if grep -q '^Sources/' <<<"$changed_paths"; then
         printf '%s\n' '- Updated HealthAtlas app functionality and interface.'
     fi
-    if grep -q '^HealthAtlas.xcodeproj/' <<<"$changed_paths"; then
+    if grep -Eq '^(HealthAtlas\.xcodeproj/|HealthAtlas/Info\.plist$)' <<<"$changed_paths"; then
         printf '%s\n' '- Updated the Xcode project configuration.'
     fi
     if grep -q '^Tests/' <<<"$changed_paths"; then
