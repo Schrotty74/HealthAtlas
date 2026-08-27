@@ -2,6 +2,9 @@
 
 [Deutsch](README.de.md)
 
+> [!IMPORTANT]
+> The `main` branch is reserved for final releases. Newer features may appear first on the [`beta` branch](https://github.com/Schrotty74/HealthAtlas/tree/beta).
+
 HealthAtlas is a privacy-first macOS Apple Health export viewer and analyzer for turning a local Apple Health export into clear, visual insights.
 
 It starts empty, imports only a file you choose, and turns selected health data into a calm, modern dashboard. HealthAtlas focuses on trends and personal patterns instead of raw tables.

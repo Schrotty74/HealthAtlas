@@ -1,5 +1,8 @@
 # HealthAtlas
 
+> [!IMPORTANT]
+> Der Branch `main` ist finalen Veröffentlichungen vorbehalten. Neuere Funktionen können zuerst im [`beta`-Branch](https://github.com/Schrotty74/HealthAtlas/tree/beta) erscheinen.
+
 HealthAtlas ist eine datenschutzorientierte macOS-App, die einen lokalen Apple-Health-Export verständlich und grafisch aufbereitet.
 
 Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei und zeigt ausgewählte Gesundheitsdaten in einem ruhigen, modernen Dashboard. HealthAtlas konzentriert sich auf Verläufe und persönliche Muster statt auf Rohdaten-Tabellen.
