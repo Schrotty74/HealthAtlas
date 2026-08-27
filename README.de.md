@@ -129,10 +129,6 @@ HealthAtlas ist eine frühe Beta. Testdaten, Oberfläche und lokaler Import sind
 bereit für Feedback; medizinische Integration, Diagnosefunktionen und eine
 öffentliche Verteilung sind ausdrücklich nicht Teil dieses Standes.
 
-## Community
-
-Fragen, Feedback und Diskussionen sind auf [Discord](https://discord.gg/Zy93AaYFaj) willkommen.
-
 ## Lizenz
 
 Die Lizenz wird vor der ersten öffentlichen Veröffentlichung ergänzt.

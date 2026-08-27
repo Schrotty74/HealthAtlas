@@ -825,8 +825,8 @@ private final class HealthWorkspaceViewController: NSViewController {
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: card.leadingAnchor), stack.trailingAnchor.constraint(equalTo: card.trailingAnchor),
             stack.topAnchor.constraint(equalTo: card.topAnchor), stack.bottomAnchor.constraint(equalTo: card.bottomAnchor),
-            heatmap.heightAnchor.constraint(equalToConstant: heatmapRangeDays >= 182 ? 82 : 112),
-            card.heightAnchor.constraint(equalToConstant: heatmapRangeDays >= 182 ? 138 : 168)
+            heatmap.heightAnchor.constraint(equalToConstant: 112),
+            card.heightAnchor.constraint(equalToConstant: 168)
         ])
         return card
     }

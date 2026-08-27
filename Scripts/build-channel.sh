@@ -12,6 +12,10 @@ esac
 root="$(cd "$(dirname "$0")/.." && pwd)"
 build_root="${HEALTHATLAS_BUILD_ROOT:-$root}"
 derived_data="$build_root/.build/$channel/DerivedData"
+marketing_version_setting=()
+if [[ -n "${HEALTHATLAS_VERSION:-}" ]]; then
+  marketing_version_setting=("MARKETING_VERSION=$HEALTHATLAS_VERSION")
+fi
 
 # Each channel begins without app-owned state and never touches another channel.
 bash "$root/Scripts/clean-channel-state.sh" "$channel"
@@ -23,6 +27,7 @@ HEALTHATLAS_SKIP_SCHEME_CLEAN=YES xcodebuild \
   -scheme "$scheme" \
   -configuration "$configuration" \
   -derivedDataPath "$derived_data" \
+  "${marketing_version_setting[@]}" \
   build
 
 # The compiler cache stays private under .build; every usable Dev app is written

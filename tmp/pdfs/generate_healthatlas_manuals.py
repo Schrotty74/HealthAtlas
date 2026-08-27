@@ -222,7 +222,7 @@ def manual_de(styles):
             "Voraussetzung: macOS 26 oder neuer.",
         ], callout_data=("Wichtig", "HealthAtlas beschreibt Werte und Verläufe. Es ersetzt keine ärztliche Beratung, Untersuchung oder Diagnose.", PINK))
     s += [PageBreak()]
-    s += section("Schnellstart in 5 Schritten", "Für einen sicheren ersten Test liegt im Repository eine vollständig synthetische Demo vor. Sie enthält keine persönlichen Gesundheitsdaten.", styles,
+    s += section("Schnellstart in 5 Schritten", "Für einen sicheren ersten Test liegt im Repository eine vollständig synthetische Demo vor. Sie enthält keine persönlichen Gesundheitsdaten und fiktive Werte für alle aktuell unterstützten, nicht veralteten Apple-Health-Exporttypen.", styles,
         bullets_list=[
             "HealthAtlas öffnen. In der Mitte der leeren Übersicht erscheint der Import-Button.",
             "Auf " + '"ZIP oder Export.xml importieren ..."' + " klicken.",
@@ -365,7 +365,7 @@ def manual_en(styles):
             "Requirement: macOS 26 or later.",
         ], callout_data=("Important", "HealthAtlas describes values and trends. It is not a substitute for professional medical advice, examination or diagnosis.", PINK))
     s += [PageBreak()]
-    s += section("Quick start in 5 steps", "The repository includes a fully synthetic demo export for a safe first test. It contains no personal health information.", styles,
+    s += section("Quick start in 5 steps", "The repository includes a fully synthetic demo export for a safe first test. It contains no personal health information and fictional values for every currently supported, non-deprecated Apple Health export type.", styles,
         bullets_list=[
             "Open HealthAtlas. The empty overview presents a central import button.",
             "Click " + '"Import ZIP or Export.xml ..."' + ".",

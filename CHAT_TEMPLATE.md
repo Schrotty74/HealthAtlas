@@ -1,27 +1,31 @@
-# Chat-Startvorlage – HealthAtlas Beta
+# Chat-Startvorlage – HealthAtlas
 
-Ich arbeite am **Beta-Branch** von HealthAtlas.
+Ich arbeite am Projekt **HealthAtlas**.
+
+Projekt-Root:
+`Repository-Root`
 
 Repository:
 https://github.com/Schrotty74/HealthAtlas
 
-Dieser Branch ist ein veröffentlichter Beta-Quellstand. `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` sind hier nicht vorhanden und werden nicht vorausgesetzt.
-
-Bitte lies vor Beginn:
+Bitte lies vor Beginn vollständig:
 
 1. `AGENTS.md`
-2. `README.md`
-3. bei deutschen Texten `README.de.md`
-4. anschließend nur die für den Auftrag relevanten Quellen, Skripte und Konfigurationen
+2. `PROJECT_CONTEXT.md`
+3. `NEXT_STEPS.md`
+4. `README.md` und bei deutschen Texten `README.de.md`
+5. Bei Demo- oder Testdatenarbeit `Demo/README.md`
 
-Die verbindlichen allgemeinen und Beta-spezifischen Arbeits-, Branch-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md` und gelten vollständig.
+Die verbindlichen allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md` und gelten vollständig.
 
-HealthAtlas-Beta-spezifisch:
+Prüfe vor Aussagen oder Änderungen den tatsächlichen Projektzustand und halte `PROJECT_CONTEXT.md` sowie `NEXT_STEPS.md` bei wichtigen Änderungen aktuell.
 
-- Den tatsächlichen Stand dieses Branches höher gewichten als frühere Chats oder andere Branches.
-- Keine neue Entwicklungsarbeit beiläufig in `beta` beginnen.
-- Für Tests, Screenshots und öffentliche Inhalte ausschließlich synthetische Apple-Health-Daten verwenden.
-- Bestehende Release- und Datenschutzabläufe nicht umgehen.
+HealthAtlas-spezifisch:
+
+- Für Tests, Screenshots und Repository-Inhalte ausschließlich synthetische Apple-Health-Daten verwenden.
+- Keine HealthKit-Integration, Cloud-Synchronisierung, Diagnose- oder Behandlungsaussagen beginnen, sofern dies nicht ausdrücklich als Produktänderung beauftragt wurde.
+- Bestehende Architektur und Release-Skripte nicht unnötig umstellen.
+- Vor App-Arbeit Dokumentation, Manifeste, Build-Skripte und relevante CI-Konfiguration prüfen; projektgebundene Abhängigkeiten nicht automatisch global installieren.
 
 Aktueller Auftrag:
 

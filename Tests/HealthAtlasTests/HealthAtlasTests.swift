@@ -11,8 +11,9 @@ struct HealthAtlasTests {
         let demoURL = projectRoot.appendingPathComponent("Demo/AppleHealthDemo/Export.xml")
         let summary = AppleHealthImporter.importXML(data: try Data(contentsOf: demoURL), fileName: "Export.xml")
 
-        #expect(summary?.recordCount == 495)
+        #expect(summary?.recordCount == 518)
         #expect(summary?.dataTypes.count == 193)
+        #expect(summary?.dataTypes.first(where: { $0.identifier == "HKQuantityTypeIdentifierBasalEnergyBurned" })?.dailyValues.count == 30)
     }
 
     @Test func appleHealthParserListsEveryRecognisedRecordType() {

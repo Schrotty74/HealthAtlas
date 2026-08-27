@@ -166,7 +166,6 @@ create_github_release() {
 }
 
 require_dev_branch
-sync_branch_with_origin dev
 ensure_beta_ref
 sync_branch_with_origin beta
 require_gh
