@@ -1,6 +1,6 @@
 # HealthAtlas – Projektkontext
 
-Stand: 27. August 2026 · Arbeitsbranch: `dev`
+Stand: 31. August 2026 · Arbeitsbranch: `dev`
 
 HealthAtlas ist eine native macOS-App zur lokalen Darstellung eines bewusst
 ausgewählten Apple-Health-Exports. Sie startet ohne Daten, verarbeitet nur eine
@@ -12,7 +12,7 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 
 ## Aktueller Stand
 
-- Die aktuelle öffentliche Vorabversion ist `v0.1.0-beta.5` vom 27. August 2026. Sie enthält ZIP, DMG und SHA-256-Dateien.
+- Die aktuelle öffentliche Vorabversion ist `v0.1.0-beta.6` vom 31. August 2026. Sie enthält ZIP, DMG und SHA-256-Dateien.
 - `dev` ist ausschließlich die lokale Arbeitslinie; auf GitHub liegen nur die getrennten Release-Linien `beta` und `main`.
 - Die App bietet lokale Importansicht, Quellen-Auswahl, Übersichten, Verläufe, beschreibende Einblicke, Zeitraumvergleiche, Datenkalender, Musterkarte, Vollbild-Fokus, konfigurierbare Karten und Kartensortierung.
 - Deutsch und Englisch, die Themes Clear Glass, Midnight Glass, Aurora und Warmpaper sowie die datensparsame Ersthilfe sind umgesetzt.
