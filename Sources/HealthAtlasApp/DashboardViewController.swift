@@ -245,7 +245,7 @@ private struct CommunityLinkButton: View {
                 .frame(width: 30, height: 30)
                 .background(backgroundColor, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass(.clear))
         .help(label)
         .accessibilityLabel(label)
     }
@@ -369,6 +369,24 @@ private enum MetricPinArea: CaseIterable {
 
 private final class FlippedContentView: NSView {
     override var isFlipped: Bool { true }
+}
+
+@available(macOS 26.0, *)
+private struct GlassImportButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.body.weight(.semibold))
+                .lineLimit(1)
+                .padding(.horizontal, 20)
+                .frame(minHeight: 46)
+        }
+        .buttonStyle(.glass(.clear))
+        .accessibilityLabel(title)
+    }
 }
 
 private final class HealthWorkspaceViewController: NSViewController {
@@ -1026,15 +1044,16 @@ private final class HealthWorkspaceViewController: NSViewController {
         let detail = NSTextField(labelWithString: help.introduction)
         detail.font = .systemFont(ofSize: 13, weight: .medium)
         detail.textColor = NSColor.white.withAlphaComponent(0.72)
-        let button = NSButton(title: AppLanguage.current.text(english: "Import ZIP or Export.xml…", german: "ZIP oder Export.xml importieren …"), target: self, action: #selector(importFile))
-        stylePrimaryButton(button)
-        button.font = .systemFont(ofSize: 13, weight: .semibold)
-        button.cell?.lineBreakMode = .byTruncatingTail
+        let glassButton = NSHostingView(rootView: GlassImportButton(
+            title: AppLanguage.current.text(english: "Import ZIP or Export.xml…", german: "ZIP oder Export.xml importieren …"),
+            action: { [weak self] in self?.importFile() }
+        ))
+        glassButton.translatesAutoresizingMaskIntoConstraints = false
         let manualButton = NSButton(title: help.manualButtonTitle, target: self, action: #selector(openFirstLaunchManual))
         manualButton.bezelStyle = .rounded
         manualButton.contentTintColor = .white
         manualButton.toolTip = help.manualButtonTitle
-        let actionRow = NSStackView(views: [button, manualButton])
+        let actionRow = NSStackView(views: [glassButton, manualButton])
         actionRow.orientation = .horizontal
         actionRow.spacing = 10
         actionRow.alignment = .centerY
@@ -1072,7 +1091,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         NSLayoutConstraint.activate([
             stack.centerXAnchor.constraint(equalTo: container.centerXAnchor), stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
             hero.widthAnchor.constraint(equalToConstant: 126), hero.heightAnchor.constraint(equalToConstant: 126),
-            button.widthAnchor.constraint(greaterThanOrEqualToConstant: 244), button.heightAnchor.constraint(equalToConstant: 46),
+            glassButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 244), glassButton.heightAnchor.constraint(equalToConstant: 46),
             aiPrivacy.widthAnchor.constraint(lessThanOrEqualToConstant: 570),
             container.heightAnchor.constraint(equalToConstant: 560)
         ])
@@ -1110,17 +1129,6 @@ private final class HealthWorkspaceViewController: NSViewController {
         let services = FirstLaunchAIService.allCases
         guard services.indices.contains(sender.tag) else { return }
         FirstLaunchHelpAction.copyPromptAndOpen(services[sender.tag], language: AppLanguage.current)
-    }
-
-    private func stylePrimaryButton(_ button: NSButton) {
-        button.isBordered = false
-        button.wantsLayer = true
-        button.layer?.backgroundColor = NSColor.systemCyan.withAlphaComponent(0.90).cgColor
-        button.layer?.cornerRadius = 15
-        button.layer?.borderWidth = 1
-        button.layer?.borderColor = NSColor.white.withAlphaComponent(0.26).cgColor
-        button.font = .systemFont(ofSize: 14, weight: .bold)
-        button.contentTintColor = .white
     }
 
     private func emptySelectionState() -> NSView {

@@ -27,6 +27,8 @@ HEALTHATLAS_SKIP_SCHEME_CLEAN=YES xcodebuild \
   -scheme "$scheme" \
   -configuration "$configuration" \
   -derivedDataPath "$derived_data" \
+  "SYMROOT=$derived_data/Build" \
+  "OBJROOT=$derived_data/Build/Intermediates.noindex" \
   "${marketing_version_setting[@]}" \
   build
 

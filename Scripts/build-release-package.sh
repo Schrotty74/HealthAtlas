@@ -78,7 +78,7 @@ case "$version" in
 esac
 
 derived_data="$root_directory/.build/$channel/DerivedData"
-app_source="$derived_data/Build/Products/$configuration/HealthAtlas.app"
+app_source="$derived_data/Build/$configuration/HealthAtlas.app"
 app_bundle="$release_directory/$app_bundle_name"
 zip_file="$backup_directory/$artifact_base_name.zip"
 dmg_file="$backup_directory/$artifact_base_name.dmg"
