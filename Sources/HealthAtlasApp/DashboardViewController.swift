@@ -9,11 +9,13 @@ private extension Array {
     }
 }
 
-final class DashboardViewController: NSViewController {
+final class DashboardViewController: NSViewController, NSMenuItemValidation {
+    var onImportStateChanged: ((Bool) -> Void)?
     private let sidebar = SidebarViewController()
     private let workspace = HealthWorkspaceViewController()
     private let clearGlassAtmosphere = ClearGlassAtmosphereView(drawsAmbient: true, emitsSparks: false)
     private let clearGlassSparkOverlay = ClearGlassAtmosphereView(drawsAmbient: false, emitsSparks: true)
+    private let sidebarToggleButton = NSButton()
     private var sidebarWidthConstraint: NSLayoutConstraint!
     private var isSidebarVisible = true
 
@@ -45,6 +47,8 @@ final class DashboardViewController: NSViewController {
         root.addSubview(sidebarView)
         root.addSubview(workspaceView)
         root.addSubview(clearGlassSparkOverlay)
+        configureSidebarToggleButton()
+        root.addSubview(sidebarToggleButton)
         NSLayoutConstraint.activate([
             sidebarView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             sidebarView.topAnchor.constraint(equalTo: root.topAnchor),
@@ -57,7 +61,11 @@ final class DashboardViewController: NSViewController {
             clearGlassSparkOverlay.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             clearGlassSparkOverlay.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             clearGlassSparkOverlay.topAnchor.constraint(equalTo: root.topAnchor),
-            clearGlassSparkOverlay.bottomAnchor.constraint(equalTo: root.bottomAnchor)
+            clearGlassSparkOverlay.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+            sidebarToggleButton.leadingAnchor.constraint(equalTo: workspaceView.leadingAnchor, constant: 12),
+            sidebarToggleButton.topAnchor.constraint(equalTo: root.topAnchor, constant: 12),
+            sidebarToggleButton.widthAnchor.constraint(equalToConstant: 34),
+            sidebarToggleButton.heightAnchor.constraint(equalToConstant: 30)
         ])
         sidebar.onSelection = { [weak self] section in self?.workspace.show(section: section) }
         workspace.onRequestSection = { [weak self] section in self?.sidebar.select(section) }
@@ -69,6 +77,7 @@ final class DashboardViewController: NSViewController {
         workspace.onLanguageChanged = { [weak self] in self?.sidebar.apply(theme: .current) }
         workspace.onImportStateChanged = { [weak self] hasImportedData in
             self?.sidebar.apply(hasImportedData: hasImportedData)
+            self?.onImportStateChanged?(hasImportedData)
         }
         sidebar.apply(hasImportedData: workspace.hasImportedData)
         workspace.onActivityChanged = { [weak self] isActive in
@@ -89,6 +98,17 @@ final class DashboardViewController: NSViewController {
         workspace.exportReportFromMenu(sender)
     }
 
+    var hasImportedData: Bool {
+        workspace.hasImportedData
+    }
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(exportReportFromMenu(_:)) {
+            return workspace.hasImportedData
+        }
+        return true
+    }
+
     @objc func showDesignStudio(_ sender: Any?) {
         sidebar.select(.settings)
     }
@@ -97,14 +117,29 @@ final class DashboardViewController: NSViewController {
         isSidebarVisible.toggle()
         sidebar.view.isHidden = !isSidebarVisible
         sidebarWidthConstraint.constant = isSidebarVisible ? 236 : 0
+        (sender as? NSMenuItem)?.title = isSidebarVisible ? "Hide Sidebar" : "Show Sidebar"
+        updateSidebarToggleButton()
         view.needsLayout = true
     }
 
-    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        if menuItem.action == #selector(toggleSidebar(_:)) {
-            menuItem.title = isSidebarVisible ? "Hide Sidebar" : "Show Sidebar"
-        }
-        return true
+    private func configureSidebarToggleButton() {
+        sidebarToggleButton.translatesAutoresizingMaskIntoConstraints = false
+        sidebarToggleButton.image = NSImage(systemSymbolName: "sidebar.left", accessibilityDescription: nil)
+        sidebarToggleButton.imagePosition = .imageOnly
+        sidebarToggleButton.bezelStyle = .texturedRounded
+        sidebarToggleButton.contentTintColor = .white
+        sidebarToggleButton.target = self
+        sidebarToggleButton.action = #selector(toggleSidebar(_:))
+        updateSidebarToggleButton()
+    }
+
+    private func updateSidebarToggleButton() {
+        let title = AppLanguage.current.text(
+            english: isSidebarVisible ? "Hide sidebar" : "Show sidebar",
+            german: isSidebarVisible ? "Sidebar ausblenden" : "Sidebar einblenden"
+        )
+        sidebarToggleButton.toolTip = title
+        sidebarToggleButton.setAccessibilityLabel(title)
     }
 }
 
@@ -448,6 +483,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     private var selectedTrendDate: Date?
     private var selectedInsightTypeID: String?
     private var importTimestamp: Date?
+    private let trendRangeOptions = [7, 15, 30, 90, 182, 365]
     private var trendRangeDays = 30
     private var heatmapRangeDays: Int {
         get {
@@ -713,8 +749,8 @@ private final class HealthWorkspaceViewController: NSViewController {
             body.addArrangedSubview(emptyImportState())
             return
         }
-        let range = segmentedControl(labels: ["7D", "30D", "3M", "1Y"])
-        range.selectedSegment = [7, 30, 90, 365].firstIndex(of: trendRangeDays) ?? 1
+        let range = segmentedControl(labels: trendRangeOptions.map(trendRangeLabel))
+        range.selectedSegment = trendRangeOptions.firstIndex(of: trendRangeDays) ?? 2
         range.target = self
         range.action = #selector(trendRangeChanged(_:))
         body.addArrangedSubview(range)
@@ -736,7 +772,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         typePicker.selectItem(withTitle: metric.localizedDisplayName)
         typePicker.target = self
         typePicker.action = #selector(trendTypeChanged(_:))
-        let name = NSTextField(labelWithString: "\(metric.localizedDisplayName) · \(trendRangeDays)D")
+        let name = NSTextField(labelWithString: "\(metric.localizedDisplayName) · \(trendRangeLabel(trendRangeDays))")
         name.font = .systemFont(ofSize: 17, weight: .bold)
         name.textColor = .white
         let points = trendPoints(for: metric)
@@ -954,9 +990,21 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 
     @objc private func trendRangeChanged(_ sender: NSSegmentedControl) {
-        trendRangeDays = [7, 30, 90, 365][sender.selectedSegment]
+        trendRangeDays = trendRangeOptions[sender.selectedSegment]
         selectedTrendDate = nil
         rebuildBody()
+    }
+
+    private func trendRangeLabel(_ days: Int) -> String {
+        switch days {
+        case 7: return "7D"
+        case 15: return "15D"
+        case 30: return "30D"
+        case 90: return "3M"
+        case 182: return "6M"
+        case 365: return "1Y"
+        default: return "\(days)D"
+        }
     }
 
     @objc private func trendTypeChanged(_ sender: NSPopUpButton) {
@@ -2605,6 +2653,17 @@ private final class MetricCardBackgroundView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        startAnimationIfNeeded()
+    }
+
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        // Stack views can attach a freshly rebuilt card after the window move.
+        // Retry on the next main-loop pass so its visual timer is not skipped.
+        DispatchQueue.main.async { [weak self] in self?.startAnimationIfNeeded() }
+    }
+
+    private func startAnimationIfNeeded() {
         guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
         guard window != nil, timer == nil else { return }
         timer = Timer.scheduledTimer(timeInterval: 1.0 / 24.0, target: self, selector: #selector(advance), userInfo: nil, repeats: true)
@@ -2721,6 +2780,13 @@ private final class CalendarHeatmapView: NSView {
     private let metric: HealthDataTypeSummary
     private let tintColor: NSColor
     private let days: Int
+    private var detailPopover: NSPopover?
+
+    private struct DayCell {
+        let date: Date
+        let value: Double?
+        let rect: NSRect
+    }
 
     init(values: [HealthDailyValue], metric: HealthDataTypeSummary, tintColor: NSColor, days: Int = 84) {
         self.values = values
@@ -2729,35 +2795,87 @@ private final class CalendarHeatmapView: NSView {
         self.days = days
         super.init(frame: .zero)
         toolTip = AppLanguage.current.text(english: "Each square represents one local day. Stronger colour means a higher value relative to this displayed period.", german: "Jedes Feld steht für einen lokalen Tag. Eine stärkere Farbe bedeutet einen höheren Wert innerhalb dieses angezeigten Zeitraums.")
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(AppLanguage.current.text(english: "Local data calendar", german: "Lokaler Datenkalender"))
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override var isFlipped: Bool { true }
 
     override func draw(_ dirtyRect: NSRect) {
-        let calendar = Calendar.current
-        guard let latest = values.map(\.date).max() else { return }
-        let latestDay = calendar.startOfDay(for: latest)
-        let valueByDay = Dictionary(uniqueKeysWithValues: values.map { (calendar.startOfDay(for: $0.date), metric.displayValue(for: $0)) })
-        let shownValues = Array(valueByDay.values)
+        let cells = dayCells()
+        guard !cells.isEmpty else { return }
+        let shownValues = cells.compactMap(\.value)
         let minimum = shownValues.min() ?? 0
         let span = max((shownValues.max() ?? 0) - minimum, 0.000_001)
+        for cell in cells {
+            let intensity = cell.value.map { 0.16 + 0.72 * CGFloat(($0 - minimum) / span) } ?? 0.05
+            tintColor.withAlphaComponent(intensity).setFill()
+            NSBezierPath(roundedRect: cell.rect, xRadius: 3, yRadius: 3).fill()
+        }
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        let location = convert(event.locationInWindow, from: nil)
+        guard let cell = dayCells().first(where: { $0.rect.contains(location) }) else { return }
+        presentDetail(for: cell)
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        guard let cell = dayCells().last else { return false }
+        presentDetail(for: cell)
+        return true
+    }
+
+    private func dayCells() -> [DayCell] {
+        let calendar = Calendar.current
+        guard let latest = values.map(\.date).max() else { return [] }
+        let latestDay = calendar.startOfDay(for: latest)
+        let valueByDay = Dictionary(uniqueKeysWithValues: values.map { (calendar.startOfDay(for: $0.date), metric.displayValue(for: $0)) })
         let weeks = max(1, Int(ceil(Double(days) / 7)))
-        let cell = min(days > 100 ? 8 : 13, floor((bounds.width - 26) / CGFloat(weeks)))
+        let cellSize = min(days > 100 ? 8 : 13, floor((bounds.width - 26) / CGFloat(weeks)))
         let gap: CGFloat = 3
-        let gridHeight = CGFloat(7) * cell + CGFloat(6) * gap
+        let gridHeight = CGFloat(7) * cellSize + CGFloat(6) * gap
         let startY = max(6, (bounds.height - gridHeight) / 2)
-        for week in 0..<weeks {
-            for weekday in 0..<7 {
+
+        return (0..<weeks).flatMap { week in
+            (0..<7).compactMap { weekday in
                 let dayOffset = -((weeks - 1 - week) * 7 + (6 - weekday))
-                guard let date = calendar.date(byAdding: .day, value: dayOffset, to: latestDay) else { continue }
-                let rect = NSRect(x: 4 + CGFloat(week) * (cell + gap), y: startY + CGFloat(weekday) * (cell + gap), width: cell, height: cell)
-                let value = valueByDay[date]
-                let intensity = value.map { 0.16 + 0.72 * CGFloat(($0 - minimum) / span) } ?? 0.05
-                tintColor.withAlphaComponent(intensity).setFill()
-                NSBezierPath(roundedRect: rect, xRadius: 3, yRadius: 3).fill()
+                guard let date = calendar.date(byAdding: .day, value: dayOffset, to: latestDay) else { return nil }
+                let rect = NSRect(
+                    x: 4 + CGFloat(week) * (cellSize + gap),
+                    y: startY + CGFloat(weekday) * (cellSize + gap),
+                    width: cellSize,
+                    height: cellSize
+                )
+                return DayCell(date: date, value: valueByDay[date], rect: rect)
             }
         }
+    }
+
+    private func presentDetail(for cell: DayCell) {
+        let language = AppLanguage.current
+        let text = cell.value.map { metric.formattedValue($0) }
+            ?? language.text(english: "No local value", german: "Kein lokaler Wert")
+        let label = NSTextField(wrappingLabelWithString: "\(cell.date.formatted(date: .long, time: .omitted))\n\(text)")
+        label.font = .systemFont(ofSize: 11, weight: .medium)
+        label.textColor = .labelColor
+        label.alignment = .center
+        label.frame = NSRect(x: 8, y: 6, width: 130, height: 30)
+
+        let content = NSView(frame: NSRect(x: 0, y: 0, width: 146, height: 42))
+        content.wantsLayer = true
+        content.layer?.backgroundColor = NSColor(calibratedWhite: 0.10, alpha: 0.72).cgColor
+        content.addSubview(label)
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.contentSize = content.bounds.size
+        popover.contentViewController = NSViewController()
+        popover.contentViewController?.view = content
+        detailPopover?.close()
+        detailPopover = popover
+        popover.show(relativeTo: cell.rect, of: self, preferredEdge: .maxY)
     }
 }
 
@@ -2901,7 +3019,7 @@ private final class HealthRingsCanvasView: NSView {
 private final class CombinedHealthTimelineView: GlassCardView {
     init(metrics: [HealthDataTypeSummary], language: AppLanguage, onSelect: @escaping (String) -> Void) {
         super.init(accent: .systemBlue)
-        toolTip = language.text(english: "Selected local data types over their last 30 local days. Click to open the first metric in focus view.", german: "Ausgewählte lokale Datentypen über ihre letzten 30 lokalen Tage. Klicke für die Fokusansicht des ersten Datentyps.")
+        toolTip = language.text(english: "Selected local data types over their last 30 local days. Click a coloured name to open that metric in focus view.", german: "Ausgewählte lokale Datentypen über ihre letzten 30 lokalen Tage. Klicke auf einen farbigen Namen, um genau diesen Datentyp in der Fokusansicht zu öffnen.")
         let canvas = CombinedHealthTimelineCanvasView(metrics: metrics, language: language, onSelect: onSelect)
         canvas.translatesAutoresizingMaskIntoConstraints = false
         addSubview(canvas)
@@ -2952,7 +3070,14 @@ private final class CombinedHealthTimelineCanvasView: NSView {
             ])
         }
     }
-    override func mouseDown(with event: NSEvent) { if let identifier = metrics.first?.identifier { onSelect(identifier) } }
+    override func mouseDown(with event: NSEvent) {
+        let location = convert(event.locationInWindow, from: nil)
+        let labelWidth = max(1, (bounds.width - 36) / CGFloat(max(metrics.count, 1)))
+        guard (5...20).contains(location.y) else { return }
+        let index = Int((location.x - 18) / labelWidth)
+        guard metrics.indices.contains(index) else { return }
+        onSelect(metrics[index].identifier)
+    }
     override func accessibilityPerformPress() -> Bool {
         guard let identifier = metrics.first?.identifier else { return false }
         onSelect(identifier)
