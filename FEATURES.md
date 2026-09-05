@@ -2,7 +2,7 @@
 
 [Deutsch](FEATURES.de.md)
 
-This page describes the current HealthAtlas functions in detail. Every screenshot shows synthetic demo data only; no personal health data is shown.
+This page describes the current HealthAtlas functions in detail.
 
 ## Import and sources
 
@@ -12,9 +12,6 @@ This page describes the current HealthAtlas functions in detail. Every screensho
 - Replace an import, delete all local data after confirmation, and see the import time for the current session.
 - The data-quality card describes local coverage, missing dates and sparsely recorded types without rating health values.
 
-<a href="Screenshots/en/import.png"><img src="Screenshots/en/import.png" alt="HealthAtlas empty import screen" width="49%"></a>
-<a href="Screenshots/en/sources.png"><img src="Screenshots/en/sources.png" alt="HealthAtlas source selection for imported Apple Health data types" width="49%"></a>
-
 ## Overview
 
 - Choose 4, 8 or 12 metric cards and use Compact, Standard or Focus density. Each density saves its own local card order.
@@ -22,8 +19,6 @@ This page describes the current HealthAtlas functions in detail. Every screensho
 - Compare selected metrics in a shared health timeline and visual daily rings.
 - Export a local PDF report with its own period, selected data types and theme. The save location is chosen explicitly.
 - The overview uses bars for steps and energy, an area chart for sleep, and lines for other numeric values.
-
-<a href="Screenshots/en/overview.png"><img src="Screenshots/en/overview.png" alt="HealthAtlas overview with selected health cards" width="50%"></a>
 
 ## Trends and focus
 
@@ -33,8 +28,6 @@ This page describes the current HealthAtlas functions in detail. Every screensho
 - Trend notes report facts such as a local high value or the number of days with data; they do not rate health values.
 - The full-screen focus view combines the selected metric's trend, period comparison and local calendar.
 
-<a href="Screenshots/en/trends.png"><img src="Screenshots/en/trends.png" alt="HealthAtlas interactive heart-rate trend" width="50%"></a>
-
 ## Insights
 
 - A local snapshot presents the latest local value and the number of local dates with values.
@@ -42,16 +35,12 @@ This page describes the current HealthAtlas functions in detail. Every screensho
 - A recording pattern names the weekday with the most local entries. It describes recording frequency only.
 - Insights are descriptive local summaries, never diagnoses or treatment recommendations.
 
-<a href="Screenshots/en/insights.png"><img src="Screenshots/en/insights.png" alt="HealthAtlas local heart-rate insight" width="50%"></a>
-
 ## Appearance and local use
 
 - Use the German or English interface.
 - Choose Clear Glass, Midnight Glass, Aurora or Warmpaper. The app starts at 16:9 and remains freely resizable.
 - Guided empty states lead to Sources or local import when data or a selection is missing.
 - The interface uses native glass surfaces and subtle animations while respecting the macOS reduced-motion preference.
-
-<a href="Screenshots/en/design-studio.png"><img src="Screenshots/en/design-studio.png" alt="HealthAtlas theme and language settings" width="50%"></a>
 
 ## Optional first-start help
 

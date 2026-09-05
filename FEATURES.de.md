@@ -2,7 +2,7 @@
 
 [English](FEATURES.md)
 
-Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich. Alle Screenshots zeigen ausschließlich synthetische Demodaten; persönliche Gesundheitsdaten sind nicht zu sehen.
+Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich.
 
 ## Import und Quellen
 
@@ -12,9 +12,6 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich. Alle S
 - Einen Import ersetzen, alle lokalen Daten nach Bestätigung löschen und den Importzeitpunkt der aktuellen Sitzung sehen.
 - Die Datenqualitäts-Karte beschreibt lokale Abdeckung, fehlende Tage und selten erfasste Typen, ohne Gesundheitswerte zu bewerten.
 
-<a href="Screenshots/import.png"><img src="Screenshots/import.png" alt="Leere HealthAtlas-Startansicht für den Apple-Health-Import" width="49%"></a>
-<a href="Screenshots/sources.png"><img src="Screenshots/sources.png" alt="HealthAtlas-Auswahl importierter Apple-Health-Datentypen" width="49%"></a>
-
 ## Übersicht
 
 - 4, 8 oder 12 Kennzahlen-Kacheln wählen und die Dichte Kompakt, Standard oder Fokus nutzen. Jede Dichte speichert ihre eigene lokale Kartenreihenfolge.
@@ -22,8 +19,6 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich. Alle S
 - Ausgewählte Werte im gemeinsamen Gesundheitsverlauf und in visuellen Tagesringen vergleichen.
 - Einen lokalen PDF-Bericht mit eigenem Zeitraum, ausgewählten Datentypen und Theme exportieren. Der Speicherort wird bewusst gewählt.
 - Die Übersicht verwendet Balken für Schritte und Energie, ein Bereichsdiagramm für Schlaf und Linien für andere numerische Werte.
-
-<a href="Screenshots/overview.png"><img src="Screenshots/overview.png" alt="HealthAtlas-Übersicht mit ausgewählten Gesundheits-Kacheln" width="50%"></a>
 
 ## Verläufe und Fokusansicht
 
@@ -33,8 +28,6 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich. Alle S
 - Trend-Hinweise nennen Fakten wie einen lokalen Höchstwert oder die Anzahl der Tage mit Daten, ohne Gesundheitswerte zu bewerten.
 - Die Vollbild-Fokusansicht verbindet den Verlauf des ausgewählten Werts mit Zeitraumvergleich und lokalem Datenkalender.
 
-<a href="Screenshots/trends.png"><img src="Screenshots/trends.png" alt="Interaktiver Herzfrequenz-Verlauf in HealthAtlas" width="50%"></a>
-
 ## Einblicke
 
 - Eine lokale Momentaufnahme zeigt den letzten lokalen Wert und die Anzahl der lokalen Tage mit Werten.
@@ -42,16 +35,12 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich. Alle S
 - Das Erfassungsmuster nennt den Wochentag mit den meisten lokalen Einträgen. Es beschreibt nur die Erfassungshäufigkeit.
 - Einblicke sind beschreibende lokale Zusammenfassungen, niemals Diagnosen oder Behandlungsempfehlungen.
 
-<a href="Screenshots/insights.png"><img src="Screenshots/insights.png" alt="Lokaler Herzfrequenz-Einblick in HealthAtlas" width="50%"></a>
-
 ## Erscheinungsbild und lokale Nutzung
 
 - Deutsche oder englische Oberfläche verwenden.
 - Clear Glass, Midnight Glass, Aurora oder Warmpaper wählen. Die App startet im 16:9-Format und bleibt frei skalierbar.
 - Geführte Leerzustände führen zu Quellen oder lokalem Import, wenn Daten oder eine Auswahl fehlen.
 - Die Oberfläche nutzt native Glasflächen und dezente Animationen und berücksichtigt die macOS-Einstellung „Bewegung reduzieren“.
-
-<a href="Screenshots/design-studio.png"><img src="Screenshots/design-studio.png" alt="HealthAtlas-Theme- und Spracheinstellungen" width="50%"></a>
 
 ## Freiwillige Ersthilfe
 

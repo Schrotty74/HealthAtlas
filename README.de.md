@@ -14,7 +14,20 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 - Getrennte Pins und lokale Reihenfolge für Übersicht, Verläufe und Einblicke festlegen.
 - Deutsche oder englische Oberfläche und eines von vier Glass-Themes wählen.
 
-Die vollständige, nach Bereichen gegliederte [Funktionsübersicht](FEATURES.de.md) enthält auch die aktuellen Screenshots.
+### Screenshots
+
+Alle Screenshots zeigen die aktuelle HealthAtlas-Oberfläche mit ausschließlich synthetischen Demodaten; persönliche Gesundheitsdaten sind nicht zu sehen.
+
+<a href="Screenshots/import.png"><img src="Screenshots/import.png" alt="Leere HealthAtlas-Startansicht für den Apple-Health-Import" width="49%"></a>
+<a href="Screenshots/sources.png"><img src="Screenshots/sources.png" alt="HealthAtlas-Auswahl importierter Apple-Health-Datentypen" width="49%"></a>
+
+<a href="Screenshots/overview.png"><img src="Screenshots/overview.png" alt="HealthAtlas-Übersicht mit ausgewählten Gesundheits-Kacheln" width="49%"></a>
+<a href="Screenshots/trends.png"><img src="Screenshots/trends.png" alt="Interaktiver Herzfrequenz-Verlauf in HealthAtlas" width="49%"></a>
+
+<a href="Screenshots/insights.png"><img src="Screenshots/insights.png" alt="Lokaler Herzfrequenz-Einblick in HealthAtlas" width="49%"></a>
+<a href="Screenshots/design-studio.png"><img src="Screenshots/design-studio.png" alt="HealthAtlas-Theme- und Spracheinstellungen" width="49%"></a>
+
+Die vollständige, nach Bereichen gegliederte [Funktionsübersicht](FEATURES.de.md) enthält die Details.
 
 ## Datenschutz an erster Stelle
 
