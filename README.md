@@ -16,6 +16,8 @@ It starts empty, imports only a file you choose, and turns selected health data 
 - Keep separate pins and local ordering for Overview, Trends and Insights.
 - Use German or English and choose from four glass themes.
 
+See the complete, grouped [feature overview](FEATURES.md).
+
 ### Screenshots
 
 All screenshots show the current HealthAtlas interface with synthetic demo data only; no personal health data is shown.
@@ -28,8 +30,6 @@ All screenshots show the current HealthAtlas interface with synthetic demo data 
 
 <a href="Screenshots/en/insights.png"><img src="Screenshots/en/insights.png" alt="HealthAtlas local heart-rate insight" width="49%"></a>
 <a href="Screenshots/en/design-studio.png"><img src="Screenshots/en/design-studio.png" alt="HealthAtlas theme and language settings" width="49%"></a>
-
-See the complete, grouped [feature overview](FEATURES.md).
 
 ## Privacy first
 
