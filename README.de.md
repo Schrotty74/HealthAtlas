@@ -4,30 +4,17 @@ HealthAtlas ist eine datenschutzorientierte macOS-App, die einen lokalen Apple-H
 
 Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei und zeigt ausgewählte Gesundheitsdaten in einem ruhigen, modernen Dashboard. HealthAtlas konzentriert sich auf Verläufe und persönliche Muster statt auf Rohdaten-Tabellen.
 
-## Was HealthAtlas bietet
+## Funktionen
 
-- Native macOS-App mit Swift, SwiftUI und AppKit
-- Lokaler Import von Apple-Health-`Export.xml`-Dateien und ZIP-Archiven damit
-- Frei wählbare, erkannte Datentypen für die Anzeige
-- Dynamische Kennzahlen-Kacheln mit eigener Farbe und grafischem Hintergrund
-- Interaktive Verläufe: Datentyp, 7T/30T/3M/1J, Hover-Werte und einzelne Datenpunkte auswählen
-- Getrennte Pins für Übersicht, Verläufe und Einblicke sowie lokale Reihenfolge, Kategorien und Suche für große Datentyp-Listen
-- Klickbare Kennzahlen-Karten mit eigener Vollbild-Fokusansicht, Verlauf, Zeitraumvergleich und Jahreskalender
-- Gemeinsamer Mehrfach-Verlauf, visuelle Tagesringe und lokaler Zeitraumvergleich
-- Lokaler Datenkalender in Verläufen mit 1 Woche, 4 Wochen, 3 Monaten, 6 Monaten oder 1 Jahr sowie echte Vollbild-Fokusansicht mit Zeitraumvergleich
-- Interaktive Verläufe mit schwebender Wertkarte, Datum, Mini-Trend und sanft pulsierendem ausgewählten Punkt
-- Anpassbares Dashboard: Kartenzahl, kompakte/Standard/Fokus-Dichte sowie gespeicherte lokale Kartenanordnung je Layout
-- Lokale Datenqualitäts-Übersicht ohne Bewertung der Gesundheitswerte
-- Konfigurierbarer lokaler PDF-Bericht: Zeitraum, ausgewählte Datentypen und Bericht-Theme; nur an einen bewusst gewählten Speicherort
-- Zum lokalen Datentyp passende Diagramme: Balken für Schritte und Energie, Bereichsdiagramm für Schlaf, Linien für andere numerische Werte und lokale Zeitraum-Ringe
-- Lokale Datenverwaltung mit Import ersetzen, Bestätigung zum vollständigen Löschen und sichtbarem Importzeitpunkt der aktuellen Sitzung
-- Reine Abdeckungs-Hinweise zu fehlenden lokalen Tagen, wenigen Werten und sachlichen Trend-Höhepunkten — niemals Gesundheitsbewertung oder Diagnose
-- Beschreibende lokale Einblicke mit Momentaufnahme, lokaler Abdeckung und Erfassungsmuster — niemals Diagnosen oder Behandlungsempfehlungen
-- Deutsche und englische Oberfläche
-- Beschreibende Karte „Dein Zeitraum in Kürze“ für die letzten sieben lokalen Erfassungstage — keine Bewertung und keine Diagnose
-- Geführte Glas-Leerzustände mit direkter Aktion zu Quellen oder lokalem Import
-- Glass-Themes, dezente Karten-/Diagramm-Animationen, Import-Erfolgsschimmer, native Milchglas-Sidebar sowie Glow, Lichtpunkte, Konturen und Gesundheits-Symbole im Clear-Glass-Theme hinter gut lesbaren Inhalten
-- Startfenster im 16:9-Format, danach frei skalierbar
+- Lokale Apple-Health-`Export.xml`-Dateien oder ZIP-Archive importieren und erkannte Datentypen gezielt auswählen.
+- Anpassbare Übersicht mit Kennzahlen-Kacheln, gemeinsamem Verlauf, Zeitraum-Ringen und lokalem PDF-Bericht.
+- Einzelne Werte in interaktiven Verläufen für 7T, 30T, 3M und 1J verfolgen, mit Punktdetails und lokalem Datenkalender.
+- Eine Kennzahl in einer eigenen Vollbild-Fokusansicht mit lokalem Verlauf und Zeitraumvergleich öffnen.
+- Beschreibende lokale Momentaufnahme, Abdeckung und Erfassungsmuster ohne Diagnose oder Gesundheitsbewertung lesen.
+- Getrennte Pins und lokale Reihenfolge für Übersicht, Verläufe und Einblicke festlegen.
+- Deutsche oder englische Oberfläche und eines von vier Glass-Themes wählen.
+
+Die vollständige, nach Bereichen gegliederte [Funktionsübersicht](FEATURES.de.md) enthält auch die aktuellen Screenshots.
 
 ## Datenschutz an erster Stelle
 
@@ -47,9 +34,8 @@ Die einzige startbare Dev-App liegt anschließend unter `dist/local-test/HealthA
 Auch ein direkter Build oder Run des gemeinsamen Dev-Schemes in Xcode aktualisiert genau diese App.
 Der Ordner `.build` ist ausschließlich der temporäre Compiler-Arbeitsbereich von Xcode, keine zweite App zum Öffnen.
 
-Die aktuellen Dev- und Beta-Builds sind ad hoc signiert, weil für das Projekt
-kein Apple-Developer-Account vorhanden ist. macOS Gatekeeper zeigt beim ersten
-Öffnen daher einen Hinweis an.
+Die aktuellen Dev- und Beta-Builds sind ad hoc signiert. macOS Gatekeeper kann
+beim ersten Öffnen einen Hinweis anzeigen.
 
 So öffnest du einen lokalen Build, ohne Gatekeeper systemweit abzuschalten:
 
@@ -82,35 +68,7 @@ Zum Testen liegt eine vollständig synthetische Demo bei:
 1. HealthAtlas öffnen und **Apple Health importieren …** wählen.
 2. [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml) auswählen.
 3. Unter **Quellen** die gewünschten Werte wählen.
-4. Kacheln, Mehrfach-Verlauf und Ringe unter **Übersicht**, Punkte und Zeiträume unter **Verläufe** sowie Kalender und Muster unter **Einblicke** erkunden.
-
-## Screenshots
-
-Alle folgenden Screenshots zeigen die aktuelle HealthAtlas-Oberfläche mit ausschließlich synthetischen Demodaten – es sind keine persönlichen Gesundheitsdaten zu sehen.
-
-### Import
-
-<a href="Screenshots/import.png"><img src="Screenshots/import.png" alt="Leere HealthAtlas-Startansicht für den Apple-Health-Import" width="50%"></a>
-
-### Übersicht
-
-<a href="Screenshots/overview.png"><img src="Screenshots/overview.png" alt="HealthAtlas-Übersicht mit ausgewählten Gesundheits-Kacheln" width="50%"></a>
-
-### Quellen
-
-<a href="Screenshots/sources.png"><img src="Screenshots/sources.png" alt="HealthAtlas-Auswahl importierter Apple-Health-Datentypen" width="50%"></a>
-
-### Verläufe
-
-<a href="Screenshots/trends.png"><img src="Screenshots/trends.png" alt="Interaktiver Herzfrequenz-Verlauf in HealthAtlas" width="50%"></a>
-
-### Einblicke
-
-<a href="Screenshots/insights.png"><img src="Screenshots/insights.png" alt="Lokaler Herzfrequenz-Einblick in HealthAtlas" width="50%"></a>
-
-### Design-Studio
-
-<a href="Screenshots/design-studio.png"><img src="Screenshots/design-studio.png" alt="HealthAtlas-Theme- und Spracheinstellungen" width="50%"></a>
+4. Kacheln, Mehrfach-Verlauf und Ringe unter **Übersicht**, Punkte und Zeiträume unter **Verläufe** sowie Abdeckung und Erfassungsmuster unter **Einblicke** erkunden.
 
 ## Beta-Pakete
 
@@ -126,10 +84,10 @@ Prüfsummen und Changelog unter `Backup/releases/beta/<version>/`.
 
 ## Projektstatus
 
-HealthAtlas ist eine frühe Beta. Testdaten, Oberfläche und lokaler Import sind
-bereit für Feedback; medizinische Integration, Diagnosefunktionen und eine
-öffentliche Verteilung sind ausdrücklich nicht Teil dieses Standes.
+HealthAtlas ist eine frühe Beta. Lokaler Import und Oberfläche sind bereit für
+Feedback. Medizinische Integration, Diagnosen und Behandlungsempfehlungen bietet
+die App nicht.
 
 ## Lizenz
 
-Die Lizenz wird vor der ersten öffentlichen Veröffentlichung ergänzt.
+HealthAtlas steht unter der [GNU General Public License v3.0](LICENSE).
