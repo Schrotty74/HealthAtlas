@@ -45,6 +45,7 @@ bash Scripts/build-development.sh
 ```
 
 The only runnable Dev output is `dist/local-test/HealthAtlas-Development/HealthAtlas Dev.app`.
+Building or running the shared Dev scheme directly in Xcode refreshes this same app.
 The `.build` directory is only Xcode's temporary compiler workspace, not a second app to open.
 
 The current Dev and Beta builds are ad-hoc signed because the project has no

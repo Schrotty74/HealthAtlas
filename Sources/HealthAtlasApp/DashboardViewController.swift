@@ -485,14 +485,17 @@ private final class HealthWorkspaceViewController: NSViewController {
         heading.orientation = .vertical
         heading.spacing = 4
         heading.translatesAutoresizingMaskIntoConstraints = false
+        heading.setContentHuggingPriority(.required, for: .vertical)
         let controls = NSStackView(views: [themeButton, importButton])
         controls.spacing = 10
         controls.translatesAutoresizingMaskIntoConstraints = false
+        controls.setContentHuggingPriority(.required, for: .vertical)
 
         body.orientation = .vertical
         body.spacing = 16
         body.translatesAutoresizingMaskIntoConstraints = false
         body.alignment = .leading
+        body.setContentHuggingPriority(.required, for: .vertical)
         body.wantsLayer = true
         contentScrollView.drawsBackground = false
         contentScrollView.hasVerticalScroller = true
@@ -506,8 +509,10 @@ private final class HealthWorkspaceViewController: NSViewController {
         contentDocumentView.addSubview(heading)
         contentDocumentView.addSubview(controls)
         contentDocumentView.addSubview(body)
-        let bodyBottom = body.bottomAnchor.constraint(equalTo: contentDocumentView.bottomAnchor, constant: -28)
-        bodyBottom.priority = .defaultLow
+        // The document grows for long content, but short sections stay anchored at the top.
+        // An equality here stretches the stack view to the viewport height and can distribute
+        // its arranged subviews downward after rebuilding for a theme or language change.
+        let bodyBottom = body.bottomAnchor.constraint(lessThanOrEqualTo: contentDocumentView.bottomAnchor, constant: -28)
         NSLayoutConstraint.activate([
             clearGlassEffect.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             clearGlassEffect.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -3211,10 +3216,6 @@ private final class TrendGraphView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         let bottomInset: CGFloat = showsDateLabels ? 32 : 12
         let inset = NSRect(x: 8, y: 12, width: max(0, bounds.width - 16), height: max(0, bounds.height - 12 - bottomInset))
-        let grid = NSBezierPath(); grid.lineWidth = 1
-        NSColor.white.withAlphaComponent(0.12).setStroke()
-        for fraction in [0.2, 0.5, 0.8] { let y = inset.minY + inset.height * fraction; grid.move(to: NSPoint(x: inset.minX, y: y)); grid.line(to: NSPoint(x: inset.maxX, y: y)) }
-        grid.stroke()
         guard points.count > 1,
               let minimum = points.map(\.value).min(), let maximum = points.map(\.value).max() else {
             let label = AppLanguage.current.text(english: "No values in this period", german: "Keine Werte in diesem Zeitraum")

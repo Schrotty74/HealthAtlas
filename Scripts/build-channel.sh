@@ -35,7 +35,7 @@ HEALTHATLAS_SKIP_SCHEME_CLEAN=YES xcodebuild \
 # The compiler cache stays private under .build; every usable Dev app is written
 # to the same stable local-test location as AppAtlas.
 if [[ "$channel" == "dev" ]]; then
-  app_source="$derived_data/Build/Products/$configuration/HealthAtlas.app"
+  app_source="$derived_data/Build/$configuration/HealthAtlas.app"
   output_directory="$root/dist/local-test/HealthAtlas-Development"
   app_bundle="$output_directory/HealthAtlas Dev.app"
   rm -rf "$output_directory"

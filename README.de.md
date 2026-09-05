@@ -44,6 +44,7 @@ bash Scripts/build-development.sh
 ```
 
 Die einzige startbare Dev-App liegt anschließend unter `dist/local-test/HealthAtlas-Development/HealthAtlas Dev.app`.
+Auch ein direkter Build oder Run des gemeinsamen Dev-Schemes in Xcode aktualisiert genau diese App.
 Der Ordner `.build` ist ausschließlich der temporäre Compiler-Arbeitsbereich von Xcode, keine zweite App zum Öffnen.
 
 Die aktuellen Dev- und Beta-Builds sind ad hoc signiert, weil für das Projekt
