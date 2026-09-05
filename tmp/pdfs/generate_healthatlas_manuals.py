@@ -239,13 +239,15 @@ def manual_de(styles):
             "Es gibt keine direkte HealthKit-Verbindung und keinen Cloud-Import.",
             "Bei einem nicht passenden ZIP, einer nicht lesbaren XML oder einer zu großen Datei zeigt HealthAtlas eine Erklärung an und importiert nichts.",
         ], callout_data=("Export auf dem iPhone", "In Apple Health: Übersicht öffnen, oben rechts Bild oder Initialen wählen, dann " + '"Alle Gesundheitsdaten exportieren"' + ". Apple kann die Bezeichnung der Oberfläche ändern. Quelle: Apple Support, " + '<font color="#42C5EE">support.apple.com/de-de/guide/iphone/iph5ede58c3d/26/ios/26</font>', TEAL))
-    s += section("Navigation und Status", "Die linke Milchglas-Sidebar bleibt in jedem Theme sichtbar. Vor dem ersten lokalen Import heißt ihr erster Eintrag " + '"Import"' + "; nach erfolgreichem Import wird daraus " + '"Übersicht"' + ". Am unteren Rand bleibt " + '"Privat - Nur lokal"' + " als ständige Datenschutzerinnerung sichtbar.", styles,
+    s += section("Navigation und Status", "Die linke Milchglas-Sidebar ist in jedem Theme standardmäßig sichtbar. Vor dem ersten lokalen Import heißt ihr erster Eintrag " + '"Import"' + "; nach erfolgreichem Import wird daraus " + '"Übersicht"' + ". Am unteren Rand bleibt " + '"Privat - Nur lokal"' + " als ständige Datenschutzerinnerung sichtbar.", styles,
         bullets_list=[
             "<b>Übersicht:</b> Karten der ausgewählten Datentypen.",
             "<b>Verläufe:</b> Interaktive Zeitreihe eines ausgewählten Typs.",
             "<b>Quellen:</b> Auswahl aller im Import erkannten Datentypen.",
             "<b>Einblicke:</b> Beschreibende Zusammenfassung eines Datentyps.",
             "<b>Design-Studio:</b> Sprache und Erscheinungsbild.",
+            "Die native Menüleiste bietet Import, lokalen PDF-Bericht, Design-Studio sowie Fenstersteuerung. Über <b>Ansicht</b> lässt sich die Sidebar ein- oder ausblenden.",
+            "Interaktive Karten und Diagramme sind als Bedienelemente für macOS-Assistenzfunktionen erreichbar.",
             "Die GitHub- und Discord-Icons über dem Datenschutz-Status öffnen die Projektseite bzw. die Community im Standardbrowser.",
         ])
     s += [PageBreak()]
@@ -323,6 +325,7 @@ def manual_de(styles):
         ["Bereich", "Option", "Wirkung"],
         ["Kopfzeile", "Theme-Menü", "Wechselt die Darstellung sofort."],
         ["Kopfzeile", "Import", "Öffnet die Auswahl für ZIP oder Export.xml."],
+        ["Menüleiste", "Datei / Ansicht / Fenster", "Importiert, exportiert den lokalen PDF-Bericht, öffnet das Design-Studio, zeigt oder verbirgt die Sidebar und steuert das Fenster."],
         ["Übersicht", "Zeitraum", "Beschreibt nur lokale Erfassungstage."],
         ["Übersicht", "4 / 8 / 12 · Dichte", "Legt Kartenzahl und lokale Kartendichte fest."],
         ["Übersicht", "Karte / PDF-Bericht", "Öffnet Fokusansicht bzw. speichert lokal einen PDF-Bericht."],
@@ -381,11 +384,13 @@ def manual_en(styles):
             "There is no direct HealthKit connection and no cloud import.",
             "For a wrong ZIP, unreadable XML or an oversized file, HealthAtlas explains the issue and imports nothing.",
         ], callout_data=("Export on iPhone", "In Apple Health, open Summary, tap your picture or initials, then select " + '"Export All Health Data"' + ". Apple can change exact interface labels. Source: Apple Support, " + '<font color="#42C5EE">support.apple.com/en-in/guide/iphone/iph5ede58c3d/ios</font>', TEAL))
-    s += section("Navigation and status", "The frosted sidebar remains visible in every theme. Before the first local import, its first entry is called " + '"Import"' + "; after a successful import it becomes " + '"Overview"' + ". It shows " + '"Private - Local only"' + " at the bottom as a permanent privacy reminder.", styles,
+    s += section("Navigation and status", "The frosted sidebar is visible by default in every theme. Before the first local import, its first entry is called " + '"Import"' + "; after a successful import it becomes " + '"Overview"' + ". It shows " + '"Private - Local only"' + " at the bottom as a permanent privacy reminder.", styles,
         bullets_list=[
             "<b>Overview:</b> cards for selected data types.", "<b>Trends:</b> an interactive timeline for one selected type.",
             "<b>Sources:</b> selection of all data types recognised in the import.", "<b>Insights:</b> a descriptive summary for one data type.",
             "<b>Design Studio:</b> language and appearance.",
+            "The native menu bar provides import, the local PDF report, Design Studio and window controls. Use <b>View</b> to show or hide the sidebar.",
+            "Interactive cards and charts are available as controls for macOS assistive technologies.",
             "The GitHub and Discord icons above the privacy status open the project page and community in the default browser.",
         ])
     s += [PageBreak()]
@@ -459,6 +464,7 @@ def manual_en(styles):
     rows = [
         ["Area", "Control", "Outcome"],
         ["Header", "Theme menu", "Changes appearance immediately."], ["Header", "Import", "Opens ZIP or Export.xml picker."],
+        ["Menu bar", "File / View / Window", "Imports, exports the local PDF report, opens Design Studio, shows or hides the sidebar, and controls the window."],
         ["Overview", "Period", "Describes only local recording days."], ["Overview", "4 / 8 / 12 · density", "Sets card count and local card density."], ["Overview", "Arrows", "Moves through additional selected cards."],
         ["Overview", "Card / PDF report", "Opens the focus view or saves a local PDF report."],
         ["Overview", "Timeline / rings", "Shows several local types; no goal or rating."],

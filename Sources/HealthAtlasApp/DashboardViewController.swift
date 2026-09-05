@@ -14,6 +14,8 @@ final class DashboardViewController: NSViewController {
     private let workspace = HealthWorkspaceViewController()
     private let clearGlassAtmosphere = ClearGlassAtmosphereView(drawsAmbient: true, emitsSparks: false)
     private let clearGlassSparkOverlay = ClearGlassAtmosphereView(drawsAmbient: false, emitsSparks: true)
+    private var sidebarWidthConstraint: NSLayoutConstraint!
+    private var isSidebarVisible = true
 
     override func loadView() {
         let root = NSView()
@@ -37,6 +39,7 @@ final class DashboardViewController: NSViewController {
         addChild(workspace)
         let sidebarView = sidebar.view
         let workspaceView = workspace.view
+        sidebarWidthConstraint = sidebarView.widthAnchor.constraint(equalToConstant: 236)
         sidebarView.translatesAutoresizingMaskIntoConstraints = false
         workspaceView.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(sidebarView)
@@ -46,7 +49,7 @@ final class DashboardViewController: NSViewController {
             sidebarView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             sidebarView.topAnchor.constraint(equalTo: root.topAnchor),
             sidebarView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
-            sidebarView.widthAnchor.constraint(equalToConstant: 236),
+            sidebarWidthConstraint,
             workspaceView.leadingAnchor.constraint(equalTo: sidebarView.trailingAnchor),
             workspaceView.topAnchor.constraint(equalTo: root.topAnchor),
             workspaceView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
@@ -76,6 +79,32 @@ final class DashboardViewController: NSViewController {
            let section = DashboardSection.allCases.first(where: { String(describing: $0) == value }) {
             workspace.show(section: section)
         }
+    }
+
+    @objc func importFromMenu(_ sender: Any?) {
+        workspace.importFromMenu(sender)
+    }
+
+    @objc func exportReportFromMenu(_ sender: Any?) {
+        workspace.exportReportFromMenu(sender)
+    }
+
+    @objc func showDesignStudio(_ sender: Any?) {
+        sidebar.select(.settings)
+    }
+
+    @objc func toggleSidebar(_ sender: Any?) {
+        isSidebarVisible.toggle()
+        sidebar.view.isHidden = !isSidebarVisible
+        sidebarWidthConstraint.constant = isSidebarVisible ? 236 : 0
+        view.needsLayout = true
+    }
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(toggleSidebar(_:)) {
+            menuItem.title = isSidebarVisible ? "Hide Sidebar" : "Show Sidebar"
+        }
+        return true
     }
 }
 
@@ -161,13 +190,13 @@ private struct SidebarLiquidGlassView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
                 Image(systemName: "heart.text.square.fill")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundStyle(.pink)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("HealthAtlas")
-                        .font(.system(size: 21, weight: .bold))
+                        .font(.title2.weight(.bold))
                     Text(AppLanguage.current.text(english: "Health, in your hands", german: "Gesundheit in deiner Hand"))
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption)
                         .foregroundStyle(.white.opacity(0.72))
                 }
             }
@@ -185,10 +214,10 @@ private struct SidebarLiquidGlassView: View {
                                 : section.title(for: .current))
                             Spacer(minLength: 0)
                         }
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(section == selectedSection ? Color.black.opacity(0.82) : .white)
                         .padding(.horizontal, 16)
-                        .frame(height: 44)
+                        .frame(minHeight: 44)
                         .background {
                             if section == selectedSection {
                                 RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -213,7 +242,7 @@ private struct SidebarLiquidGlassView: View {
             .padding(.bottom, 12)
 
             Label(AppLanguage.current.text(english: "Private · Local only", german: "Privat · Nur lokal"), systemImage: "circle.fill")
-                .font(.system(size: 12, weight: .bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(.green)
                 .padding(.horizontal, 22)
                 .padding(.bottom, 23)
@@ -455,6 +484,14 @@ private final class HealthWorkspaceViewController: NSViewController {
 
     var hasImportedData: Bool {
         importedSummary != nil
+    }
+
+    @objc func importFromMenu(_ sender: Any?) {
+        importFile()
+    }
+
+    @objc func exportReportFromMenu(_ sender: Any?) {
+        exportLocalReport()
     }
 
     override func loadView() {
@@ -856,12 +893,14 @@ private final class HealthWorkspaceViewController: NSViewController {
 
     private func buildSettings() {
         let label = NSTextField(labelWithString: AppLanguage.current.text(english: "Appearance", german: "Erscheinungsbild"))
+        label.setAccessibilityIdentifier("design-studio-heading")
         label.font = .systemFont(ofSize: 16, weight: .bold)
         label.textColor = .white
         body.addArrangedSubview(label)
         let languageButton = NSPopUpButton()
         languageButton.addItems(withTitles: AppLanguage.allCases.map(\.displayName))
         languageButton.selectItem(withTitle: AppLanguage.current.displayName)
+        languageButton.setAccessibilityIdentifier("design-studio-language")
         languageButton.target = self
         languageButton.action = #selector(languageChanged(_:))
         let languageRow = NSStackView(views: [
@@ -1027,6 +1066,8 @@ private final class HealthWorkspaceViewController: NSViewController {
         next.isBordered = false
         previous.contentTintColor = .white
         next.contentTintColor = .white
+        previous.setAccessibilityLabel(AppLanguage.current.text(english: "Previous page", german: "Vorherige Seite"))
+        next.setAccessibilityLabel(AppLanguage.current.text(english: "Next page", german: "Nächste Seite"))
         previous.font = .systemFont(ofSize: 22, weight: .bold)
         next.font = .systemFont(ofSize: 22, weight: .bold)
         previous.isEnabled = overviewPage > 0
@@ -1172,7 +1213,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 
     private func metricCard(_ metric: HealthMetric) -> NSView {
-        let card = DraggableMetricCard(identifier: metric.identifier, accent: accent(for: metric.color)) { [weak self] source, destination in
+        let card = DraggableMetricCard(identifier: metric.identifier, title: metric.localizedTitle, accent: accent(for: metric.color)) { [weak self] source, destination in
             self?.moveDashboardMetric(source, before: destination)
         } onOpen: { [weak self] identifier in
             self?.presentMetricFocus(for: identifier)
@@ -1816,12 +1857,14 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
             let checkbox = NSButton(checkboxWithTitle: "", target: self, action: #selector(toggleMetric(_:)))
             checkbox.tag = row
             checkbox.state = selectedIDs.contains(metric.identifier) ? .on : .off
+            checkbox.setAccessibilityLabel(AppLanguage.current.text(english: "Show \(metric.localizedDisplayName)", german: "\(metric.localizedDisplayName) anzeigen"))
             return checkbox
         }
         if id == "favorite" {
             let favorites = favoritesByArea[selectedPinArea] ?? []
             let favorite = NSButton(title: favorites.contains(metric.identifier) ? "★" : "☆", target: self, action: #selector(toggleFavorite(_:)))
             favorite.tag = row
+            favorite.setAccessibilityLabel(AppLanguage.current.text(english: "Pin \(metric.localizedDisplayName)", german: "\(metric.localizedDisplayName) anpinnen"))
             favorite.isBordered = false
             favorite.font = .systemFont(ofSize: 17, weight: .medium)
             favorite.contentTintColor = favorites.contains(metric.identifier) ? .systemYellow : .white.withAlphaComponent(0.55)
@@ -1832,6 +1875,8 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
             let up = NSButton(title: "↑", target: self, action: #selector(moveMetricUp(_:)))
             let down = NSButton(title: "↓", target: self, action: #selector(moveMetricDown(_:)))
             [up, down].forEach { $0.tag = row; $0.isBordered = false; $0.contentTintColor = .white }
+            up.setAccessibilityLabel(AppLanguage.current.text(english: "Move \(metric.localizedDisplayName) up", german: "\(metric.localizedDisplayName) nach oben verschieben"))
+            down.setAccessibilityLabel(AppLanguage.current.text(english: "Move \(metric.localizedDisplayName) down", german: "\(metric.localizedDisplayName) nach unten verschieben"))
             let controls = NSStackView(views: [up, down])
             controls.spacing = 2
             return controls
@@ -2376,17 +2421,22 @@ private final class HeroMetricOrbitView: NSView {
 private final class DraggableMetricCard: GlassCardView, NSDraggingSource {
     private static let metricIdentifierPasteboardType = NSPasteboard.PasteboardType("com.schrotty74.healthatlas.metric-card")
     private let metricIdentifier: String
+    private let metricTitle: String
     private let onMove: (String, String) -> Void
     private let onOpen: (String) -> Void
     private var mouseDownPoint: NSPoint?
     private var hasStartedDrag = false
     private var trackingArea: NSTrackingArea?
 
-    init(identifier: String, accent: NSColor, onMove: @escaping (String, String) -> Void, onOpen: @escaping (String) -> Void) {
+    init(identifier: String, title: String, accent: NSColor, onMove: @escaping (String, String) -> Void, onOpen: @escaping (String) -> Void) {
         self.metricIdentifier = identifier
+        self.metricTitle = title
         self.onMove = onMove
         self.onOpen = onOpen
         super.init(accent: accent)
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(AppLanguage.current.text(english: "Open \(title) details", german: "Details zu \(title) öffnen"))
         self.identifier = NSUserInterfaceItemIdentifier(identifier)
         registerForDraggedTypes([Self.metricIdentifierPasteboardType])
     }
@@ -2420,6 +2470,11 @@ private final class DraggableMetricCard: GlassCardView, NSDraggingSource {
         defer { mouseDownPoint = nil }
         guard !hasStartedDrag else { return }
         onOpen(metricIdentifier)
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        onOpen(metricIdentifier)
+        return true
     }
 
     override func updateTrackingAreas() {
@@ -2859,7 +2914,15 @@ private final class CombinedHealthTimelineCanvasView: NSView {
     private let metrics: [HealthDataTypeSummary]
     private let language: AppLanguage
     private let onSelect: (String) -> Void
-    init(metrics: [HealthDataTypeSummary], language: AppLanguage, onSelect: @escaping (String) -> Void) { self.metrics = metrics; self.language = language; self.onSelect = onSelect; super.init(frame: .zero) }
+    init(metrics: [HealthDataTypeSummary], language: AppLanguage, onSelect: @escaping (String) -> Void) {
+        self.metrics = metrics
+        self.language = language
+        self.onSelect = onSelect
+        super.init(frame: .zero)
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(language.text(english: "Combined health timeline", german: "Gemeinsame Gesundheitszeitleiste"))
+    }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override var isOpaque: Bool { false }
     override func draw(_ dirtyRect: NSRect) {
@@ -2890,6 +2953,11 @@ private final class CombinedHealthTimelineCanvasView: NSView {
         }
     }
     override func mouseDown(with event: NSEvent) { if let identifier = metrics.first?.identifier { onSelect(identifier) } }
+    override func accessibilityPerformPress() -> Bool {
+        guard let identifier = metrics.first?.identifier else { return false }
+        onSelect(identifier)
+        return true
+    }
 }
 
 private final class InsightSnapshotView: GlassCardView {
@@ -3186,6 +3254,9 @@ private final class TrendGraphView: NSView {
         self.onSelect = onSelect
         self.progress = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 1 : 0
         super.init(frame: .zero)
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(AppLanguage.current.text(english: "Trend chart", german: "Verlaufsdiagramm"))
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override var isFlipped: Bool { true }
@@ -3314,6 +3385,12 @@ private final class TrendGraphView: NSView {
         guard let target = hitTargets.min(by: { hypot($0.location.x - click.x, $0.location.y - click.y) < hypot($1.location.x - click.x, $1.location.y - click.y) }),
               hypot(target.location.x - click.x, target.location.y - click.y) < 18 else { return }
         onSelect(target.point)
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        guard let point = points.last else { return false }
+        onSelect(point)
+        return true
     }
 
     override func mouseMoved(with event: NSEvent) {

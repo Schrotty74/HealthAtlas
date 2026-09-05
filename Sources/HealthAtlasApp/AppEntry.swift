@@ -17,6 +17,7 @@ enum HealthAtlasApp {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow?
+    private var dashboard: DashboardViewController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         presentMainWindow()
@@ -42,6 +43,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             newWindow.setContentSize(NSSize(width: 1280, height: 720))
             newWindow.center()
             window = newWindow
+            dashboard = content
+            installMainMenu()
         }
 
         window?.makeKeyAndOrderFront(nil)
@@ -56,5 +59,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
+    }
+
+    private func installMainMenu() {
+        let mainMenu = NSMenu()
+
+        let applicationMenu = NSMenu()
+        applicationMenu.addItem(withTitle: "About \(BuildChannel.current.displayName)", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        applicationMenu.addItem(.separator())
+        applicationMenu.addItem(withTitle: "Hide \(BuildChannel.current.displayName)", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        applicationMenu.addItem(withTitle: "Hide Others", action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h").keyEquivalentModifierMask = [.command, .option]
+        applicationMenu.addItem(withTitle: "Show All", action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "")
+        applicationMenu.addItem(.separator())
+        applicationMenu.addItem(withTitle: "Quit \(BuildChannel.current.displayName)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let applicationItem = NSMenuItem(title: BuildChannel.current.displayName, action: nil, keyEquivalent: "")
+        applicationItem.submenu = applicationMenu
+        mainMenu.addItem(applicationItem)
+
+        let fileMenu = NSMenu(title: "File")
+        fileMenu.addItem(NSMenuItem(title: "Import Apple Health Export…", action: #selector(DashboardViewController.importFromMenu(_:)), keyEquivalent: "i"))
+        fileMenu.addItem(NSMenuItem(title: "Export Local PDF Report…", action: #selector(DashboardViewController.exportReportFromMenu(_:)), keyEquivalent: "e"))
+        fileMenu.addItem(.separator())
+        fileMenu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        let fileItem = NSMenuItem(title: "File", action: nil, keyEquivalent: "")
+        fileItem.submenu = fileMenu
+        mainMenu.addItem(fileItem)
+
+        let viewMenu = NSMenu(title: "View")
+        viewMenu.addItem(NSMenuItem(title: "Show Sidebar", action: #selector(DashboardViewController.toggleSidebar(_:)), keyEquivalent: "s"))
+        viewMenu.addItem(NSMenuItem(title: "Design Studio", action: #selector(DashboardViewController.showDesignStudio(_:)), keyEquivalent: ","))
+        let viewItem = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
+        viewItem.submenu = viewMenu
+        mainMenu.addItem(viewItem)
+
+        let windowMenu = NSMenu(title: "Window")
+        windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.miniaturize(_:)), keyEquivalent: "m")
+        windowMenu.addItem(withTitle: "Zoom", action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
+        windowMenu.addItem(withTitle: "Enter Full Screen", action: #selector(NSWindow.toggleFullScreen(_:)), keyEquivalent: "f").keyEquivalentModifierMask = [.command, .control]
+        windowMenu.addItem(.separator())
+        windowMenu.addItem(withTitle: "Bring All to Front", action: #selector(NSApplication.arrangeInFront(_:)), keyEquivalent: "")
+        let windowItem = NSMenuItem(title: "Window", action: nil, keyEquivalent: "")
+        windowItem.submenu = windowMenu
+        mainMenu.addItem(windowItem)
+
+        NSApp.mainMenu = mainMenu
     }
 }

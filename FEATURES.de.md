@@ -38,9 +38,11 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich.
 ## Erscheinungsbild und lokale Nutzung
 
 - Deutsche oder englische Oberfläche verwenden.
+- Die native Menüleiste für Import, lokalen PDF-Bericht, Design-Studio und Fenstersteuerung verwenden; die Sidebar lässt sich im Menü „Ansicht“ ein- oder ausblenden.
 - Clear Glass, Midnight Glass, Aurora oder Warmpaper wählen. Die App startet im 16:9-Format und bleibt frei skalierbar.
 - Geführte Leerzustände führen zu Quellen oder lokalem Import, wenn Daten oder eine Auswahl fehlen.
 - Die Oberfläche nutzt native Glasflächen und dezente Animationen und berücksichtigt die macOS-Einstellung „Bewegung reduzieren“.
+- Interaktive Karten und Diagramme sind als Bedienelemente für macOS-Assistenzfunktionen erreichbar.
 
 ## Freiwillige Ersthilfe
 

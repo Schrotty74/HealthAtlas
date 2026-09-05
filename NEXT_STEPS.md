@@ -1,6 +1,6 @@
 # HealthAtlas – Nächste Schritte
 
-Stand: 5. September 2026 · Bezug: öffentliche Beta `v0.1.0-beta.7`
+Stand: 5. September 2026 · Bezug: öffentliche Beta `v0.1.0-beta.8`
 
 Diese Datei enthält nur bestätigte offene Arbeit. Der technische Kontext und projektspezifische Regeln stehen in `PROJECT_CONTEXT.md`; die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md`.
 

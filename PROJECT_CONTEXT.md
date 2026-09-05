@@ -12,10 +12,12 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 
 ## Aktueller Stand
 
-- Die aktuelle öffentliche Vorabversion ist `v0.1.0-beta.7` vom 5. September 2026. Sie enthält ZIP, DMG und SHA-256-Dateien.
+- Die aktuelle öffentliche Vorabversion ist `v0.1.0-beta.8` vom 5. September 2026. Sie enthält ZIP, DMG und SHA-256-Dateien.
 - `dev` ist ausschließlich die lokale Arbeitslinie; auf GitHub liegen nur die getrennten Release-Linien `beta` und `main`.
 - Die App bietet lokale Importansicht, Quellen-Auswahl, Übersichten, Verläufe, beschreibende Einblicke, Zeitraumvergleiche, Datenkalender, Musterkarte, Vollbild-Fokus, konfigurierbare Karten und Kartensortierung.
 - Deutsch und Englisch, die Themes Clear Glass, Midnight Glass, Aurora und Warmpaper sowie die datensparsame Ersthilfe sind umgesetzt.
+- Die App verwendet eine native Menüleiste für Import, PDF-Export, Ansicht und Fenstersteuerung; die Sidebar lässt sich über das View-Menü ein- und ausblenden.
+- Eigene interaktive Diagramm- und Kartenansichten sind als AppKit-Accessibility-Controls erreichbar; die bestehenden Themes bleiben unverändert.
 - `Demo/AppleHealthDemo/Export.xml` enthält ausschließlich synthetische Daten. Öffentliche Screenshots und Handbücher müssen ebenso synthetisch bleiben.
 
 ## Architektur
@@ -24,6 +26,7 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 | --- | --- |
 | `Sources/HealthAtlasApp/` | AppKit-/SwiftUI-App, Import, Datenaggregation, Oberfläche und KI-Ersthilfe |
 | `Tests/HealthAtlasTests/` | Swift-Tests für Import, Datenverarbeitung und datensparsame Hilfe |
+| `HealthAtlasUITests/` | Xcode-UI-Regressionstest für die stabile Positionierung der Design-Studio-Einstellungen bei Sprach- und Themewechsel |
 | `Demo/AppleHealthDemo/` | sichere synthetische Testdaten |
 | `Scripts/` | Dev-Build, Beta-/Final-Release, Paketierung, Backup und Datenschutzprüfung |
 | `output/pdf/` | öffentliche deutsche und englische Handbücher |

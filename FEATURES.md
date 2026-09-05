@@ -38,9 +38,11 @@ This page describes the current HealthAtlas functions in detail.
 ## Appearance and local use
 
 - Use the German or English interface.
+- Use the native menu bar for import, the local PDF report, Design Studio and window controls; use the View menu to show or hide the sidebar.
 - Choose Clear Glass, Midnight Glass, Aurora or Warmpaper. The app starts at 16:9 and remains freely resizable.
 - Guided empty states lead to Sources or local import when data or a selection is missing.
 - The interface uses native glass surfaces and subtle animations while respecting the macOS reduced-motion preference.
+- Interactive cards and charts are available as controls for macOS assistive technologies.
 
 ## Optional first-start help
 
