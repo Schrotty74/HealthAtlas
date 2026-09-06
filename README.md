@@ -61,18 +61,16 @@ The only runnable Dev output is `dist/local-test/HealthAtlas-Development/HealthA
 Building or running the shared Dev scheme directly in Xcode refreshes this same app.
 The `.build` directory is only Xcode's temporary compiler workspace, not a second app to open.
 
-Dev, Beta and Final builds are ad-hoc signed. macOS Gatekeeper may show a
-warning the first time one is opened.
+Dev, Beta and Final builds are ad-hoc signed. macOS Gatekeeper may show a warning the first time one is opened.
 
-To open a local build without disabling Gatekeeper system-wide:
+On current macOS versions, if Gatekeeper blocks an official HealthAtlas download:
 
-1. In Finder, Control-click `HealthAtlas.app`, `HealthAtlas Beta.app` or `HealthAtlas Dev.app` and choose **Open**.
-2. Confirm **Open** in the dialog.
-3. If macOS still blocks it, open **System Settings → Privacy & Security** and
-   choose **Open Anyway** for that specific HealthAtlas build.
+1. Try to open the HealthAtlas app normally once so macOS registers the blocked launch.
+2. Open **System Settings → Privacy & Security** and scroll down to **Security**.
+3. Click **Open Anyway** for that HealthAtlas build.
+4. Confirm the warning by clicking **Open** and authenticate if macOS asks you to.
 
-Only do this for a build you created yourself or obtained from the official
-HealthAtlas GitHub release. This does not disable Gatekeeper system-wide.
+The **Open Anyway** option is only shown for a limited time after the blocked launch attempt. Only override Gatekeeper for a build you created yourself or obtained from the official HealthAtlas GitHub release. This creates an exception for that specific app and does not disable Gatekeeper system-wide.
 
 ## Data sources
 
