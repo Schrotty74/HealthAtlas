@@ -59,22 +59,16 @@ Die einzige startbare Dev-App liegt anschließend unter `dist/local-test/HealthA
 Auch ein direkter Build oder Run des gemeinsamen Dev-Schemes in Xcode aktualisiert genau diese App.
 Der Ordner `.build` ist ausschließlich der temporäre Compiler-Arbeitsbereich von Xcode, keine zweite App zum Öffnen.
 
-Dev-, Beta- und Final-Builds sind ad hoc signiert. macOS Gatekeeper kann
-beim ersten Öffnen einen Hinweis anzeigen.
+Dev-, Beta- und Final-Builds sind ad hoc signiert. macOS Gatekeeper kann beim ersten Öffnen einen Hinweis anzeigen.
 
-So öffnest du einen lokalen Build, ohne Gatekeeper systemweit abzuschalten:
+Wenn Gatekeeper einen offiziellen HealthAtlas-Download auf aktuellen macOS-Versionen blockiert:
 
-1. Im Finder bei gedrückter Control-Taste auf `HealthAtlas.app`,
-   `HealthAtlas Beta.app` oder `HealthAtlas Dev.app` klicken und
-   **Öffnen** wählen.
-2. Im Hinweisfenster nochmals **Öffnen** bestätigen.
-3. Falls macOS die App weiter blockiert: **Systemeinstellungen → Datenschutz &
-   Sicherheit** öffnen und bei genau diesem HealthAtlas-Build **Dennoch
-   öffnen** wählen.
+1. Versuche zuerst einmal, die HealthAtlas-App normal zu öffnen, damit macOS den blockierten Start registriert.
+2. Öffne **Systemeinstellungen → Datenschutz & Sicherheit** und scrolle nach unten zum Bereich **Sicherheit**.
+3. Klicke bei diesem HealthAtlas-Build auf **Dennoch öffnen**.
+4. Bestätige die Warnung mit **Öffnen** und authentifiziere dich, falls macOS danach fragt.
 
-Mach das nur bei einem Build, den du selbst erstellt oder vom offiziellen
-HealthAtlas-GitHub-Release erhalten hast. Gatekeeper wird dadurch nicht
-systemweit deaktiviert.
+Die Option **Dennoch öffnen** wird nur für begrenzte Zeit nach dem blockierten Startversuch angezeigt. Überschreibe Gatekeeper nur für einen Build, den du selbst erstellt oder vom offiziellen HealthAtlas-GitHub-Release erhalten hast. Dadurch wird nur für diese konkrete App eine Ausnahme gespeichert; Gatekeeper wird nicht systemweit deaktiviert.
 
 ## Datenquellen
 
