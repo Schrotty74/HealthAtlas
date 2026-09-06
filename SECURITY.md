@@ -1,5 +1,7 @@
 # Security Policy
 
+[Deutsch](SECURITY.de.md)
+
 ## Supported Versions
 
 Security fixes are provided for the current stable release of HealthAtlas.
