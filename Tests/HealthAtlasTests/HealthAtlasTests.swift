@@ -91,6 +91,16 @@ struct HealthAtlasTests {
         #expect(english.prompt.contains(english.handbookURL.absoluteString))
     }
 
+    @Test func AIHelpAsksForAnExplanationOfThePublicManual() {
+        let german = FirstLaunchHelpContent(language: .german)
+        let english = FirstLaunchHelpContent(language: .english)
+
+        #expect(german.prompt.contains("Handbuch"))
+        #expect(english.prompt.localizedCaseInsensitiveContains("manual"))
+        #expect(german.manualExplanationDescription.contains("Handbuch"))
+        #expect(english.manualExplanationDescription.localizedCaseInsensitiveContains("manual"))
+    }
+
     @Test func firstLaunchPromptContainsNoLocalOrImportedData() {
         for language in [AppLanguage.german, .english] {
             let prompt = FirstLaunchHelpContent(language: language).prompt
@@ -158,5 +168,22 @@ struct HealthAtlasTests {
         #expect(comparison?.current == 85)
         #expect(comparison?.previous == 65)
         #expect(comparison?.difference == 20)
+    }
+
+    @Test func appUpdateVersionsOrderFinalAfterBeta() {
+        #expect(AppReleaseVersion("v0.1.0-beta.10")! > AppReleaseVersion("v0.1.0-beta.9")!)
+        #expect(AppReleaseVersion("v0.1.0")! > AppReleaseVersion("v0.1.0-beta.10")!)
+        #expect(AppReleaseVersion("v0.2.0-beta.1")! > AppReleaseVersion("v0.1.0")!)
+    }
+
+    @Test func appUpdateUsesTheMatchingReleaseChannel() {
+        let releases = [
+            GitHubRelease(tagName: "v0.1.0-beta.9", htmlURL: URL(string: "https://example.com/beta")!, isPrerelease: true, isDraft: false),
+            GitHubRelease(tagName: "v0.1.0", htmlURL: URL(string: "https://example.com/final")!, isPrerelease: false, isDraft: false),
+            GitHubRelease(tagName: "v0.2.0-beta.1", htmlURL: URL(string: "https://example.com/draft")!, isPrerelease: true, isDraft: true)
+        ]
+
+        #expect(AppUpdateService.latestRelease(from: releases, for: .beta)?.versionText == "v0.1.0")
+        #expect(AppUpdateService.latestRelease(from: releases, for: .final)?.versionText == "v0.1.0")
     }
 }

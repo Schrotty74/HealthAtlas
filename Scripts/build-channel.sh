@@ -12,6 +12,7 @@ esac
 root="$(cd "$(dirname "$0")/.." && pwd)"
 build_root="${HEALTHATLAS_BUILD_ROOT:-$root}"
 derived_data="$build_root/.build/$channel/DerivedData"
+build_number="${HEALTHATLAS_BUILD_NUMBER:-$(git -C "$root" rev-list --count HEAD)}"
 marketing_version_setting=()
 if [[ -n "${HEALTHATLAS_VERSION:-}" ]]; then
   marketing_version_setting=("MARKETING_VERSION=$HEALTHATLAS_VERSION")
@@ -29,6 +30,7 @@ HEALTHATLAS_SKIP_SCHEME_CLEAN=YES xcodebuild \
   -derivedDataPath "$derived_data" \
   "SYMROOT=$derived_data/Build" \
   "OBJROOT=$derived_data/Build/Intermediates.noindex" \
+  "CURRENT_PROJECT_VERSION=$build_number" \
   "${marketing_version_setting[@]}" \
   build
 

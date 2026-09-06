@@ -68,6 +68,18 @@ require_gh() {
     command -v gh >/dev/null 2>&1 || { echo "Abbruch: GitHub CLI 'gh' wurde nicht gefunden." >&2; exit 1; }
 }
 
+final_tree_from_beta() {
+    local english_readme german_readme tree_entries
+    english_readme="$(git show beta:README.md | sed '/^See \[what’s new and the complete feature overview\](FEATURES\.md)\.$/d' | git hash-object -w --stdin)"
+    german_readme="$(git show beta:README.de.md | sed '/^Neuigkeiten und alle Details stehen in der \[vollständigen Funktionsübersicht\](FEATURES\.de\.md)\.$/d' | git hash-object -w --stdin)"
+    tree_entries="$(git ls-tree beta | awk -F '\t' '$2 != "FEATURES.md" && $2 != "FEATURES.de.md" && $2 != "README.md" && $2 != "README.de.md"')"
+    {
+        printf '100644 blob %s\tREADME.md\n' "$english_readme"
+        printf '100644 blob %s\tREADME.de.md\n' "$german_readme"
+        printf '%s\n' "$tree_entries"
+    } | LC_ALL=C sort -k 2 | git mktree
+}
+
 backup_directory_for_version() {
     case "$1" in
         *local*|*test*) echo "$root_directory/Backup/local-test/$1" ;;
@@ -126,7 +138,7 @@ EOF
 
 create_github_release() {
     local version="$1" target_commit="$2" notes_file="$3"; shift 3
-    GH_PROMPT_DISABLED=1 gh release create "v$version" "$@" --target "$target_commit" --title "HealthAtlas $version" --notes-file "$notes_file"
+    GH_PROMPT_DISABLED=1 gh release create "v$version" "$@" --target "$target_commit" --title "Final $version" --notes-file "$notes_file"
 }
 
 require_clean_worktree
@@ -139,6 +151,7 @@ bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
 
 version="$(release_version)"
+[[ "$version" =~ ^[1-9][0-9]*\.0\.0$ ]] || { echo "Abbruch: Final-Version muss X.0.0 sein." >&2; exit 1; }
 previous_final_tag="$(last_final_tag)"
 previous_release_note_ref="${previous_final_tag:-$(git rev-list --max-parents=0 HEAD)}"
 backup_directory="$(backup_directory_for_version "$version")"
@@ -151,8 +164,11 @@ release_notes_file="$backup_directory/HealthAtlas-$version-release-notes.md"
 
 git switch beta
 beta_commit="$(git rev-parse --short HEAD)"
+main_before="$(git rev-parse refs/heads/main)"
+final_tree="$(final_tree_from_beta)"
+final_commit="$(printf 'Publish Final %s from beta\n' "$version" | git commit-tree "$final_tree" -p "$main_before")"
+git update-ref refs/heads/main "$final_commit" "$main_before"
 git switch main
-git merge --ff-only beta
 
 release_changes="$(categorized_release_changes "${previous_release_note_ref}")" || {
     echo "Abbruch: Seit ${previous_final_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Kein Final ohne vollständigen Changelog erstellen." >&2
@@ -167,7 +183,7 @@ HEALTHATLAS_ALLOW_PUSH=YES git push --set-upstream origin main
 release_tag="v$version"
 if gh release view "$release_tag" >/dev/null 2>&1; then
     gh release upload "$release_tag" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file" --clobber
-    gh release edit "$release_tag" --title "HealthAtlas $version" --notes-file "$release_notes_file"
+    gh release edit "$release_tag" --title "Final $version" --notes-file "$release_notes_file"
 else
     create_github_release "$version" "$(git rev-parse HEAD)" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi

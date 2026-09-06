@@ -16,6 +16,7 @@
 		A10000000000000000000007 /* Resources/AI/healthatlas-chatgpt-logo.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* Resources/AI/healthatlas-chatgpt-logo.jpg */; };
 		A10000000000000000000008 /* Resources/AI/healthatlas-gemini-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* Resources/AI/healthatlas-gemini-logo.svg */; };
 		A10000000000000000000009 /* Resources/AI/healthatlas-claude-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* Resources/AI/healthatlas-claude-logo.png */; };
+		A10000000000000000000010 /* AppUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* AppUpdate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +41,7 @@
 		A20000000000000000000008 /* Resources/AI/healthatlas-chatgpt-logo.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "Resources/AI/healthatlas-chatgpt-logo.jpg"; sourceTree = "<group>"; };
 		A20000000000000000000009 /* Resources/AI/healthatlas-gemini-logo.svg */ = {isa = PBXFileReference; lastKnownFileType = image.svg; path = "Resources/AI/healthatlas-gemini-logo.svg"; sourceTree = "<group>"; };
 		A20000000000000000000010 /* Resources/AI/healthatlas-claude-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Resources/AI/healthatlas-claude-logo.png"; sourceTree = "<group>"; };
+		A20000000000000000000011 /* AppUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -90,6 +92,7 @@
 				A20000000000000000000003 /* DashboardViewController.swift */,
 				A20000000000000000000006 /* AppLanguage.swift */,
 				A20000000000000000000007 /* AIHelp.swift */,
+				A20000000000000000000011 /* AppUpdate.swift */,
 				A20000000000000000000008 /* Resources/AI/healthatlas-chatgpt-logo.jpg */,
 				A20000000000000000000009 /* Resources/AI/healthatlas-gemini-logo.svg */,
 				A20000000000000000000010 /* Resources/AI/healthatlas-claude-logo.png */,
@@ -139,6 +142,7 @@
 				A30000000000000000000002 /* Resources */,
 				A30000000000000000000001 /* Frameworks */,
 				A30000000000000000000003 /* Sources */,
+				A30000000000000000000004 /* Set Build Version */,
 			);
 			buildRules = (
 			);
@@ -208,6 +212,28 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		A30000000000000000000004 /* Set Build Version */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Set Build Version";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "build_number=`/usr/bin/git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null`\nif [ -z \"$build_number\" ]; then\n  build_number=\"$CURRENT_PROJECT_VERSION\"\nfi\nplist=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nif [ -f \"$plist\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $build_number\" \"$plist\"\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		5BA031E6304C6F5400496B99 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -225,6 +251,7 @@
 				A10000000000000000000003 /* DashboardViewController.swift in Sources */,
 				A10000000000000000000005 /* AppLanguage.swift in Sources */,
 				A10000000000000000000006 /* AIHelp.swift in Sources */,
+				A10000000000000000000010 /* AppUpdate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -593,7 +620,7 @@
 				HEALTHATLAS_BUILD_CHANNEL = dev;
 				HEALTHATLAS_DISPLAY_NAME = "HealthAtlas Dev";
 				INFOPLIST_FILE = HealthAtlas/Info.plist;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.healthatlas.app.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -612,7 +639,7 @@
 				HEALTHATLAS_BUILD_CHANNEL = beta;
 				HEALTHATLAS_DISPLAY_NAME = "HealthAtlas Beta";
 				INFOPLIST_FILE = HealthAtlas/Info.plist;
-				MARKETING_VERSION = "0.1.0-beta.1";
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.healthatlas.app.beta;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -631,7 +658,7 @@
 				HEALTHATLAS_BUILD_CHANNEL = final;
 				HEALTHATLAS_DISPLAY_NAME = HealthAtlas;
 				INFOPLIST_FILE = HealthAtlas/Info.plist;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.healthatlas.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

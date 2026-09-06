@@ -120,6 +120,10 @@ last_beta_tag() {
     git tag --list 'v*-beta*' --sort=-version:refname | head -n 1
 }
 
+beta_release_tag() {
+    echo "v$1-beta"
+}
+
 categorized_release_changes() {
     local base_ref="$1" target_ref="$2"
     local changed_paths
@@ -162,7 +166,7 @@ EOF
 
 create_github_release() {
     local version="$1" target_commit="$2" notes_file="$3"; shift 3
-    GH_PROMPT_DISABLED=1 gh release create "v$version" "$@" --target "$target_commit" --title "HealthAtlas Beta $version" --notes-file "$notes_file" --prerelease
+    GH_PROMPT_DISABLED=1 gh release create "$(beta_release_tag "$version")" "$@" --target "$target_commit" --title "Beta $version" --notes-file "$notes_file" --prerelease
 }
 
 require_dev_branch
@@ -173,6 +177,8 @@ bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
 
 version="$(release_version)"
+[[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.0$ ]] || { echo "Abbruch: Beta-Version muss X.Y.0 sein." >&2; exit 1; }
+release_tag="$(beta_release_tag "$version")"
 dev_commit="$(git rev-parse --short HEAD)"
 previous_beta_tag="$(last_beta_tag)"
 previous_release_note_ref="${previous_beta_tag:-$(git rev-list --max-parents=0 HEAD)}"
@@ -199,9 +205,9 @@ git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
 write_release_notes "$release_notes_file" "$previous_beta_tag" "$release_changes"
-if gh release view "v$version" >/dev/null 2>&1; then
-    gh release upload "v$version" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file" --clobber
-    gh release edit "v$version" --prerelease --title "HealthAtlas Beta $version" --notes-file "$release_notes_file"
+if gh release view "$release_tag" >/dev/null 2>&1; then
+    gh release upload "$release_tag" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file" --clobber
+    gh release edit "$release_tag" --prerelease --title "Beta $version" --notes-file "$release_notes_file"
 else
     create_github_release "$version" "$beta_commit" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi

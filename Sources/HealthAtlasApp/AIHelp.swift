@@ -52,12 +52,12 @@ struct FirstLaunchHelpContent {
         switch language {
         case .german:
             """
-            Ich habe HealthAtlas gerade zum ersten Mal geöffnet. Erkläre mir die App freundlich und in einfacher Sprache. Führe mich Schritt für Schritt durch den ersten sinnvollen Start. Erkläre die wichtigsten Funktionen, wo ich sie in der App finde und wann sie sinnvoll sind. Frage mich am Ende, wobei ich Hilfe benötige. Verwende dieses offizielle Handbuch auf GitHub:
+            Erkläre mir das HealthAtlas-Handbuch freundlich und in einfacher Sprache. Führe mich Schritt für Schritt durch die wichtigsten Funktionen, wo ich sie in der App finde und wann sie sinnvoll sind. Frage mich am Ende, wobei ich Hilfe benötige. Verwende dieses offizielle Handbuch auf GitHub:
             \(handbookURL.absoluteString)
             """
         case .english:
             """
-            I have just opened HealthAtlas for the first time. Explain the app in a friendly and simple way. Guide me step by step through the first useful start. Explain the most important features, where to find them in the app, and when they are useful. At the end, ask me what I need help with. Use this official manual on GitHub:
+            Explain the HealthAtlas manual in a friendly and simple way. Guide me step by step through the most important features, where to find them in the app, and when they are useful. At the end, ask me what I need help with. Use this official manual on GitHub:
             \(handbookURL.absoluteString)
             """
         }
@@ -82,6 +82,25 @@ struct FirstLaunchHelpContent {
         language.text(english: "Get Started with AI Help", german: "Erste Hilfe mit KI")
     }
 
+    var manualExplanationHeading: String {
+        language.text(english: "Manual help", german: "Hilfe zum Handbuch")
+    }
+
+    var manualExplanationDescription: String {
+        language.text(
+            english: "Choose a service to explain the matching public manual. HealthAtlas copies only a general question with the manual link to the clipboard; paste it yourself with Cmd+V.",
+            german: "Wähle einen Dienst, der das passende öffentliche Handbuch erklärt. HealthAtlas kopiert nur eine allgemeine Frage mit Handbuch-Link in die Zwischenablage; füge sie selbst mit Cmd+V ein."
+        )
+    }
+
+    var germanManualButtonTitle: String {
+        language.text(english: "German manual", german: "Handbuch Deutsch")
+    }
+
+    var englishManualButtonTitle: String {
+        language.text(english: "English manual", german: "Manual English")
+    }
+
     var privacyNote: String {
         language.text(
             english: "The prepared question contains no local data. It is copied only to the clipboard; paste it into the selected service yourself with Cmd+V.",
@@ -91,8 +110,8 @@ struct FirstLaunchHelpContent {
 
     func serviceHelp(_ service: FirstLaunchAIService) -> String {
         language.text(
-            english: "Copy the question and open \(service.title)",
-            german: "Frage kopieren und \(service.title) öffnen"
+            english: "Copy the manual-explanation question and open \(service.title)",
+            german: "Frage zur Handbuch-Erklärung kopieren und \(service.title) öffnen"
         )
     }
 }

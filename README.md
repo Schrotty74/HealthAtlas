@@ -6,36 +6,48 @@ HealthAtlas is a privacy-first macOS app for turning a local Apple Health export
 
 It starts empty, imports only a file you choose, and turns selected health data into a calm, modern dashboard. HealthAtlas focuses on trends and personal patterns instead of raw tables.
 
-## Features
+## What HealthAtlas offers
 
 - Import a local Apple Health `Export.xml` file or ZIP archive and choose the recognised data types to show.
-- Explore a configurable overview with metric cards, shared timelines, period rings and a local PDF report.
-- Follow individual metrics in interactive 7D, 30D, 3M and 1Y trends, including point details and a local activity calendar.
-- Open a metric in a dedicated full-screen focus view with its local trend and period comparison.
-- Read descriptive local snapshots, coverage and recording patterns without diagnoses or health ratings.
-- Keep separate pins and local ordering for Overview, Trends and Insights.
-- Use German or English and choose from four glass themes.
+- Browse Sources by category or search, then keep separate pins and local ordering for Overview, Trends and Insights.
+- Configure 4, 8 or 12 overview cards, their density and their local order.
+- Choose one to four data types independently for the shared health timeline.
+- Follow a selected metric across 7D, 15D, 30D, 3M, 6M and 1Y, with clickable points and a clickable local calendar.
+- Compare the current period with the immediately preceding period and open a metric in a full-screen focus view.
+- Read local snapshots, coverage and recording patterns without diagnoses or health ratings.
+- Export a local PDF report with its own period, data-type and theme choices.
+- Use German or English, choose from four glass themes, and check the public GitHub release list manually or on a selected schedule.
+- Open either public manual separately, or let ChatGPT, Gemini or Claude explain the matching manual from a general copied prompt. No local health data is included.
 
-See the complete, grouped [feature overview](FEATURES.md).
+See [what’s new and the complete feature overview](FEATURES.md).
 
 ### Screenshots
 
 All screenshots show the current HealthAtlas interface with synthetic demo data only; no personal health data is shown.
 
-<a href="Screenshots/en/import.png"><img src="Screenshots/en/import.png" alt="HealthAtlas empty import screen" width="49%"></a>
-<a href="Screenshots/en/sources.png"><img src="Screenshots/en/sources.png" alt="HealthAtlas source selection for imported Apple Health data types" width="49%"></a>
-
-<a href="Screenshots/en/overview.png"><img src="Screenshots/en/overview.png" alt="HealthAtlas overview with selected health cards" width="49%"></a>
-<a href="Screenshots/en/trends.png"><img src="Screenshots/en/trends.png" alt="HealthAtlas interactive heart-rate trend" width="49%"></a>
-
-<a href="Screenshots/en/insights.png"><img src="Screenshots/en/insights.png" alt="HealthAtlas local heart-rate insight" width="49%"></a>
-<a href="Screenshots/en/design-studio.png"><img src="Screenshots/en/design-studio.png" alt="HealthAtlas theme and language settings" width="49%"></a>
+<table>
+  <tr><th align="left">Import</th><th align="left">Sources</th></tr>
+  <tr>
+    <td><a href="Screenshots/final-import.png"><img src="Screenshots/final-import.png" alt="HealthAtlas empty import screen" width="100%"></a></td>
+    <td><a href="Screenshots/final-sources.png"><img src="Screenshots/final-sources.png" alt="HealthAtlas source selection for imported Apple Health data types" width="100%"></a></td>
+  </tr>
+  <tr><th align="left">Overview</th><th align="left">Trends</th></tr>
+  <tr>
+    <td><a href="Screenshots/final-overview.png"><img src="Screenshots/final-overview.png" alt="HealthAtlas overview with timeline and PDF report controls" width="100%"></a></td>
+    <td><a href="Screenshots/final-trends.png"><img src="Screenshots/final-trends.png" alt="HealthAtlas interactive trend with 15-day range and local calendar" width="100%"></a></td>
+  </tr>
+  <tr><th align="left">Insights</th><th align="left">Design Studio</th></tr>
+  <tr>
+    <td><a href="Screenshots/final-insights.png"><img src="Screenshots/final-insights.png" alt="HealthAtlas descriptive local insight" width="100%"></a></td>
+    <td><a href="Screenshots/final-design-studio.png"><img src="Screenshots/final-design-studio.png" alt="HealthAtlas themes, language, manual help and app update settings" width="100%"></a></td>
+  </tr>
+</table>
 
 ## Privacy first
 
 HealthAtlas is designed around local processing. Personal health data should remain on the user's Mac. The project does not include analytics, advertising, tracking or hidden cloud uploads.
 
-The project contains no analytics, advertising, tracking, account or cloud upload. Imported data stays in memory for the current app session and the app opens empty again next time.
+The project contains no analytics, advertising, tracking, account or cloud upload. Imported data stays in memory for the current app session and the app opens empty again next time. If you enable an update check, HealthAtlas requests only the public GitHub release list; it never includes health data.
 
 ## Local builds and Gatekeeper
 
@@ -49,12 +61,12 @@ The only runnable Dev output is `dist/local-test/HealthAtlas-Development/HealthA
 Building or running the shared Dev scheme directly in Xcode refreshes this same app.
 The `.build` directory is only Xcode's temporary compiler workspace, not a second app to open.
 
-The current Dev and Beta builds are ad-hoc signed. macOS Gatekeeper may show a
+Dev, Beta and Final builds are ad-hoc signed. macOS Gatekeeper may show a
 warning the first time one is opened.
 
 To open a local build without disabling Gatekeeper system-wide:
 
-1. In Finder, Control-click `HealthAtlas Beta.app` (or `HealthAtlas Dev.app`) and choose **Open**.
+1. In Finder, Control-click `HealthAtlas.app`, `HealthAtlas Beta.app` or `HealthAtlas Dev.app` and choose **Open**.
 2. Confirm **Open** in the dialog.
 3. If macOS still blocks it, open **System Settings → Privacy & Security** and
    choose **Open Anyway** for that specific HealthAtlas build.
@@ -97,9 +109,7 @@ the changelog are written to `Backup/releases/beta/<version>/`.
 
 ## Project status
 
-HealthAtlas is an early beta. The local import and interface are ready for
-feedback. It does not provide medical integration, diagnoses or treatment
-recommendations.
+Final 1.0.0 is the current stable release. HealthAtlas remains a local visualisation tool and does not provide medical integration, diagnoses or treatment recommendations.
 
 ## License
 

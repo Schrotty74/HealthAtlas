@@ -4,6 +4,14 @@
 
 This page describes the current HealthAtlas functions in detail.
 
+## What's New
+
+- The shared health timeline now has its own selection: choose one to four active data types without changing cards, pins or the other areas.
+- Trends and the local activity calendar now include a dedicated 15-day range; a calendar day can be clicked to reveal its local date and value.
+- The local PDF report has its own period, data-type and theme choices, independent of the overview and timeline selections.
+- Design Studio can show the installed version and check the public GitHub release list manually, at every launch, daily, weekly or monthly.
+- Design Studio keeps the German and English public manuals plus the three privacy-safe manual-explanation services available at all times.
+
 ## Import and sources
 
 - Import a local Apple Health `Export.xml` file or a ZIP archive containing one. The clinical companion file is intentionally not imported.
@@ -16,15 +24,15 @@ This page describes the current HealthAtlas functions in detail.
 
 - Choose 4, 8 or 12 metric cards and use Compact, Standard or Focus density. Each density saves its own local card order.
 - Open a metric card in a dedicated full-screen focus view.
-- Compare selected metrics in a shared health timeline and visual daily rings.
+- Choose one to four active data types independently for the shared health timeline, then compare their recent patterns alongside visual daily rings.
 - Export a local PDF report with its own period, selected data types and theme. The save location is chosen explicitly.
 - The overview uses bars for steps and energy, an area chart for sleep, and lines for other numeric values.
 
 ## Trends and focus
 
-- Switch a selected metric between 7D, 30D, 3M and 1Y. Click a point for its value or hover it for the date, value and a compact local trend.
+- Switch a selected metric between 7D, 15D, 30D, 3M, 6M and 1Y. Click a point for its value or hover it for the date, value and a compact local trend.
 - View a factual comparison of the current period with the preceding one when enough local data is available.
-- Use the local activity calendar for 1 week, 4 weeks, 3 months, 6 months or 1 year.
+- Use the local activity calendar for 1 week, 15 days, 4 weeks, 3 months, 6 months or 1 year. Click a day to see its local date and value.
 - Trend notes report facts such as a local high value or the number of days with data; they do not rate health values.
 - The full-screen focus view combines the selected metric's trend, period comparison and local calendar.
 
@@ -40,6 +48,8 @@ This page describes the current HealthAtlas functions in detail.
 - Use the German or English interface.
 - Use the native menu bar for import, the local PDF report, Design Studio and window controls; use the View menu to show or hide the sidebar.
 - Choose Clear Glass, Midnight Glass, Aurora or Warmpaper. The app starts at 16:9 and remains freely resizable.
+- In Design Studio, see the installed release and automatically check the public GitHub release list at every launch, daily, weekly or monthly, or check manually. A newer matching release is opened only after you choose its link.
+- In Design Studio, open the German or English public manual separately, or use ChatGPT, Gemini or Claude to explain the matching manual from a general copied prompt. No imported or local health data is included.
 - Guided empty states lead to Sources or local import when data or a selection is missing.
 - The interface uses native glass surfaces and subtle animations while respecting the macOS reduced-motion preference.
 - Interactive cards and charts are available as controls for macOS assistive technologies.
@@ -53,5 +63,6 @@ This page describes the current HealthAtlas functions in detail.
 ## Privacy
 
 - HealthAtlas uses no account, analytics, advertising, tracking or hidden cloud upload.
+- An optional update check requests the public GitHub release list only; it never sends imported health values.
 - Imported data remains in memory for the current app session. The app starts empty again after it is reopened.
 - There is no direct HealthKit or cloud-service connection.

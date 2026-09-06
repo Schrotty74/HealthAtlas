@@ -474,6 +474,10 @@ private final class HealthWorkspaceViewController: NSViewController {
     private var isScreenshotDemoLoaded = false
     private var selectedTypeIDs = Set<String>()
     private let selectedTypeIDsPreferenceKey = "HealthAtlas.selectedHealthTypeIDs"
+    private let combinedTimelineMetricIDsPreferenceKey = "HealthAtlas.combinedTimelineMetricIDs"
+    private let automaticUpdateChecksPreferenceKey = "HealthAtlas.automaticUpdateChecksEnabled"
+    private let updateCadencePreferenceKey = "HealthAtlas.updateCheckCadence"
+    private let lastUpdateCheckPreferenceKey = "HealthAtlas.lastUpdateCheck"
     private var favoriteTypeIDs = Set<String>()
     private var favoritesByArea = Dictionary(uniqueKeysWithValues: MetricPinArea.allCases.map { ($0, Set<String>()) })
     private let favoriteTypeIDsPreferenceKey = "HealthAtlas.favoriteHealthTypeIDs"
@@ -491,7 +495,7 @@ private final class HealthWorkspaceViewController: NSViewController {
             // Earlier Dev builds stored 84 for "12 weeks". Keep that local
             // preference meaningful by moving it to the renamed 3-month range.
             if stored == 84 { return 90 }
-            return [7, 28, 90, 182, 365].contains(stored) ? stored : 90
+            return [7, 15, 28, 90, 182, 365].contains(stored) ? stored : 90
         }
         set { BuildEnvironment.defaults.set(newValue, forKey: "HealthAtlas.heatmapRangeDays") }
     }
@@ -506,6 +510,10 @@ private final class HealthWorkspaceViewController: NSViewController {
     private var overviewPage = 0
     private var isImporting = false
     private var importProgressOverlay: ImportProgressOverlayView?
+    private let appUpdateService = AppUpdateService()
+    private var appUpdateState: AppUpdateCheckResult?
+    private var isCheckingForUpdate = false
+    private var didEvaluateStartupUpdateCheck = false
     private var heroMetricID: String? {
         get { BuildEnvironment.defaults.string(forKey: "HealthAtlas.heroMetricID") }
         set { BuildEnvironment.defaults.set(newValue, forKey: "HealthAtlas.heroMetricID") }
@@ -520,6 +528,13 @@ private final class HealthWorkspaceViewController: NSViewController {
 
     var hasImportedData: Bool {
         importedSummary != nil
+    }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        guard !didEvaluateStartupUpdateCheck else { return }
+        didEvaluateStartupUpdateCheck = true
+        checkForAppUpdateIfNeeded()
     }
 
     @objc func importFromMenu(_ sender: Any?) {
@@ -706,10 +721,14 @@ private final class HealthWorkspaceViewController: NSViewController {
         let resetLayout = NSButton(title: AppLanguage.current.text(english: "Reset layout", german: "Anordnung zurücksetzen"), target: self, action: #selector(resetDashboardLayout))
         resetLayout.bezelStyle = .rounded
         resetLayout.contentTintColor = .white
+        let configureTimeline = NSButton(title: AppLanguage.current.text(english: "Choose timeline…", german: "Verlauf auswählen …"), target: self, action: #selector(configureCombinedTimeline))
+        configureTimeline.bezelStyle = .rounded
+        configureTimeline.contentTintColor = .white
         let displayRow = NSStackView(views: [
             NSTextField(labelWithString: AppLanguage.current.text(english: "Cards shown", german: "Angezeigte Karten")),
             displayControl,
             densityControl, resetLayout,
+            configureTimeline,
             exportReport
         ])
         displayRow.spacing = 10
@@ -732,7 +751,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         overviewVisuals.distribution = .fillEqually
         overviewVisuals.spacing = 12
         let rings = HealthRingsView(metrics: Array(selectedTypes.prefix(3)), language: AppLanguage.current)
-        let timeline = CombinedHealthTimelineView(metrics: Array(selectedTypes.prefix(4)), language: AppLanguage.current) { [weak self] identifier in
+        let timeline = CombinedHealthTimelineView(metrics: combinedTimelineMetrics(), language: AppLanguage.current) { [weak self] identifier in
             self?.presentMetricFocus(for: identifier)
         }
         overviewVisuals.addArrangedSubview(rings)
@@ -897,9 +916,10 @@ private final class HealthWorkspaceViewController: NSViewController {
         let title = NSTextField(labelWithString: AppLanguage.current.text(english: "Local activity calendar", german: "Lokaler Datenkalender"))
         title.font = .systemFont(ofSize: 13, weight: .bold)
         title.textColor = .white
-        let rangeDays = [7, 28, 90, 182, 365]
+        let rangeDays = [7, 15, 28, 90, 182, 365]
         let range = NSSegmentedControl(labels: [
             AppLanguage.current.text(english: "1 week", german: "1 Woche"),
+            AppLanguage.current.text(english: "15 days", german: "15 Tage"),
             AppLanguage.current.text(english: "4 weeks", german: "4 Wochen"),
             AppLanguage.current.text(english: "3 months", german: "3 Monate"),
             AppLanguage.current.text(english: "6 months", german: "6 Monate"),
@@ -969,6 +989,155 @@ private final class HealthWorkspaceViewController: NSViewController {
         note.textColor = NSColor.white.withAlphaComponent(0.75)
         body.addArrangedSubview(note)
         note.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+
+        let help = FirstLaunchHelpContent(language: AppLanguage.current)
+        let manualHelpLabel = NSTextField(labelWithString: help.manualExplanationHeading)
+        manualHelpLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        manualHelpLabel.textColor = .white
+        body.addArrangedSubview(manualHelpLabel)
+        let manualHelpDescription = NSTextField(wrappingLabelWithString: help.manualExplanationDescription)
+        manualHelpDescription.font = .systemFont(ofSize: 12, weight: .medium)
+        manualHelpDescription.textColor = NSColor.white.withAlphaComponent(0.75)
+        manualHelpDescription.maximumNumberOfLines = 3
+        body.addArrangedSubview(manualHelpDescription)
+        manualHelpDescription.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        let germanManual = NSButton(title: help.germanManualButtonTitle, target: self, action: #selector(openGermanManual))
+        germanManual.bezelStyle = .rounded
+        germanManual.contentTintColor = .white
+        let englishManual = NSButton(title: help.englishManualButtonTitle, target: self, action: #selector(openEnglishManual))
+        englishManual.bezelStyle = .rounded
+        englishManual.contentTintColor = .white
+        let manualButtons = NSStackView(views: [germanManual, englishManual])
+        manualButtons.orientation = .horizontal
+        manualButtons.spacing = 10
+        manualButtons.alignment = .centerY
+        body.addArrangedSubview(manualButtons)
+        let aiButtons = NSStackView()
+        aiButtons.orientation = .horizontal
+        aiButtons.spacing = 10
+        aiButtons.alignment = .centerY
+        FirstLaunchAIService.allCases.enumerated().forEach { index, service in
+            let serviceButton = aiServiceButton(for: service, tag: index, help: help)
+            aiButtons.addArrangedSubview(serviceButton)
+            serviceButton.widthAnchor.constraint(equalToConstant: 148).isActive = true
+            serviceButton.heightAnchor.constraint(equalToConstant: 38).isActive = true
+        }
+        body.addArrangedSubview(aiButtons)
+
+        let updatesLabel = NSTextField(labelWithString: AppLanguage.current.text(english: "App updates", german: "App-Aktualisierungen"))
+        updatesLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        updatesLabel.textColor = .white
+        body.addArrangedSubview(updatesLabel)
+        let automaticChecks = NSButton(checkboxWithTitle: AppLanguage.current.text(english: "Check automatically", german: "Automatisch prüfen"), target: self, action: #selector(automaticUpdateChecksChanged(_:)))
+        automaticChecks.state = automaticUpdateChecksEnabled ? .on : .off
+        automaticChecks.contentTintColor = .white
+        let cadence = NSPopUpButton()
+        cadence.addItems(withTitles: AppUpdateCadence.allCases.map { $0.title(for: AppLanguage.current) })
+        cadence.selectItem(withTitle: updateCadence.title(for: AppLanguage.current))
+        cadence.isEnabled = automaticUpdateChecksEnabled
+        cadence.target = self
+        cadence.action = #selector(updateCadenceChanged(_:))
+        let cadenceRow = NSStackView(views: [automaticChecks, cadence])
+        cadenceRow.orientation = .horizontal
+        cadenceRow.spacing = 10
+        cadenceRow.alignment = .centerY
+        body.addArrangedSubview(cadenceRow)
+        let installedVersion = NSTextField(labelWithString: AppLanguage.current.text(english: "Installed: \(InstalledAppVersion.marketing) · Build \(InstalledAppVersion.build) · \(BuildChannel.current.displayName)", german: "Installiert: \(InstalledAppVersion.marketing) · Build \(InstalledAppVersion.build) · \(BuildChannel.current.displayName)"))
+        installedVersion.font = .systemFont(ofSize: 12, weight: .semibold)
+        installedVersion.textColor = .white
+        body.addArrangedSubview(installedVersion)
+        let updateStatus = NSTextField(wrappingLabelWithString: updateStatusText())
+        updateStatus.font = .systemFont(ofSize: 12, weight: .medium)
+        updateStatus.textColor = NSColor.white.withAlphaComponent(0.75)
+        updateStatus.maximumNumberOfLines = 2
+        body.addArrangedSubview(updateStatus)
+        updateStatus.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        let checkNow = NSButton(title: AppLanguage.current.text(english: "Check now", german: "Jetzt prüfen"), target: self, action: #selector(checkForAppUpdateNow))
+        checkNow.bezelStyle = .rounded
+        checkNow.contentTintColor = .white
+        checkNow.isEnabled = !isCheckingForUpdate
+        let updateControls = NSStackView(views: [checkNow])
+        updateControls.orientation = .horizontal
+        updateControls.spacing = 10
+        if case let .updateAvailable(release)? = appUpdateState {
+            let openRelease = NSButton(title: AppLanguage.current.text(english: "Open \(release.versionText)", german: "\(release.versionText) öffnen"), target: self, action: #selector(openAvailableUpdate))
+            openRelease.bezelStyle = .rounded
+            openRelease.contentTintColor = .systemCyan
+            updateControls.addArrangedSubview(openRelease)
+        }
+        body.addArrangedSubview(updateControls)
+    }
+
+    private var automaticUpdateChecksEnabled: Bool {
+        get { BuildEnvironment.defaults.object(forKey: automaticUpdateChecksPreferenceKey) as? Bool ?? false }
+        set { BuildEnvironment.defaults.set(newValue, forKey: automaticUpdateChecksPreferenceKey) }
+    }
+
+    private var updateCadence: AppUpdateCadence {
+        get { AppUpdateCadence(rawValue: BuildEnvironment.defaults.string(forKey: updateCadencePreferenceKey) ?? "") ?? .everyLaunch }
+        set { BuildEnvironment.defaults.set(newValue.rawValue, forKey: updateCadencePreferenceKey) }
+    }
+
+    private func checkForAppUpdateIfNeeded() {
+        guard automaticUpdateChecksEnabled else { return }
+        let lastCheck = BuildEnvironment.defaults.object(forKey: lastUpdateCheckPreferenceKey) as? Date
+        guard lastCheck == nil || Date().timeIntervalSince(lastCheck!) >= updateCadence.interval else { return }
+        checkForAppUpdate(force: false)
+    }
+
+    @objc private func automaticUpdateChecksChanged(_ sender: NSButton) {
+        automaticUpdateChecksEnabled = sender.state == .on
+        rebuildBody()
+        if automaticUpdateChecksEnabled { checkForAppUpdateIfNeeded() }
+    }
+
+    @objc private func updateCadenceChanged(_ sender: NSPopUpButton) {
+        guard AppUpdateCadence.allCases.indices.contains(sender.indexOfSelectedItem) else { return }
+        updateCadence = AppUpdateCadence.allCases[sender.indexOfSelectedItem]
+        rebuildBody()
+    }
+
+    @objc private func checkForAppUpdateNow() {
+        checkForAppUpdate(force: true)
+    }
+
+    private func checkForAppUpdate(force: Bool) {
+        guard !isCheckingForUpdate, force || automaticUpdateChecksEnabled else { return }
+        isCheckingForUpdate = true
+        BuildEnvironment.defaults.set(Date(), forKey: lastUpdateCheckPreferenceKey)
+        if selectedSection == .settings { rebuildBody() }
+        appUpdateService.check(channel: BuildChannel.current, installedVersion: InstalledAppVersion.marketing) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isCheckingForUpdate = false
+                self.appUpdateState = result
+                if self.selectedSection == .settings { self.rebuildBody() }
+            }
+        }
+    }
+
+    @objc private func openAvailableUpdate() {
+        guard case let .updateAvailable(release)? = appUpdateState else { return }
+        NSWorkspace.shared.open(release.url)
+    }
+
+    private func updateStatusText() -> String {
+        let language = AppLanguage.current
+        if isCheckingForUpdate {
+            return language.text(english: "Checking the public HealthAtlas release list…", german: "Die öffentliche HealthAtlas-Release-Liste wird geprüft …")
+        }
+        switch appUpdateState {
+        case .upToDate:
+            return language.text(english: "No newer matching release is available.", german: "Es ist keine neuere passende Veröffentlichung verfügbar.")
+        case let .updateAvailable(release):
+            return language.text(english: "A newer release is available: \(release.versionText).", german: "Eine neuere Veröffentlichung ist verfügbar: \(release.versionText).")
+        case .unavailable:
+            return language.text(english: "The public release list could not be checked. No health data was sent.", german: "Die öffentliche Release-Liste konnte nicht geprüft werden. Es wurden keine Gesundheitsdaten übertragen.")
+        case nil:
+            return automaticUpdateChecksEnabled
+                ? language.text(english: "The next check follows the selected schedule.", german: "Die nächste Prüfung erfolgt nach dem gewählten Intervall.")
+                : language.text(english: "Automatic checks are off. Use “Check now” to query the public release list.", german: "Die automatische Prüfung ist aus. Mit „Jetzt prüfen“ fragst du die öffentliche Release-Liste ab.")
+        }
     }
 
     @objc private func themeTileSelected(_ sender: NSButton) {
@@ -1019,7 +1188,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 
     @objc private func heatmapRangeChanged(_ sender: NSSegmentedControl) {
-        heatmapRangeDays = [7, 28, 90, 182, 365][sender.selectedSegment]
+        heatmapRangeDays = [7, 15, 28, 90, 182, 365][sender.selectedSegment]
         rebuildBody()
     }
 
@@ -1052,6 +1221,69 @@ private final class HealthWorkspaceViewController: NSViewController {
         rebuildBody()
     }
 
+    @objc private func configureCombinedTimeline() {
+        let metrics = selectedDataTypes(for: .overview)
+        guard !metrics.isEmpty, let window = view.window else { return }
+        let language = AppLanguage.current
+        let alert = NSAlert()
+        alert.messageText = language.text(english: "Choose shared timeline", german: "Gemeinsamen Verlauf auswählen")
+        alert.informativeText = language.text(english: "Choose one to four active local data types. This only changes the shared timeline, not overview cards, pins or the other sections.", german: "Wähle ein bis vier aktive lokale Datentypen. Das ändert nur den gemeinsamen Verlauf, nicht Übersichtskarten, Pins oder die anderen Bereiche.")
+        alert.addButton(withTitle: language.text(english: "Use selection", german: "Auswahl verwenden"))
+        alert.addButton(withTitle: language.text(english: "Cancel", german: "Abbrechen"))
+        let selectedIDs = Set(combinedTimelineMetrics().map(\.identifier))
+        let typeButtons = metrics.map { metric -> NSButton in
+            let button = NSButton(checkboxWithTitle: metric.localizedDisplayName, target: nil, action: nil)
+            button.identifier = NSUserInterfaceItemIdentifier(metric.identifier)
+            button.state = selectedIDs.contains(metric.identifier) ? .on : .off
+            button.contentTintColor = .white
+            return button
+        }
+        let typeStack = NSStackView(views: typeButtons)
+        typeStack.orientation = .vertical
+        typeStack.alignment = .leading
+        typeStack.spacing = 4
+        typeStack.translatesAutoresizingMaskIntoConstraints = false
+        let scroll = NSScrollView()
+        scroll.drawsBackground = false
+        scroll.hasVerticalScroller = typeButtons.count > 6
+        scroll.documentView = typeStack
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            scroll.widthAnchor.constraint(equalToConstant: 560),
+            scroll.heightAnchor.constraint(equalToConstant: min(190, CGFloat(max(1, typeButtons.count)) * 24)),
+            typeStack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor)
+        ])
+        let note = NSTextField(labelWithString: language.text(english: "Up to four data types", german: "Bis zu vier Datentypen"))
+        note.font = .systemFont(ofSize: 12, weight: .semibold)
+        let stack = NSStackView(views: [note, scroll])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 8
+        stack.frame = NSRect(x: 0, y: 0, width: 560, height: 250)
+        alert.accessoryView = stack
+        alert.beginSheetModal(for: window) { [weak self] response in
+            guard response == .alertFirstButtonReturn, let self else { return }
+            let chosenIDs = metrics.compactMap { metric in
+                typeButtons.first(where: { $0.identifier?.rawValue == metric.identifier })?.state == .on ? metric.identifier : nil
+            }
+            guard (1...4).contains(chosenIDs.count) else {
+                self.showCombinedTimelineSelectionError()
+                return
+            }
+            BuildEnvironment.defaults.set(chosenIDs, forKey: self.combinedTimelineMetricIDsPreferenceKey)
+            self.rebuildBody()
+        }
+    }
+
+    private func showCombinedTimelineSelectionError() {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = AppLanguage.current.text(english: "Choose one to four data types", german: "Ein bis vier Datentypen auswählen")
+        alert.informativeText = AppLanguage.current.text(english: "The shared timeline can show up to four local data types.", german: "Der gemeinsame Verlauf kann bis zu vier lokale Datentypen zeigen.")
+        alert.addButton(withTitle: "OK")
+        alert.beginSheetModal(for: view.window!)
+    }
+
     private func selectedHeroMetric(from metrics: [HealthDataTypeSummary]) -> HealthDataTypeSummary? {
         if let heroMetricID, let metric = metrics.first(where: { $0.identifier == heroMetricID }) {
             return metric
@@ -1065,6 +1297,14 @@ private final class HealthWorkspaceViewController: NSViewController {
         return selected.map { item in
             HealthMetric(identifier: item.identifier, title: item.localizedDisplayName, value: item.latestValueText, detail: item.latestDetailText, color: accentKey(for: item.identifier))
         }
+    }
+
+    private func combinedTimelineMetrics() -> [HealthDataTypeSummary] {
+        let availableMetrics = selectedDataTypes(for: .overview)
+        let metricsByID = Dictionary(uniqueKeysWithValues: availableMetrics.map { ($0.identifier, $0) })
+        let storedIDs = BuildEnvironment.defaults.stringArray(forKey: combinedTimelineMetricIDsPreferenceKey) ?? []
+        let configuredMetrics = storedIDs.compactMap { metricsByID[$0] }
+        return configuredMetrics.isEmpty ? Array(availableMetrics.prefix(4)) : Array(configuredMetrics.prefix(4))
     }
 
     private func selectedDataTypes(for area: MetricPinArea = .overview) -> [HealthDataTypeSummary] {
@@ -1219,6 +1459,14 @@ private final class HealthWorkspaceViewController: NSViewController {
         FirstLaunchHelpAction.openManual(for: AppLanguage.current)
     }
 
+    @objc private func openGermanManual() {
+        FirstLaunchHelpAction.openManual(for: .german)
+    }
+
+    @objc private func openEnglishManual() {
+        FirstLaunchHelpAction.openManual(for: .english)
+    }
+
     @objc private func copyFirstLaunchPromptAndOpen(_ sender: NSButton) {
         let services = FirstLaunchAIService.allCases
         guard services.indices.contains(sender.tag) else { return }
@@ -1352,12 +1600,17 @@ private final class HealthWorkspaceViewController: NSViewController {
         typeStack.orientation = .vertical
         typeStack.alignment = .leading
         typeStack.spacing = 4
+        typeStack.translatesAutoresizingMaskIntoConstraints = false
         let scroll = NSScrollView()
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = typeButtons.count > 6
         scroll.documentView = typeStack
         scroll.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([scroll.heightAnchor.constraint(equalToConstant: min(190, CGFloat(max(1, typeButtons.count)) * 24))])
+        NSLayoutConstraint.activate([
+            scroll.widthAnchor.constraint(equalToConstant: 560),
+            scroll.heightAnchor.constraint(equalToConstant: min(190, CGFloat(max(1, typeButtons.count)) * 24)),
+            typeStack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor)
+        ])
         let periodLabel = NSTextField(labelWithString: language.text(english: "Period", german: "Zeitraum"))
         let themeLabel = NSTextField(labelWithString: language.text(english: "Theme", german: "Theme"))
         [periodLabel, themeLabel].forEach { $0.font = .systemFont(ofSize: 12, weight: .semibold) }
@@ -1365,7 +1618,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 8
-        stack.frame = NSRect(x: 0, y: 0, width: 360, height: 330)
+        stack.frame = NSRect(x: 0, y: 0, width: 560, height: 330)
         alert.accessoryView = stack
         alert.beginSheetModal(for: view.window!) { [weak self] response in
             guard response == .alertFirstButtonReturn, let self else { return }
@@ -1555,7 +1808,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         selectedInsightTypeID = nil
         selectedTrendDate = nil
         overviewPage = 0
-        let keys = [selectedTypeIDsPreferenceKey, favoriteTypeIDsPreferenceKey, metricOrderPreferenceKey, heroMetricID == nil ? "" : "HealthAtlas.heroMetricID"]
+        let keys = [selectedTypeIDsPreferenceKey, combinedTimelineMetricIDsPreferenceKey, favoriteTypeIDsPreferenceKey, metricOrderPreferenceKey, heroMetricID == nil ? "" : "HealthAtlas.heroMetricID"]
             + MetricPinArea.allCases.map(\.preferenceKey)
             + ["HealthAtlas.healthMetricOrder.layout.0", "HealthAtlas.healthMetricOrder.layout.1", "HealthAtlas.healthMetricOrder.layout.2"]
         keys.filter { !$0.isEmpty }.forEach { BuildEnvironment.defaults.removeObject(forKey: $0) }
