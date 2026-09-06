@@ -19,7 +19,7 @@ It starts empty, imports only a file you choose, and turns selected health data 
 - Use German or English, choose from four glass themes, and check the public GitHub release list manually or on a selected schedule.
 - Open either public manual separately, or let ChatGPT, Gemini or Claude explain the matching manual from a general copied prompt. No local health data is included.
 
-See [what's new and the complete feature overview](FEATURES.md).
+See [what’s new and the complete feature overview](FEATURES.md).
 
 ### Screenshots
 
@@ -109,7 +109,7 @@ the changelog are written to `Backup/releases/beta/<version>/`.
 
 ## Project status
 
-Final 1.0.0 is the current stable release. HealthAtlas remains a local visualisation tool and does not provide medical integration, diagnoses or treatment recommendations.
+Bugfix 1.0.1 is the current stable release. It corrects card background clipping at rounded corners. HealthAtlas remains a local visualisation tool and does not provide medical integration, diagnoses or treatment recommendations.
 
 ## License
 

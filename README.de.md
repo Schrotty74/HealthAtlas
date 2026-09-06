@@ -109,7 +109,7 @@ Prüfsummen und Changelog unter `Backup/releases/beta/<version>/`.
 
 ## Projektstatus
 
-Final 1.0.0 ist die aktuelle stabile Veröffentlichung. HealthAtlas bleibt ein lokales Visualisierungswerkzeug und bietet keine medizinische Integration, Diagnosen oder Behandlungsempfehlungen.
+Bugfix 1.0.1 ist die aktuelle stabile Veröffentlichung. Er korrigiert die Beschneidung von Kartenhintergründen an abgerundeten Ecken. HealthAtlas bleibt ein lokales Visualisierungswerkzeug und bietet keine medizinische Integration, Diagnosen oder Behandlungsempfehlungen.
 
 ## Lizenz
 

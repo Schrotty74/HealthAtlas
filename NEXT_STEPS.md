@@ -1,6 +1,6 @@
 # HealthAtlas – Nächste Schritte
 
-Stand: 6. September 2026 · Bezug: öffentliche Final-Version `v1.0.0`
+Stand: 6. September 2026 · Bezug: öffentliche Final-Version `v1.0.1`
 
 Diese Datei enthält nur bestätigte offene Arbeit. Der technische Kontext und projektspezifische Regeln stehen in `PROJECT_CONTEXT.md`; die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md`.
 
