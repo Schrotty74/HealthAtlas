@@ -26,6 +26,7 @@ HealthAtlas-spezifisch:
 - Keine HealthKit-Integration, Cloud-Synchronisierung, Diagnose- oder Behandlungsaussagen beginnen, sofern dies nicht ausdrücklich als Produktänderung beauftragt wurde.
 - Bestehende Architektur und Release-Skripte nicht unnötig umstellen.
 - Vor App-Arbeit Dokumentation, Manifeste, Build-Skripte und relevante CI-Konfiguration prüfen; projektgebundene Abhängigkeiten nicht automatisch global installieren.
+- Wenn dieses lokale Projekt bereits eine aktuellere `dev`-Arbeitslinie enthält, damit weiterarbeiten. Nach einem vollständigen lokalen Neustart zuerst die aktuelle öffentliche `main`-Version klonen und für neue Arbeit einen lokalen `dev`-Branch daraus erstellen. Falls eine öffentliche `beta` neuer als `main` ist, stattdessen von `beta` ausgehen. `FEATURES.md` und `FEATURES.de.md` stehen auf allen drei Linien als vollständige Funktionsübersicht zur Verfügung.
 
 Aktueller Auftrag:
 
