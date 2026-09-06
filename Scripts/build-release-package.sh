@@ -48,10 +48,10 @@ build_setting() {
 
 if [[ -n "${HEALTHATLAS_VERSION:-}" ]]; then
     marketing_version="$HEALTHATLAS_VERSION"
-    build_number="${HEALTHATLAS_BUILD_NUMBER:-1}"
+    build_number="${HEALTHATLAS_BUILD_NUMBER:-$(git rev-list --count HEAD)}"
 else
     marketing_version="$(build_setting MARKETING_VERSION)"
-    build_number="${HEALTHATLAS_BUILD_NUMBER:-$(build_setting CURRENT_PROJECT_VERSION)}"
+    build_number="${HEALTHATLAS_BUILD_NUMBER:-$(git rev-list --count HEAD)}"
 fi
 [[ -n "$marketing_version" ]] || marketing_version="0.1.0"
 [[ -n "$build_number" ]] || build_number="1"
@@ -78,7 +78,7 @@ case "$version" in
 esac
 
 derived_data="$root_directory/.build/$channel/DerivedData"
-app_source="$derived_data/Build/Products/$configuration/HealthAtlas.app"
+app_source="$derived_data/Build/$configuration/HealthAtlas.app"
 app_bundle="$release_directory/$app_bundle_name"
 zip_file="$backup_directory/$artifact_base_name.zip"
 dmg_file="$backup_directory/$artifact_base_name.dmg"
@@ -87,7 +87,7 @@ dmg_checksum_file="$dmg_file.sha256"
 
 bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
-bash Scripts/build-channel.sh "$channel"
+HEALTHATLAS_BUILD_NUMBER="$build_number" bash Scripts/build-channel.sh "$channel"
 
 [[ -d "$app_source" ]] || { echo "Build abgebrochen: App-Bundle fehlt: $app_source" >&2; exit 1; }
 
@@ -109,6 +109,7 @@ for private_rpath in "${private_rpaths[@]}"; do
     [[ -n "$private_rpath" ]] || continue
     install_name_tool -delete_rpath "$private_rpath" "$app_binary"
 done
+strip -S "$app_binary"
 local_path_pattern="/""Users/[^/]+|/""Volumes/[^/]+"
 if rg -a "$local_path_pattern" "$app_binary" >/dev/null; then
     echo "Build abgebrochen: lokaler Pfad im App-Binary gefunden." >&2

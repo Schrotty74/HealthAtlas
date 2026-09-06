@@ -1,16 +1,14 @@
 # Portfolio update rule
 
-Before a public release, beta announcement, or first public publication of this
-project, check whether the central portfolio needs an update:
+Vor einer öffentlichen Beta-Ankündigung, Final-Veröffentlichung oder ersten
+öffentlichen Präsentation prüfen, ob die zentralen Portfolioseiten und das
+GitHub-Profil angepasst werden müssen:
 
-- Portfolio repository: https://github.com/Schrotty74/Portfolio
-- Live portfolio: https://schrotty74.github.io/Portfolio/
-- GitHub profile README: https://github.com/Schrotty74/Schrotty74
+- Portfolio: https://schrotty74.github.io/Portfolio/
+- Profil: https://github.com/Schrotty74/Schrotty74
 
-Update the relevant project card or detail page when its name, description,
-status, screenshots, repository link, live-app link, download URL or supported
-platforms changed.
+Eine Aktualisierung ist nur nötig, wenn sich für Besucher sichtbare Fakten ändern: Name, Beschreibung, Status, Screenshots, Plattform, Repository- oder Download-Link. Interne Refactorings, lokale Tests und unveränderte Metadaten allein erfordern keine Portfolioänderung.
 
-The repository-wide privacy and publication rules in `AGENTS.md` apply to all
-portfolio material. Public screenshots and example data must use only synthetic,
-anonymized or clearly fictional data.
+Für neue oder geänderte öffentliche Inhalte englische und deutsche Portfolio-Karte sowie Detailseite gleichwertig halten.
+
+Die repositoryweiten Datenschutz- und Veröffentlichungsregeln aus `AGENTS.md` gelten vollständig. Öffentliche Screenshots und Beispieldaten müssen ausschließlich synthetisch, anonymisiert oder eindeutig fiktiv sein.

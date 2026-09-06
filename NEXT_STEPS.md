@@ -1,32 +1,16 @@
 # HealthAtlas – Nächste Schritte
 
-Stand: 2026-08-10. Bei größeren Änderungen aktualisieren. Kontext und projektspezifische Regeln stehen in [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md); allgemeine Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md`.
+Stand: 6. September 2026 · Bezug: öffentliche Final-Version `v1.0.0`
 
-## Priorität 1 – Vor der nächsten Beta gezielt prüfen
+Diese Datei enthält nur bestätigte offene Arbeit. Der technische Kontext und projektspezifische Regeln stehen in `PROJECT_CONTEXT.md`; die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md`.
 
-- Beta `0.1.0-beta.2` mit ZIP-Export und synthetischer Demo manuell prüfen:
-  Import, Quellen-Auswahl, Übersicht, Verläufe, Einblicke sowie Deutsch/Englisch.
-- Die unteren Bereiche der Übersicht prüfen: Ringe und gemeinsamer Verlauf müssen
-  Daten anzeigen; bei leeren Daten muss eine verständliche Erklärung erscheinen.
-- Gatekeeper-Öffnen der Beta auf einem Mac ohne bereits gewährte Ausnahme testen.
-- `swift test` und `Scripts/privacy-check.sh` vor einem weiteren Release erneut
-  ausführen.
+## Bestätigte offene Arbeit
 
-## Priorität 2 – Geplante visuelle Weiterentwicklung
+Derzeit sind keine bestätigten offenen Aufgaben eingetragen.
 
-Die bestehenden Animationen sollen gezielt erweitert werden, ohne die ruhige Oberfläche zu überladen:
+Vor einer weiteren Veröffentlichung gelten die Release-Prüfungen aus
+`PROJECT_CONTEXT.md` und `AGENTS.md`.
 
-- Sichtbares Verhalten und Lesbarkeit der vorhandenen Animationen im Beta-Test
-  bewerten; nur konkrete Rückmeldungen daraus als neue Aufgaben übernehmen.
+## Pflege
 
-Diese Punkte sind Wünsche aus der bisherigen Produktarbeit, keine bereits zugesagten oder implementierten Aufgaben.
-
-## Priorität 3 – Produkt- und Release-Klärungen
-
-- Eine konkrete Open-Source-Lizenz auswählen und als Lizenzdatei ergänzen.
-- Anforderungen für Apple-Signierung und Notarisierung erst klären, wenn ein Developer-Account und eine Veröffentlichung tatsächlich beauftragt sind.
-
-## Keine offenen Aufgaben ohne Auftrag
-
-- Keine reale HealthKit-Integration beginnen.
-- Keine medizinischen Bewertungen, Diagnosen oder Behandlungshinweise entwickeln.
+Nur tatsächlich offene oder bestätigte Punkte in dieser Datei führen. Dauerhafte Regeln und bereits umgesetzte Zustände nicht als offene Aufgaben wiederholen.

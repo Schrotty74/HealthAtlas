@@ -1,107 +1,69 @@
 # HealthAtlas – Projektkontext
 
-Stand: 2026-08-10.
+Stand: 6. September 2026 · Arbeitsbranch: `dev`
 
-Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen verbindlich in `AGENTS.md`. Diese Datei enthält den projektspezifischen technischen und funktionalen Kontext.
+HealthAtlas ist eine native macOS-App zur lokalen Darstellung eines bewusst
+ausgewählten Apple-Health-Exports. Sie startet ohne Daten, verarbeitet nur eine
+vom Nutzer ausgewählte lokale `Export.xml` oder ZIP-Datei und erstellt weder
+Diagnosen noch Behandlungsempfehlungen. Es gibt keinen HealthKit-Zugriff, keine
+Cloud-Synchronisierung, keine Telemetrie und kein Daten-Backend.
 
-## Ziel und Zweck
+Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen verbindlich in `AGENTS.md`. Diese Datei enthält den branch- und projektspezifischen technischen Kontext.
 
-HealthAtlas ist eine native macOS-App zur **lokalen** Darstellung eines vom Nutzer ausgewählten Apple-Health-Exports. Sie startet ohne Daten, wertet einen lokalen ZIP- oder `Export.xml`-Export aus und zeigt bewusst ausgewählte Datentypen als Übersicht, Verlauf und beschreibende Einblicke. Die App erstellt keine Diagnosen und gibt keine Behandlungsempfehlungen.
+## Aktueller Stand
 
-## Architektur und wichtige Ordner
+- Die aktuelle öffentliche Final-Version ist `v1.0.0` mit ZIP, DMG und SHA-256-Dateien. Die letzte öffentliche Vorabversion bleibt `v0.1.0-beta.9` vom 5. September 2026.
+- `dev` ist ausschließlich die lokale Arbeitslinie; auf GitHub liegen nur die getrennten Release-Linien `beta` und `main`.
+- Die App bietet lokale Importansicht, Quellen-Auswahl, Übersichten mit separat auswählbarem gemeinsamen Verlauf, Verläufe für 7T, 15T, 30T, 3M, 6M und 1J, beschreibende Einblicke, Zeitraumvergleiche, anklickbare Datenkalendertage für 7T, 15T, 4W, 3M, 6M und 1J mit lokalem Wert, Musterkarte, Vollbild-Fokus, konfigurierbare Karten und Kartensortierung.
+- Deutsch und Englisch, die Themes Clear Glass, Midnight Glass, Aurora und Warmpaper sowie die datensparsame Ersthilfe sind umgesetzt. Im Design-Studio bleiben die drei KI-Dienste für eine Erklärung des passenden öffentlichen Handbuchs dauerhaft verfügbar; die deutschen und englischen Handbücher lassen sich dort getrennt öffnen. Das Design-Studio zeigt zudem die installierte Version und kann die öffentliche GitHub-Release-Liste nach frei wählbarem Intervall oder manuell prüfen; dabei werden keine Gesundheitsdaten übertragen.
+- Die App verwendet eine native Menüleiste für Import, PDF-Export, Ansicht und Fenstersteuerung; die Sidebar lässt sich über einen App-Button und das View-Menü ein- und ausblenden. Der PDF-Export ist ohne importierte Daten deaktiviert.
+- Eigene interaktive Diagramm- und Kartenansichten sind als AppKit-Accessibility-Controls erreichbar; die bestehenden Themes bleiben unverändert.
+- `Demo/AppleHealthDemo/Export.xml` enthält ausschließlich synthetische Daten. Öffentliche Screenshots und Handbücher müssen ebenso synthetisch bleiben.
 
-- `Sources/HealthAtlasApp/`: AppKit-/SwiftUI-Anwendung.
-  - `AppEntry.swift`: Fenster, App-Lebenszyklus und Wiederöffnen aus dem Dock.
-  - `DashboardViewController.swift`: Dashboard, AppKit-Layout, native Glas-Sidebar, Importansicht, Themes, Karten, Trends und Einblicke.
-  - `AIHelp.swift`: datensparsame Ersteinführung mit Handbuch-Link und den drei bewusst gewählten KI-Diensten.
-  - `HealthData.swift`: Dateiprüfung, ZIP-/XML-Import, XML-Parser, Tagesaggregation und Datentyp-Bezeichnungen.
-  - `AppLanguage.swift`: Deutsch/Englisch sowie getrennte Einstellungen je Build-Kanal.
-- `Sources/HealthAtlasApp/Resources/AI/`: lokal eingebundene Logos für ChatGPT, Google Gemini und Claude. Sie werden nicht aus dem Netz nachgeladen.
-- `Tests/HealthAtlasTests/`: Swift-Testing-Tests für XML/ZIP-Import sowie KI-Dienst-URLs, datensparsamen Prompt und sprachabhängige Handbuch-Links.
-- `Demo/AppleHealthDemo/Export.xml`: synthetische, sichere Testdaten. Keine persönlichen Daten hinzufügen.
-- `Scripts/`: Dev-, Release-, Backup- und Datenschutzskripte.
-- `dist/`: erzeugte, nicht zu versionierende App-Ausgaben.
-- `Backup/`: erzeugte, nicht zu versionierende Release- und Backup-Artefakte.
-- `output/pdf/`: die öffentlichen deutschen und englischen Handbücher.
-- `tmp/pdfs/generate_healthatlas_manuals.py`: Generator für beide Handbücher; gerenderte PDF-Prüfbilder bleiben temporär und gehören nicht nach Git.
-- `HealthAtlas.xcodeproj/`: Xcode-Projekt; Projektformat ist Xcode 16.0.
-- `Package.swift`: Swift Package Manifest für die App und Tests. Es sind keine externen Swift-Package-Abhängigkeiten deklariert.
-- `LICENSE`: GNU General Public License Version 3 (GPLv3).
+## Architektur
 
-## Datenformate und Datenfluss
+| Bereich | Aufgabe |
+| --- | --- |
+| `Sources/HealthAtlasApp/` | AppKit-/SwiftUI-App, Import, Datenaggregation, Oberfläche, KI-Ersthilfe und optionale Release-Prüfung |
+| `Tests/HealthAtlasTests/` | Swift-Tests für Import, Datenverarbeitung und datensparsame Hilfe |
+| `HealthAtlasUITests/` | Xcode-UI-Regressionstest für die stabile Positionierung der Design-Studio-Einstellungen bei Sprach- und Themewechsel |
+| `Demo/AppleHealthDemo/` | sichere synthetische Testdaten |
+| `Scripts/` | Dev-Build, Beta-/Final-Release, Paketierung, Backup und Datenschutzprüfung |
+| `output/pdf/` | öffentliche deutsche und englische Handbücher |
+| `tmp/pdfs/generate_healthatlas_manuals.py` | Generator der Handbücher |
+| `HealthAtlas.xcodeproj/`, `Package.swift` | Xcode- und Swift-Package-Konfiguration |
 
-- Unterstützter tatsächlicher Import: Apple Health `Export.xml` direkt oder ZIP mit einer darin enthaltenen `Export.xml`.
-- Die maximale Dateigröße für Import und XML-Auswertung beträgt 100 MB.
-- XML-`Record`-Einträge werden nach Typ gruppiert und zu Anzahl, Summe, Durchschnitt und Tageswerten zusammengefasst.
-- Nichtnumerische Einträge können als erkannter Datentyp erscheinen, haben aber keinen numerischen Verlauf.
-- Importierte Daten liegen nur im Speicher der laufenden App-Sitzung. Beim nächsten Start ist die App wieder leer.
-- Kein direkter HealthKit-Zugriff, keine Cloud-Synchronisierung und keine Analyse- oder Tracking-Anbindung.
+`Package.swift` deklariert keine externen Swift-Package-Abhängigkeiten. Das Projekt benötigt Xcode/Swift und eine Bash-Version, die mit den vorhandenen Skripten kompatibel ist. Projektabhängigkeiten, Anmeldungen, Zertifikate oder Tokens werden nicht automatisch installiert, angelegt oder geändert.
 
-## Umgesetzte Funktionen
+## Branch-Grenzen
 
-- Leerer Start mit animierter lokaler Importansicht.
-- Solange keine eigenen Daten geladen sind: Handbuch-Schaltfläche und freiwillige KI-Ersthilfe für ChatGPT, Google Gemini oder Claude. Erst ein bewusster Klick kopiert eine feste allgemeine Frage in die Zwischenablage und öffnet danach den jeweiligen Dienst. Der Prompt enthält nur den öffentlichen, sprachabhängigen PDF-Handbuch-Link.
-- Auswahl erkannter Datentypen unter **Quellen**; Auswahl wird getrennt je Dev/Beta/Final gespeichert.
-- Übersicht mit wählbar 4, 8 oder 12 Karten und Seitennavigation.
-- Interaktive Verläufe: Datentyp, 7T/30T/3M/1J und anklickbare Datenpunkte.
-- Einblicke als beschreibende lokale Zusammenfassung mit letztem Wert und Veränderung zum vorherigen Wert.
-- Gemeinsamer Mehrfach-Verlauf, Tagesringe, lokale Zeitraumvergleiche, Datenkalender, Musterkarte sowie Vollbild-Fokus.
-- Konfigurierbare Kartendichte und lokale Drag-and-drop-Reihenfolge.
-- Deutsch und Englisch, wählbar im Design-Studio.
-- Themes: Clear Glass, Midnight Glass, Aurora und Warmpaper.
-- Native AppKit-Milchglas-Sidebar; Clear Glass nutzt zusätzlich eine durchscheinende Arbeitsfläche.
-- Animierte Karten, Liniencharts und Importdarstellung; Clear Glass verwendet zusätzlich eine ruhige, reduzierbare Glüh-/Lichtpunkt-Animation.
-- Synthetische Demo für sichere Tests und Repository-Screenshots.
+| Branch | Zweck | Grenze |
+| --- | --- | --- |
+| `dev` | ausschließlich lokale Arbeitslinie | wird nicht nach GitHub gepusht; Änderungen erst nach ausdrücklichem Beta-Auftrag übernehmen |
+| `beta` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion; zuletzt `v0.1.0-beta.9` |
+| `main` | Final-Linie auf GitHub | enthält die ausdrücklich freigegebene Final-Version `v1.0.0` aus `beta` |
 
-## Build-, Test- und Release-Workflow
+Die Branches haben unterschiedliche Historien und Dokumentationsstände. Dateien nicht allein zur Vereinheitlichung zwischen Branches kopieren oder zusammenführen.
 
-- **Dev:** `Scripts/build-development.sh` erzeugt die startbare App unter `dist/local-test/HealthAtlas-Development/HealthAtlas Dev.app`.
-- **Tests:** `swift test` führt die Swift-Tests aus. Am 2026-08-10 waren sieben Tests für Import, Datentypen, Vergleiche und die datensparsame KI-Hilfe erfolgreich; vor einer neuen Aussage erneut ausführen.
-- **Beta:** `Scripts/create-beta-from-dev.sh` darf nur vom Branch `dev` aus verwendet werden. Es baut Paketdateien, aktualisiert `beta` und erstellt bzw. aktualisiert eine GitHub-Vorabveröffentlichung.
-- **Final:** `Scripts/publish-beta-as-final.sh` erwartet einen sauberen Arbeitsbaum, übernimmt `beta` per Fast-Forward in `main`, baut Paketdateien und veröffentlicht auf GitHub.
-- **Paketierung:** `Scripts/build-release-package.sh` erfordert die explizite Umgebungsfreigabe `HEALTHATLAS_ALLOW_RELEASE_PACKAGE=YES`.
-- **Backups:** `Scripts/archive-build.sh` erfordert `HEALTHATLAS_ALLOW_BACKUP=YES`, erstellt ein lokales Build-Backup und kann eine optionale Cloud-Kopie anlegen.
-- **Datenschutz:** Vor Releases `Scripts/privacy-check.sh`; bei Bedarf zusätzlich `Scripts/privacy-audit.sh` ausführen.
+## Build, Test und Veröffentlichung
 
-Die aktuelle veröffentlichte Vorabversion ist `0.1.0-beta.2` mit ZIP, DMG und SHA-256-Dateien. Der Arbeitsstand für diese Dokumente ist `main`; Änderungen an den Dokumenten nur dort veröffentlichen, sofern nicht ausdrücklich etwas anderes beauftragt wird.
+```zsh
+swift test
+Scripts/build-development.sh
+```
 
-## Abhängigkeiten und Entwicklungsumgebung
+- Dev-Builds landen unter `dist/local-test/HealthAtlas-Development/`; auch ein direkter erfolgreicher Xcode-Dev-Build aktualisiert dort die startbare Dev-App.
+- Jeder Build schreibt die Git-Commitanzahl als interne Buildnummer in die App; die öffentliche Marketing-Version bleibt für Beta- und Final-Freigaben ausdrücklich festgelegt.
+- `Scripts/create-beta-from-dev.sh` erstellt vom lokalen Branch `dev` eine Beta und veröffentlicht sie nach `beta`.
+- `Scripts/publish-beta-as-final.sh` erstellt aus dem freigegebenen Beta-Snapshot einen Final-Snapshot auf `main`; die getrennten Branch-Historien bleiben dabei erhalten.
+- Vor Releases `Scripts/privacy-check.sh` ausführen; Release-Paketierung und Backups benötigen ihre jeweils explizite Umgebungsfreigabe.
+- Die allgemeinen Regeln für Builds, Commits, Pushes, Tags, Releases und Backups stehen in `AGENTS.md`.
+- GitHub-Changelog-Titel beginnen ausschließlich mit `Final X.0.0`, `Beta X.Y.0` oder `Bugfix X.Y.Z`. Bei Final-Releases steigt die erste Stelle, bei Betas die zweite und bei Bugfixes die dritte Stelle auf Basis der letzten Veröffentlichung. Technische Git-Tags bleiben maschinenlesbar, etwa `v1.0.0` oder `v1.1.0-beta`.
 
-Es gibt keine externen Swift-Package-Abhängigkeiten und keine Lockfile-Datei.
+## Projektspezifische Regeln
 
-Für eine neue Entwicklungsumgebung sind folgende Werkzeuge relevant; nichts davon automatisch installieren oder aktualisieren:
-
-| Werkzeug | Zweck | Quelle im Projekt | Offizieller Installationsweg | Verifikation | Einordnung |
-| --- | --- | --- | --- | --- | --- |
-| Xcode mit Swift-Toolchain | App-Build, Tests und Xcode-Projekt | `Package.swift`, `HealthAtlas.xcodeproj`, Build-Skripte | Apple App Store oder Apple Developer | `xcodebuild -version`, `swift --version` | Allgemeine macOS-Entwicklungsumgebung |
-| Aktuelle Bash | Ausführung der Bash-Skripte | `Scripts/*.sh` | System-/Paketmanager je Entwicklungsumgebung | `bash --version` | Shell-Laufzeit; kein konkreter lokaler Installationspfad ist Projekteigenschaft |
-| macOS-Systemwerkzeuge | Import, Signierung und Paketierung (`unzip`, `zip`, `ditto`, `codesign`, `hdiutil`, `otool`) | Import- und Release-Skripte | Bestandteil von macOS/Xcode; nicht separat projektweit installieren | `command -v unzip zip ditto codesign hdiutil otool` | Projekt-Build/Release, keine Swift-Abhängigkeit |
-| GitHub CLI (`gh`) | Nur Beta- und Final-Veröffentlichung | `create-beta-from-dev.sh`, `publish-beta-as-final.sh` | Offizielle GitHub-CLI-Installation | `gh --version` | Release-spezifisch; Anmeldung oder Tokens niemals automatisch anlegen oder speichern |
-
-Dieser Projektkontext dokumentiert nur den technischen Bedarf; Änderungen an einer persönlichen Entwicklungsumgebung sind keine Projekteigenschaft.
-
-## Feste Entscheidungen und Regeln
-
-- Drei Git-Branches: `dev`, `beta`, `main`. In Xcode müssen alle drei einmal lokal durchgewechselt werden, damit Xcode sie im Branch-Menü zuverlässig anzeigt. Xcodes Play-Button bleibt auf den Dev-Scheme beschränkt.
-- Die Dev-, Beta- und Final-Varianten haben getrennte App-IDs und getrennte lokale Einstellungen.
-- Die App verwendet AppKit für Fenster, Glas-Sidebar und Diagramm-/Kartenansichten; SwiftUI wird für den Sidebar-Inhalt eingebettet.
-- Änderungen an Release-Skripten immer gegen AppAtlas abgleichen, wenn ein Auftrag das ausdrücklich verlangt.
-
-## Projektspezifischer Datenschutz und Veröffentlichung
-
-- Keine Konten, Analytics, Werbung, Tracking oder versteckten Uploads.
-- Nur vom Nutzer gewählte lokale Dateien werden gelesen.
-- Die Demo und alle Repository-Screenshots müssen synthetische Daten verwenden und als Demo gekennzeichnet sein.
-- Persönliche App- oder Gesundheitsdaten werden niemals in einen KI-Prompt aufgenommen oder an ChatGPT, Gemini oder Claude gesendet. Das Einfügen der kopierten allgemeinen Frage erfolgt ausschließlich durch die Person mit Cmd+V.
-- Die vorhandenen Builds sind ad-hoc signiert; ohne Apple-Developer-Account erscheint beim ersten Start Gatekeeper. Die README enthält die sichere Öffnungsanleitung.
-- Medizinische Integration, Diagnosen und öffentliche Verteilung sind nicht Teil des dokumentierten Funktionsstands.
-- Für alle Repository-Inhalte und öffentlichen Materialien gelten zusätzlich die Datenschutz- und Namensregeln aus `AGENTS.md`.
-
-## Bekannte Einschränkungen und unbekannte Punkte
-
-- Kein bestätigter aktueller Bug ist dokumentiert. Aktuelle Build-, Test- und UI-Checks sind vor einer neuen Behauptung auszuführen.
-- Kein CI-Workflow und keine Lockfile-Datei wurden im Repository gefunden.
-- Das Projekt ist unter GPLv3 lizenziert; die Lizenzdatei liegt als `LICENSE` im Repository.
-- Nicht geklärt bzw. nicht dokumentiert: Anforderungen für eine spätere Signierung, Notarisierung oder öffentliche Distribution.
-
-Bei größeren fachlichen, Architektur-, Build-, Datenschutz- oder Release-Änderungen diese Datei und [NEXT_STEPS.md](NEXT_STEPS.md) aktualisieren.
+- Die freiwillige KI-Ersthilfe kopiert nur eine feste allgemeine Frage mit öffentlichem Handbuch-Link; Gesundheitsdaten werden nicht gelesen oder übertragen.
+- Die optionale Update-Prüfung ruft ausschließlich die öffentliche GitHub-Release-Liste ab; sie überträgt keine importierten Gesundheitsdaten und öffnet eine Veröffentlichung erst nach Nutzerklick.
+- Dev, Beta und Final verwenden getrennte App-IDs und lokale Einstellungen.
+- Bei sichtbaren Funktions-, Bedienungs- oder Datenschutzänderungen README, beide Handbücher und die Kontextdateien gegen den tatsächlichen Stand abgleichen.
+- Vor öffentlichen Builds und Releases die vorhandenen Datenschutzskripte verwenden und ausschließlich synthetische Demo-/Testdaten einsetzen.

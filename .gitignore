@@ -1,5 +1,6 @@
 .DS_Store
 .build/
+.build-cache/
 DerivedData/
 build/
 Build/
@@ -29,5 +30,8 @@ xcuserdata/
 *.pdf
 Backup/
 dist/
+tmp/pdfs/*
+!tmp/pdfs/generate_healthatlas_manuals.py
+tmp/pdf-layout-check*/
 Secrets.xcconfig
 Local.xcconfig

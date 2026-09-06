@@ -18,8 +18,22 @@ enum BuildChannel: String {
 }
 
 enum BuildEnvironment {
+    private static let didResetUITestingDefaults: Bool = {
+        guard ProcessInfo.processInfo.arguments.contains("--ui-testing-reset") else { return false }
+        let suiteName = "com.healthatlas.app.ui-testing.preferences"
+        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
+        return true
+    }()
+
     static var defaults: UserDefaults {
-        UserDefaults(suiteName: "com.healthatlas.app.\(BuildChannel.current.rawValue).preferences") ?? .standard
+        _ = didResetUITestingDefaults
+        let suiteName: String
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
+            suiteName = "com.healthatlas.app.ui-testing.preferences"
+        } else {
+            suiteName = "com.healthatlas.app.\(BuildChannel.current.rawValue).preferences"
+        }
+        return UserDefaults(suiteName: suiteName) ?? .standard
     }
 }
 

@@ -18,14 +18,14 @@ Bitte lies vor Beginn vollständig:
 
 Die verbindlichen allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md` und gelten vollständig.
 
-Prüfe vor Aussagen oder Änderungen den tatsächlichen Projektzustand. Halte `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` bei wichtigen Änderungen aktuell.
+Prüfe vor Aussagen oder Änderungen den tatsächlichen Projektzustand und halte `PROJECT_CONTEXT.md` sowie `NEXT_STEPS.md` bei wichtigen Änderungen aktuell.
 
 HealthAtlas-spezifisch:
 
-- Nur synthetische Demodaten für Tests, Screenshots und das Repository nutzen.
-- Keine HealthKit-Integration, Cloud-Synchronisierung, Diagnose- oder Behandlungsaussagen beginnen, sofern dies nicht ausdrücklich beauftragt wurde.
+- Für Tests, Screenshots und Repository-Inhalte ausschließlich synthetische Apple-Health-Daten verwenden.
+- Keine HealthKit-Integration, Cloud-Synchronisierung, Diagnose- oder Behandlungsaussagen beginnen, sofern dies nicht ausdrücklich als Produktänderung beauftragt wurde.
 - Bestehende Architektur und Release-Skripte nicht unnötig umstellen.
-- Vor App-Arbeit Dokumentation, Manifeste, Lockfiles, Build-Skripte und CI-Konfiguration prüfen. Projektgebundene Abhängigkeiten niemals global installieren; Änderungen an der allgemeinen Entwicklungsumgebung nur nach den vorhandenen Projektregeln.
+- Vor App-Arbeit Dokumentation, Manifeste, Build-Skripte und relevante CI-Konfiguration prüfen; projektgebundene Abhängigkeiten nicht automatisch global installieren.
 
 Aktueller Auftrag:
 
