@@ -43,7 +43,7 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 | `beta` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion; zuletzt `v0.1.0-beta.9` |
 | `main` | Final-Linie auf GitHub | enthält die ausdrücklich freigegebene Final-Version `v1.0.0` aus `beta` |
 
-Die Branches haben unterschiedliche Historien und Dokumentationsstände. Dateien nicht allein zur Vereinheitlichung zwischen Branches kopieren oder zusammenführen.
+Die Branches haben unterschiedliche Historien und Dokumentationsstände. Dateien nicht allein zur Vereinheitlichung zwischen Branches kopieren oder zusammenführen. Die ausführlichen Funktionsübersichten `FEATURES.md` und `FEATURES.de.md` werden jedoch auf `dev`, `beta` und `main` gepflegt. Sie ergänzen README und Projektkontext, ersetzen aber keine Branch- oder Release-Regeln.
 
 ## Build, Test und Veröffentlichung
 
