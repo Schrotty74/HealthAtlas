@@ -68,8 +68,33 @@ require_gh() {
     command -v gh >/dev/null 2>&1 || { echo "Abbruch: GitHub CLI 'gh' wurde nicht gefunden." >&2; exit 1; }
 }
 
-release_tree_from() {
-    git rev-parse "$1^{tree}"
+final_tree_from_beta() {
+    local english_readme german_readme tree_entries
+    english_readme="$(git show beta:README.md | sed '/^See \[what’s new and the complete feature overview\](FEATURES\.md)\.$/d' | git hash-object -w --stdin)"
+    german_readme="$(git show beta:README.de.md | sed '/^Neuigkeiten und alle Details stehen in der \[vollständigen Funktionsübersicht\](FEATURES\.de\.md)\.$/d' | git hash-object -w --stdin)"
+    tree_entries="$(git ls-tree beta | awk -F '\t' '$2 != "FEATURES.md" && $2 != "FEATURES.de.md" && $2 != "README.md" && $2 != "README.de.md"')"
+    {
+        printf '100644 blob %s\tREADME.md\n' "$english_readme"
+        printf '100644 blob %s\tREADME.de.md\n' "$german_readme"
+        printf '%s\n' "$tree_entries"
+    } | LC_ALL=C sort -k 2 | git mktree
+}
+
+bugfix_tree_from_dev() {
+    local main_ref="$1" temporary_index tree
+    if [[ -n "$(git diff --name-only --diff-filter=D "$main_ref" dev)" ]]; then
+        echo "Abbruch: Der direkte Dev-Bugfix würde Dateien aus main entfernen." >&2
+        echo "Bitte die Entfernung zuerst bewusst auf main vorbereiten." >&2
+        exit 1
+    fi
+
+    temporary_index="$(mktemp "${TMPDIR:-/tmp}/healthatlas-bugfix-index.XXXXXX")"
+    rm -f "$temporary_index"
+    GIT_INDEX_FILE="$temporary_index" git read-tree "$main_ref^{tree}"
+    git diff --binary --diff-filter=AM "$main_ref" dev | GIT_INDEX_FILE="$temporary_index" git apply --cached
+    tree="$(GIT_INDEX_FILE="$temporary_index" git write-tree)"
+    rm -f "$temporary_index"
+    echo "$tree"
 }
 
 backup_directory_for_version() {
@@ -114,7 +139,7 @@ categorized_release_changes() {
         printf '%s\n' '- Automated tests for local behavior updated.'
     fi
     if grep -Eq '^(README\.md|README\.de\.md|output/pdf/)' <<<"$changed_paths"; then
-        printf '%s\n' '- German and English documentation, screenshots and manuals updated.'
+        printf '%s\n' '- German and English project documentation updated.'
     fi
     if grep -q '^Scripts/' <<<"$changed_paths"; then
         printf '%s\n' '- Build, backup, privacy or release automation updated.'
@@ -174,12 +199,18 @@ release_notes_file="$backup_directory/HealthAtlas-$version-release-notes.md"
 git switch "$source_branch"
 source_commit="$(git rev-parse --short HEAD)"
 main_before="$(git rev-parse refs/heads/main)"
-final_tree="$(release_tree_from "$source_branch")"
+if [[ "$release_label" == "Bugfix" ]]; then
+    final_tree="$(bugfix_tree_from_dev "$main_before")"
+    release_change_base="$main_before"
+else
+    final_tree="$(final_tree_from_beta)"
+    release_change_base="${previous_release_note_ref}"
+fi
 final_commit="$(printf 'Publish %s %s from %s\n' "$release_label" "$version" "$source_branch" | git commit-tree "$final_tree" -p "$main_before")"
 git update-ref refs/heads/main "$final_commit" "$main_before"
 git switch main
 
-release_changes="$(categorized_release_changes "${previous_release_note_ref}" "$release_label")" || {
+release_changes="$(categorized_release_changes "$release_change_base" "$release_label")" || {
     echo "Abbruch: Seit ${previous_final_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Kein Final ohne vollständigen Changelog erstellen." >&2
     exit 1
 }
