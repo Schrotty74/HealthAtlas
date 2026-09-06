@@ -69,15 +69,7 @@ require_gh() {
 }
 
 final_tree_from_beta() {
-    local english_readme german_readme tree_entries
-    english_readme="$(git show beta:README.md | sed '/^See \[what’s new and the complete feature overview\](FEATURES\.md)\.$/d' | git hash-object -w --stdin)"
-    german_readme="$(git show beta:README.de.md | sed '/^Neuigkeiten und alle Details stehen in der \[vollständigen Funktionsübersicht\](FEATURES\.de\.md)\.$/d' | git hash-object -w --stdin)"
-    tree_entries="$(git ls-tree beta | awk -F '\t' '$2 != "FEATURES.md" && $2 != "FEATURES.de.md" && $2 != "README.md" && $2 != "README.de.md"')"
-    {
-        printf '100644 blob %s\tREADME.md\n' "$english_readme"
-        printf '100644 blob %s\tREADME.de.md\n' "$german_readme"
-        printf '%s\n' "$tree_entries"
-    } | LC_ALL=C sort -k 2 | git mktree
+    git rev-parse beta^{tree}
 }
 
 backup_directory_for_version() {

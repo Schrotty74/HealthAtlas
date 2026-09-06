@@ -17,6 +17,7 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 - Deutsch oder Englisch, eines von vier Glass-Themes und die manuelle oder geplante Prüfung der öffentlichen GitHub-Release-Liste nutzen.
 - Die beiden öffentlichen Handbücher getrennt öffnen oder ChatGPT, Gemini beziehungsweise Claude das passende Handbuch anhand einer allgemeinen kopierten Frage erklären lassen. Lokale Gesundheitsdaten sind nicht enthalten.
 
+Neuigkeiten und alle Details stehen in der [vollständigen Funktionsübersicht](FEATURES.de.md).
 
 ### Screenshots
 
