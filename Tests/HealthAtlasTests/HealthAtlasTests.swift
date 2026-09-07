@@ -454,6 +454,7 @@ struct HealthAtlasTests {
         #expect(AppReleaseVersion("v0.1.0-beta.10")! > AppReleaseVersion("v0.1.0-beta.9")!)
         #expect(AppReleaseVersion("v0.1.0")! > AppReleaseVersion("v0.1.0-beta.10")!)
         #expect(AppReleaseVersion("v0.2.0-beta.1")! > AppReleaseVersion("v0.1.0")!)
+        #expect(AppReleaseVersion("v1.1.1-beta")! > AppReleaseVersion("v1.1.0-beta")!)
     }
 
     @Test func appUpdateUsesTheMatchingReleaseChannel() {

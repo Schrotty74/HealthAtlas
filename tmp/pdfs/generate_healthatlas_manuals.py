@@ -59,6 +59,9 @@ def make_styles():
         leading=13.3, textColor=MIST, spaceAfter=7,
     ))
     styles.add(ParagraphStyle(
+        name="CompactBodyHA", parent=styles["BodyHA"], spaceAfter=4,
+    ))
+    styles.add(ParagraphStyle(
         name="SmallHA", parent=styles["BodyText"], fontName="HealthAtlas", fontSize=7.2,
         leading=10.2, textColor=MUTED,
     ))
@@ -152,8 +155,8 @@ def P(text, style):
     return Paragraph(text, style)
 
 
-def bullets(items, styles):
-    return [P(f'<font color="#42C5EE">&#8226;</font> {item}', styles["BodyHA"]) for item in items]
+def bullets(items, styles, style_name="BodyHA"):
+    return [P(f'<font color="#42C5EE">&#8226;</font> {item}', styles[style_name]) for item in items]
 
 
 def callout(title, text, styles, color=CYAN):
@@ -236,10 +239,10 @@ def at_a_glance(items, styles):
     return panel
 
 
-def section(title, text, styles, screenshot=None, caption=None, bullets_list=None, callout_data=None, screenshot_notes=None, screenshot_note_title=None):
+def section(title, text, styles, screenshot=None, caption=None, bullets_list=None, callout_data=None, screenshot_notes=None, screenshot_note_title=None, bullet_style_name="BodyHA"):
     flow = [P(title, styles["H1HA"]), P(text, styles["BodyHA"])]
     if bullets_list:
-        flow += bullets(bullets_list, styles)
+        flow += bullets(bullets_list, styles, bullet_style_name)
     if callout_data:
         title, callout_text, color = callout_data
         flow += [Spacer(1, 2 * mm), callout(title, callout_text, styles, color), Spacer(1, 3 * mm)]
@@ -302,7 +305,7 @@ def manual_de(styles):
             "Die klinische Zusatzdatei eines Apple-Health-Exports wird bewusst nicht importiert.",
             "Es gibt keine direkte HealthKit-Verbindung und keinen Cloud-Import.",
             "Bei einem nicht passenden ZIP, einer nicht lesbaren XML oder einer zu großen Datei zeigt HealthAtlas eine Erklärung an und importiert nichts.",
-        ], callout_data=("Export auf dem iPhone", "In Apple Health: Übersicht öffnen, oben rechts Bild oder Initialen wählen, dann " + '"Alle Gesundheitsdaten exportieren"' + ". Apple kann die Bezeichnung der Oberfläche ändern. Quelle: Apple Support, " + '<font color="#42C5EE">support.apple.com/de-de/guide/iphone/iph5ede58c3d/26/ios/26</font>', TEAL))
+        ], callout_data=("Export auf dem iPhone", "In Apple Health: Übersicht öffnen, oben rechts Bild oder Initialen wählen, dann " + '"Alle Gesundheitsdaten exportieren"' + ". Apple kann die Bezeichnung der Oberfläche ändern. Quelle: Apple Support, " + '<font color="#42C5EE">support.apple.com/de-de/guide/iphone/iph5ede58c3d/26/ios/26</font>', TEAL), bullet_style_name="CompactBodyHA")
     s += section("Navigation und Status", "Die linke Milchglas-Sidebar ist in jedem Theme standardmäßig sichtbar. Vor dem ersten lokalen Import heißt ihr erster Eintrag " + '"Import"' + "; nach erfolgreichem Import wird daraus " + '"Übersicht"' + ". Am unteren Rand bleibt " + '"Privat - Nur lokal"' + " als ständige Datenschutzerinnerung sichtbar.", styles,
         bullets_list=[
             "<b>Übersicht:</b> Karten der ausgewählten Datentypen.",
@@ -487,7 +490,7 @@ def manual_en(styles):
             "The clinical companion file in an Apple Health export is intentionally not imported.",
             "There is no direct HealthKit connection and no cloud import.",
             "For a wrong ZIP, unreadable XML or an oversized file, HealthAtlas explains the issue and imports nothing.",
-        ], callout_data=("Export on iPhone", "In Apple Health, open Summary, tap your picture or initials, then select " + '"Export All Health Data"' + ". Apple can change exact interface labels. Source: Apple Support, " + '<font color="#42C5EE">support.apple.com/en-in/guide/iphone/iph5ede58c3d/ios</font>', TEAL))
+        ], callout_data=("Export on iPhone", "In Apple Health, open Summary, tap your picture or initials, then select " + '"Export All Health Data"' + ". Apple can change exact interface labels. Source: Apple Support, " + '<font color="#42C5EE">support.apple.com/en-in/guide/iphone/iph5ede58c3d/ios</font>', TEAL), bullet_style_name="CompactBodyHA")
     s += section("Navigation and status", "The frosted sidebar is visible by default in every theme. Before the first local import, its first entry is called " + '"Import"' + "; after a successful import it becomes " + '"Overview"' + ". It shows " + '"Private - Local only"' + " at the bottom as a permanent privacy reminder.", styles,
         bullets_list=[
             "<b>Overview:</b> cards for selected data types.", "<b>Trends:</b> an interactive timeline for one selected type.",

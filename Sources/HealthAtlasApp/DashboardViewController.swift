@@ -2094,6 +2094,9 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         search.placeholderString = AppLanguage.current.text(english: "Search data types", german: "Datentypen suchen")
         search.target = self
         search.action = #selector(searchChanged(_:))
+        search.translatesAutoresizingMaskIntoConstraints = false
+        search.widthAnchor.constraint(equalToConstant: 190).isActive = true
+        search.setContentCompressionResistancePriority(.required, for: .horizontal)
         let pinPicker = NSSegmentedControl(labels: MetricPinArea.allCases.map { $0.title(for: .current) }, trackingMode: .selectOne, target: self, action: #selector(pinAreaChanged(_:)))
         pinPicker.selectedSegment = 0
         pinPicker.segmentStyle = .texturedRounded

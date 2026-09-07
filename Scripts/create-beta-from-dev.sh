@@ -89,11 +89,11 @@ worktree_tree() {
 }
 
 create_beta_commit() {
-    local version="$1" tree="$2" parent parent_tree
+    local version="$1" release_label="$2" tree="$3" parent parent_tree
     parent="$(git rev-parse refs/heads/beta)"
     parent_tree="$(git rev-parse "$parent^{tree}")"
     [[ "$tree" == "$parent_tree" ]] && { echo "$parent"; return; }
-    printf 'Create beta %s from dev\n' "$version" | git commit-tree "$tree" -p "$parent"
+    printf 'Create %s %s from dev\n' "$release_label" "$version" | git commit-tree "$tree" -p "$parent"
 }
 
 backup_directory_for_version() {
@@ -104,11 +104,8 @@ backup_directory_for_version() {
 }
 
 artifact_base_name() {
-    if [[ "$1" == *beta* ]]; then
-        echo "HealthAtlas-$1-macos"
-    else
-        echo "HealthAtlas-Beta-$1-macos"
-    fi
+    local version="$1"
+    echo "HealthAtlas-Beta-${version}-macos"
 }
 
 require_release_artifacts() {
@@ -149,9 +146,9 @@ categorized_release_changes() {
 }
 
 write_release_notes() {
-    local notes_file="$1" previous_beta_tag="$2" changes="$3"
+    local notes_file="$1" previous_beta_tag="$2" changes="$3" release_label="$4"
     cat > "$notes_file" <<EOF
-This beta contains the latest HealthAtlas fixes and improvements since ${previous_beta_tag:-the first beta}.
+This ${release_label:l} pre-release contains the latest HealthAtlas fixes and improvements since ${previous_beta_tag:-the first beta}.
 
 $changes
 ## Privacy
@@ -165,8 +162,8 @@ EOF
 }
 
 create_github_release() {
-    local version="$1" target_commit="$2" notes_file="$3"; shift 3
-    GH_PROMPT_DISABLED=1 gh release create "$(beta_release_tag "$version")" "$@" --target "$target_commit" --title "Beta $version" --notes-file "$notes_file" --prerelease
+    local version="$1" target_commit="$2" notes_file="$3" release_label="$4"; shift 4
+    GH_PROMPT_DISABLED=1 gh release create "$(beta_release_tag "$version")" "$@" --target "$target_commit" --title "$release_label $version" --notes-file "$notes_file" --prerelease
 }
 
 require_dev_branch
@@ -177,7 +174,14 @@ bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
 
 version="$(release_version)"
-[[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.0$ ]] || { echo "Abbruch: Beta-Version muss X.Y.0 sein." >&2; exit 1; }
+if [[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.0$ ]]; then
+    release_label="Beta"
+elif [[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]*[1-9][0-9]*$ ]]; then
+    release_label="Bugfix"
+else
+    echo "Abbruch: Beta muss X.Y.0 und ein Beta-Bugfix X.Y.Z mit Z größer 0 sein." >&2
+    exit 1
+fi
 release_tag="$(beta_release_tag "$version")"
 dev_commit="$(git rev-parse --short HEAD)"
 previous_beta_tag="$(last_beta_tag)"
@@ -188,7 +192,7 @@ zip_file="$backup_directory/$artifact_base.zip"
 dmg_file="$backup_directory/$artifact_base.dmg"
 zip_checksum_file="$zip_file.sha256"
 dmg_checksum_file="$dmg_file.sha256"
-release_notes_file="$backup_directory/HealthAtlas-Beta-$version-release-notes.md"
+release_notes_file="$backup_directory/HealthAtlas-$release_label-$version-release-notes.md"
 
 HEALTHATLAS_VERSION="$version" HEALTHATLAS_ALLOW_RELEASE_PACKAGE=YES Scripts/build-release-package.sh beta
 require_release_artifacts "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
@@ -196,7 +200,7 @@ Scripts/privacy-check.sh
 
 tree="$(worktree_tree)"
 beta_before="$(git rev-parse refs/heads/beta)"
-beta_commit="$(create_beta_commit "$version" "$tree")"
+beta_commit="$(create_beta_commit "$version" "$release_label" "$tree")"
 release_changes="$(categorized_release_changes "$previous_release_note_ref" "$beta_commit")" || {
     echo "Abbruch: Seit ${previous_beta_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Keine Beta ohne tatsächliche Änderungen erstellen." >&2
     exit 1
@@ -204,15 +208,15 @@ release_changes="$(categorized_release_changes "$previous_release_note_ref" "$be
 git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
-write_release_notes "$release_notes_file" "$previous_beta_tag" "$release_changes"
+write_release_notes "$release_notes_file" "$previous_beta_tag" "$release_changes" "$release_label"
 if gh release view "$release_tag" >/dev/null 2>&1; then
     gh release upload "$release_tag" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file" --clobber
-    gh release edit "$release_tag" --prerelease --title "Beta $version" --notes-file "$release_notes_file"
+    gh release edit "$release_tag" --prerelease --title "$release_label $version" --notes-file "$release_notes_file"
 else
-    create_github_release "$version" "$beta_commit" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
+    create_github_release "$version" "$beta_commit" "$release_notes_file" "$release_label" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi
 
-echo "Beta wurde aus Dev erstellt."
+echo "$release_label wurde als Beta-Vorabversion aus Dev erstellt."
 echo "Version: $version"
 echo "Ausgabeordner: $backup_directory"
 echo "Release Notes: $release_notes_file"
