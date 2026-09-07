@@ -80,6 +80,8 @@ systemweit deaktiviert.
 
 Apple-Health-ZIP-Archive mit `Export.xml` und direkte `Export.xml`-Dateien werden lokal gelesen; die klinische Zusatzdatei wird bewusst nicht importiert. Es gibt keine direkte HealthKit- oder Cloud-Anbindung.
 
+HealthAtlas liest die XML inkrementell in zwei lokalen Durchläufen und unterstützt Dateien bis 500 MiB. Exakte Records mit denselben exportierten Attributen werden nur einmal gezählt. Bei summierbaren Intervalltypen wie Schritten, Distanz und aktiver Energie vergleicht HealthAtlas unterschiedliche Quellen in lokalen 15-Minuten-Intervallen, damit überlappende Anteile nicht doppelt addiert werden. Einzelmessungen wie Herzfrequenz und Gewicht bleiben getrennte Messproben, sofern sie keine exakten Dubletten sind. Schlafdauer wird ebenfalls auf eine Quelle pro lokalem Intervall begrenzt; Workouts werden nur bei vollständig gleichen exportierten Attributen dedupliziert. Der Export enthält nicht genug Informationen, um Apples interne Quellenpriorität nachzubilden. HealthAtlas verwendet deshalb diese deterministische lokale Regel und behauptet keine identischen Werte zur Health-App. Bei gleicher Abdeckung entscheidet eine stabile alphabetische Quellenreihenfolge ohne Unterschied von Groß- und Kleinschreibung oder Akzenten.
+
 ## Demo ohne persönliche Daten
 
 Für einen sicheren Test liegt eine vollständig synthetische Apple-Health-Datei im Repository: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). Sie enthält fiktive Werte für alle aktuell unterstützten, nicht veralteten Apple-Health-Exporttypen; persönliche Exportwerte werden nicht übernommen.
@@ -109,7 +111,7 @@ Prüfsummen und Changelog unter `Backup/releases/beta/<version>/`.
 
 ## Projektstatus
 
-Final 1.0.0 ist die aktuelle stabile Veröffentlichung. HealthAtlas bleibt ein lokales Visualisierungswerkzeug und bietet keine medizinische Integration, Diagnosen oder Behandlungsempfehlungen.
+Bugfix 1.0.1 ist die aktuelle stabile Veröffentlichung. Er korrigiert die Beschneidung von Kartenhintergründen an abgerundeten Ecken. HealthAtlas bleibt ein lokales Visualisierungswerkzeug und bietet keine medizinische Integration, Diagnosen oder Behandlungsempfehlungen.
 
 ## Lizenz
 

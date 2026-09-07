@@ -292,9 +292,12 @@ def manual_de(styles):
         ], screenshot_note_title="Sicher starten")
     s += [Spacer(1, 3 * mm)] + success_image_block("final-import-success.png", "Import abgeschlossen", "Nach einem erfolgreichen Import bestätigt HealthAtlas, dass die ausgewählten Daten auf diesem Mac bleiben. Danach führt Quellen zur Auswahl der angezeigten Datentypen.", styles)
     s += [PageBreak()]
-    s += section("Apple-Health-Export importieren", "HealthAtlas akzeptiert genau zwei lokale Dateiformate: eine direkte <b>Export.xml</b> oder ein Apple-Health-<b>ZIP</b>-Archiv, das darin eine Datei namens Export.xml enthält. Das ZIP muss vorher nicht entpackt werden; HealthAtlas liest die Export.xml direkt aus dem Archiv.", styles,
+    s += section("Apple-Health-Export importieren", "HealthAtlas akzeptiert genau zwei lokale Dateiformate: eine direkte <b>Export.xml</b> oder ein Apple-Health-<b>ZIP</b>-Archiv, das darin eine Datei namens Export.xml enthält. Das ZIP muss vorher nicht entpackt werden; HealthAtlas liest die Export.xml lokal aus dem Archiv.", styles,
         bullets_list=[
-            "Dateien dürfen zwischen 1 Byte und 100 MB groß sein.",
+            "Direkte Export.xml-Dateien und ZIP-Archive dürfen jeweils bis zu 500 MB groß sein. Die enthaltene Export.xml darf nach dem Entpacken ebenfalls höchstens 500 MB groß sein. Das sind Sicherheitsgrenzen von HealthAtlas, keine Grenze von Apple Health oder macOS.",
+            "HealthAtlas verarbeitet die XML in zwei lokalen Streaming-Durchläufen. Vollständig gleiche exportierte Records werden nur einmal gezählt.",
+            "Schritte, Distanz und aktive Energie werden je 15-Minuten-Intervall gegen Quellenüberlappungen abgegrenzt. Einzelmessungen wie Herzfrequenz und Gewicht bleiben getrennt; Schlaf wird ebenfalls pro Intervall begrenzt. Workouts werden nur bei exakt gleichen Attributen dedupliziert.",
+            "Der Export enthält keine nachbildbare Apple-Quellenpriorität. HealthAtlas verwendet deshalb eine feste lokale Regel und behauptet keine identischen Werte zur Health-App. Bei gleicher Abdeckung entscheidet eine stabile alphabetische Quellenreihenfolge ohne Unterschied von Groß- und Kleinschreibung oder Akzenten.",
             "Es kann jeweils nur eine Datei gewählt werden.",
             "Die klinische Zusatzdatei eines Apple-Health-Exports wird bewusst nicht importiert.",
             "Es gibt keine direkte HealthKit-Verbindung und keinen Cloud-Import.",
@@ -401,7 +404,7 @@ def manual_de(styles):
             "Im Finder die App mit Control-Klick öffnen und " + '"Öffnen"' + " wählen. Im folgenden Hinweis nochmals bestätigen.",
             "Falls nötig: Systemeinstellungen > Datenschutz & Sicherheit öffnen und für genau diesen HealthAtlas-Build " + '"Dennoch öffnen"' + " wählen.",
             "Gatekeeper nicht systemweit deaktivieren. Nur Builds aus dem offiziellen HealthAtlas-Projekt oder eigene Builds öffnen.",
-            "Bei Importfehlern prüfen: ZIP enthält Export.xml, Datei ist nicht leer, kleiner als 100 MB und lokal erreichbar.",
+            "Bei Importfehlern prüfen: ZIP enthält Export.xml, Datei ist nicht leer, innerhalb der HealthAtlas-Grenze von 500 MB und lokal erreichbar.",
             "Wenn keine Werte erscheinen: zuerst unter Quellen mindestens einen Datentyp aktivieren; für Verläufe sind mindestens zwei Tageswerte im gewählten Zeitraum nötig.",
         ], callout_data=("Build-Varianten", "Dev, Beta und Final verwenden getrennte lokale Einstellungen. Ein Theme oder eine Auswahl in Dev ändert nicht die Einstellungen einer Beta oder Final-App.", GOLD))
     s += [PageBreak()]
@@ -475,9 +478,12 @@ def manual_en(styles):
         ], screenshot_note_title="Start safely")
     s += [Spacer(1, 3 * mm)] + success_image_block("final-import-success.png", "Import complete", "After a successful import, HealthAtlas confirms that the selected data stays on this Mac. Sources then leads to the selection of displayed data types.", styles)
     s += [PageBreak()]
-    s += section("Importing an Apple Health export", "HealthAtlas accepts exactly two local formats: a direct <b>Export.xml</b> file or an Apple Health <b>ZIP</b> archive containing Export.xml. You do not need to unpack the ZIP first; HealthAtlas reads Export.xml directly from the archive.", styles,
+    s += section("Importing an Apple Health export", "HealthAtlas accepts exactly two local formats: a direct <b>Export.xml</b> file or an Apple Health <b>ZIP</b> archive containing Export.xml. You do not need to unpack the ZIP first; HealthAtlas reads Export.xml locally from the archive.", styles,
         bullets_list=[
-            "Files must be between 1 byte and 100 MB.", "Only one file can be selected at a time.",
+            "Direct Export.xml files and ZIP archives can each be up to 500 MB. The contained Export.xml can also be up to 500 MB after decompression. These are HealthAtlas safety limits, not Apple Health or macOS limits.", "Only one file can be selected at a time.",
+            "HealthAtlas processes XML in two local streaming passes. Fully identical exported records are counted only once.",
+            "Steps, distance and active energy use local 15-minute intervals to avoid adding overlapping sources twice. Discrete samples such as heart rate and body mass remain separate; sleep is likewise bounded per interval. Workouts are deduplicated only when their attributes match exactly.",
+            "The export does not provide a reproducible Apple source-priority order. HealthAtlas therefore uses a fixed local rule and does not claim identical values to the Health app. Equal coverage uses a stable alphabetical source order that ignores case and diacritics.",
             "The clinical companion file in an Apple Health export is intentionally not imported.",
             "There is no direct HealthKit connection and no cloud import.",
             "For a wrong ZIP, unreadable XML or an oversized file, HealthAtlas explains the issue and imports nothing.",
@@ -580,7 +586,7 @@ def manual_en(styles):
             "In Finder, Control-click the app and choose " + '"Open"' + ". Confirm Open in the following dialog.",
             "If necessary, go to System Settings > Privacy & Security and choose " + '"Open Anyway"' + " for that exact HealthAtlas build.",
             "Do not disable Gatekeeper system-wide. Open only your own build or one from the official HealthAtlas project.",
-            "For import errors, confirm that the ZIP contains Export.xml, the file is not empty, is below 100 MB and is stored locally.",
+            "For import errors, confirm that the ZIP contains Export.xml, the file is not empty, is within the 500 MB HealthAtlas limit and is stored locally.",
             "If no values appear, enable at least one type in Sources. Trends need at least two daily values in the chosen period.",
         ], callout_data=("Build variants", "Dev, Beta and Final use separate local preferences. A theme or selection in Dev does not alter the settings of a Beta or Final app.", GOLD))
     s += [PageBreak()]

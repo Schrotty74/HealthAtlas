@@ -658,7 +658,7 @@
 				HEALTHATLAS_BUILD_CHANNEL = final;
 				HEALTHATLAS_DISPLAY_NAME = HealthAtlas;
 				INFOPLIST_FILE = HealthAtlas/Info.plist;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.healthatlas.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

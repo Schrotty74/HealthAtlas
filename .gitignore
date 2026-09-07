@@ -24,6 +24,7 @@ xcuserdata/
 !Demo/
 !Demo/AppleHealthDemo/
 !Demo/AppleHealthDemo/Export.xml
+!Tests/Fixtures/SourceOverlapValidation.xml
 *.csv
 *.xlsx
 *.xls

@@ -15,6 +15,8 @@ This page describes the current HealthAtlas functions in detail.
 ## Import and sources
 
 - Import a local Apple Health `Export.xml` file or a ZIP archive containing one. The clinical companion file is intentionally not imported.
+- XML is processed in two local streaming passes and supports up to 500 MiB. Exact exported records are counted once; cumulative interval types use a deterministic 15-minute source-overlap rule, resolving equal coverage with case- and diacritic-insensitive alphabetical source order, while discrete samples remain distinct unless they are exact duplicates.
+- HealthAtlas does not claim to reproduce Apple Health's private source-priority order. Sleep is bounded to one source per local interval, and workouts are deduplicated only when their complete exported attributes match.
 - Review every recognised local data type in **Sources**, grouped by category. Choose which types appear in the app and search large lists.
 - Pin types separately for Overview, Trends and Insights, and set their local order.
 - Replace an import, delete all local data after confirmation, and see the import time for the current session.

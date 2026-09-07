@@ -978,6 +978,7 @@ private final class HealthWorkspaceViewController: NSViewController {
             card.wantsLayer = true
             card.layer?.backgroundColor = theme.previewColor.cgColor
             card.layer?.cornerRadius = 14
+            card.layer?.masksToBounds = true
             card.heightAnchor.constraint(equalToConstant: 104).isActive = true
             row.addArrangedSubview(card)
         }
@@ -1964,14 +1965,12 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 }
 
-private final class ImportProgressOverlayView: NSVisualEffectView {
+private final class ImportProgressOverlayView: RoundedEffectView {
     init(language: AppLanguage) {
-        super.init(frame: .zero)
+        super.init(cornerRadius: 20)
         material = .hudWindow
         blendingMode = .withinWindow
         state = .active
-        wantsLayer = true
-        layer?.cornerRadius = 20
         layer?.borderWidth = 1
         layer?.borderColor = NSColor.white.withAlphaComponent(0.22).cgColor
 
@@ -2007,17 +2006,15 @@ private final class ImportProgressOverlayView: NSVisualEffectView {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }
 
-private final class ImportSuccessShimmerView: NSVisualEffectView {
+private final class ImportSuccessShimmerView: RoundedEffectView {
     private let onDismiss: () -> Void
 
     init(language: AppLanguage, onDismiss: @escaping () -> Void) {
         self.onDismiss = onDismiss
-        super.init(frame: .zero)
+        super.init(cornerRadius: 20)
         material = .hudWindow
         blendingMode = .withinWindow
         state = .active
-        wantsLayer = true
-        layer?.cornerRadius = 20
         layer?.borderWidth = 1
         layer?.borderColor = NSColor.systemGreen.withAlphaComponent(0.72).cgColor
         let icon = NSImageView(image: NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil) ?? NSImage())
@@ -2494,16 +2491,42 @@ private final class ClearGlassAtmosphereView: NSView {
     }
 }
 
-private class GlassCardView: NSVisualEffectView {
-    init(accent: NSColor = .systemCyan) {
+private class RoundedEffectView: NSVisualEffectView {
+    let roundedCornerRadius: CGFloat
+    private let roundedMask = CAShapeLayer()
+
+    init(cornerRadius: CGFloat) {
+        roundedCornerRadius = cornerRadius
         super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = cornerRadius
+        layer?.masksToBounds = true
+        layer?.mask = roundedMask
+    }
+
+    override func layout() {
+        super.layout()
+        roundedMask.frame = bounds
+        roundedMask.path = CGPath(
+            roundedRect: bounds,
+            cornerWidth: roundedCornerRadius,
+            cornerHeight: roundedCornerRadius,
+            transform: nil
+        )
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
+private class GlassCardView: RoundedEffectView {
+    static let cornerRadius: CGFloat = 18
+
+    init(accent: NSColor = .systemCyan) {
+        super.init(cornerRadius: Self.cornerRadius)
         material = .hudWindow
         blendingMode = .withinWindow
         state = .active
-        wantsLayer = true
         layer?.backgroundColor = NSColor(calibratedWhite: 0.04, alpha: 0.46).cgColor
-        layer?.cornerRadius = 18
-        layer?.masksToBounds = true
         layer?.borderWidth = 1
         layer?.borderColor = accent.withAlphaComponent(0.38).cgColor
         shadow = NSShadow()
@@ -2948,6 +2971,12 @@ private final class MetricCardBackgroundView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
+        let cardShape = NSBezierPath(
+            roundedRect: bounds,
+            xRadius: GlassCardView.cornerRadius,
+            yRadius: GlassCardView.cornerRadius
+        )
+        cardShape.addClip()
         NSGradient(colors: [
             accent.withAlphaComponent(0.34),
             accent.withAlphaComponent(0.14),

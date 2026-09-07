@@ -80,6 +80,19 @@ Apple Health ZIP archives containing `Export.xml` and direct `Export.xml` files
 are read locally. The clinical companion file is intentionally not imported.
 There is no direct HealthKit or cloud-service connection.
 
+HealthAtlas reads the XML incrementally in two local passes and supports files
+up to 500 MiB. Exact records with the same exported attributes are counted once.
+For cumulative interval types such as steps, distance and active energy, records
+from different sources are compared in local 15-minute intervals so overlapping
+portions are not added twice. Discrete measurements such as heart rate and body
+mass remain separate samples unless they are exact duplicates. Sleep duration is
+likewise bounded to one source per local interval; workouts are deduplicated only
+when their complete exported attributes match. The export does not provide enough
+information to reproduce Apple Health's private source-priority order, so
+HealthAtlas uses this deterministic local rule and does not claim identical values
+to the Health app. Equal coverage is resolved using a case- and
+diacritic-insensitive alphabetical source order.
+
 ## Demo without personal data
 
 The repository includes a fully synthetic Apple Health file for safe testing: [`Demo/AppleHealthDemo/Export.xml`](Demo/AppleHealthDemo/Export.xml). It contains fictional values for every currently supported, non-deprecated Apple Health export type; no personal export values are included.
@@ -109,7 +122,7 @@ the changelog are written to `Backup/releases/beta/<version>/`.
 
 ## Project status
 
-Final 1.0.0 is the current stable release. HealthAtlas remains a local visualisation tool and does not provide medical integration, diagnoses or treatment recommendations.
+Bugfix 1.0.1 is the current stable release. It corrects card background clipping at rounded corners. HealthAtlas remains a local visualisation tool and does not provide medical integration, diagnoses or treatment recommendations.
 
 ## License
 

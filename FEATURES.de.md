@@ -15,6 +15,8 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich.
 ## Import und Quellen
 
 - Eine lokale Apple-Health-`Export.xml`-Datei oder ein ZIP-Archiv damit importieren. Die klinische Zusatzdatei wird bewusst nicht importiert.
+- Die XML wird in zwei lokalen Streaming-Durchläufen verarbeitet und bis 500 MiB unterstützt. Exakte exportierte Records werden einmal gezählt; summierbare Intervalltypen verwenden eine deterministische Quellenregel in 15-Minuten-Intervallen. Bei gleicher Abdeckung entscheidet die alphabetische Quellenreihenfolge ohne Unterschied von Groß- und Kleinschreibung oder Akzenten; einzelne Messproben bleiben getrennt, sofern sie keine exakten Dubletten sind.
+- HealthAtlas behauptet nicht, Apples interne Quellenpriorität nachzubilden. Schlaf wird auf eine Quelle pro lokalem Intervall begrenzt; Workouts werden nur bei vollständig gleichen exportierten Attributen dedupliziert.
 - Unter **Quellen** jeden erkannten lokalen Datentyp nach Kategorie gruppiert prüfen. Gewünschte Typen auswählen und große Listen durchsuchen.
 - Datentypen getrennt für Übersicht, Verläufe und Einblicke anpinnen und lokal anordnen.
 - Einen Import ersetzen, alle lokalen Daten nach Bestätigung löschen und den Importzeitpunkt der aktuellen Sitzung sehen.

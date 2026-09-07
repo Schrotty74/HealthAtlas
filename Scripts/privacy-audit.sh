@@ -22,8 +22,9 @@ fi
 tracked_files=("${(@f)$(git ls-files)}")
 content_files=("${(@f)$(printf '%s\n' "${tracked_files[@]}" \
     | grep -Ev '^Scripts/privacy-(check|audit)\.sh$')}")
-if grep -I -n -E '/Users/[^/]+|/Volumes/[^/]+|serialNumber[[:space:]]*[:=][[:space:]]*"[^"$]+' \
-    "${content_files[@]}" >/tmp/healthatlas-privacy-audit.txt 2>/dev/null; then
+if LC_ALL=C sed 's#/Users/example/#~/#g' "${content_files[@]}" \
+    | grep -n -E '/Users/[^/]+|/Volumes/[^/]+|serialNumber[[:space:]]*[:=][[:space:]]*"[^"$]+' \
+    >/tmp/healthatlas-privacy-audit.txt 2>/dev/null; then
     cat /tmp/healthatlas-privacy-audit.txt >&2
     echo "Datenschutzaudit fehlgeschlagen: persönlicher Pfad oder Geheimnis gefunden." >&2
     exit 1
@@ -35,7 +36,10 @@ for commit in "${(@f)$(git rev-list --all)}"; do
     git grep -I -n -E \
         '/Users/[^/]+|/Volumes/[^/]+|serialNumber[[:space:]]*[:=][[:space:]]*"[^"$]+' \
         "$commit" -- . ':!Scripts/privacy-check.sh' ':!Scripts/privacy-audit.sh' \
-        >>"$history_findings" 2>/dev/null || true
+        2>/dev/null \
+        | LC_ALL=C sed 's#/Users/example/#~/#g' \
+        | grep -E '/Users/[^/]+|/Volumes/[^/]+|serialNumber[[:space:]]*[:=][[:space:]]*"[^"$]+' \
+        >>"$history_findings" || true
 done
 if [[ -s "$history_findings" ]]; then
     cat "$history_findings" >&2

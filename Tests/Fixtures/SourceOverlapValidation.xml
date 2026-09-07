@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Completely fictional records for manual and automated source-overlap validation. -->
+<HealthData>
+  <!-- Steps: expected daily total 515 count, 11 accepted samples. -->
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count" value="10" startDate="2026-07-15 08:00:00 +0200" endDate="2026-07-15 08:15:00 +0200" creationDate="2026-07-15 08:16:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="count" value="20" startDate="2026-07-15 08:15:00 +0200" endDate="2026-07-15 08:30:00 +0200" creationDate="2026-07-15 08:31:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count" value="30" startDate="2026-07-15 08:30:00 +0200" endDate="2026-07-15 08:45:00 +0200" creationDate="2026-07-15 08:46:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="count" value="40" startDate="2026-07-15 08:30:00 +0200" endDate="2026-07-15 08:45:00 +0200" creationDate="2026-07-15 08:46:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count" value="50" startDate="2026-07-15 08:45:00 +0200" endDate="2026-07-15 09:00:00 +0200" creationDate="2026-07-15 09:01:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="count" value="60" startDate="2026-07-15 09:00:00 +0200" endDate="2026-07-15 09:15:00 +0200" creationDate="2026-07-15 09:16:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count" value="80" startDate="2026-07-15 09:15:00 +0200" endDate="2026-07-15 09:45:00 +0200" creationDate="2026-07-15 09:46:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="count" value="100" startDate="2026-07-15 09:30:00 +0200" endDate="2026-07-15 10:00:00 +0200" creationDate="2026-07-15 10:01:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="ThirdParty Fitness" sourceVersion="1.0" device="Synthetic Tracker" unit="count" value="70" startDate="2026-07-15 10:00:00 +0200" endDate="2026-07-15 10:15:00 +0200" creationDate="2026-07-15 10:16:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="count" value="90" startDate="2026-07-15 10:00:00 +0200" endDate="2026-07-15 10:15:00 +0200" creationDate="2026-07-15 10:16:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count" value="25" startDate="2026-07-15 10:15:00 +0200" endDate="2026-07-15 10:30:00 +0200" creationDate="2026-07-15 10:31:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count" value="25" startDate="2026-07-15 10:15:00 +0200" endDate="2026-07-15 10:30:00 +0200" creationDate="2026-07-15 10:31:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count" value="35" startDate="2026-07-15 10:30:00 +0200" endDate="2026-07-15 10:45:00 +0200" creationDate="2026-07-15 10:46:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="count" value="35" startDate="2026-07-15 10:30:00 +0200" endDate="2026-07-15 10:45:00 +0200" creationDate="2026-07-15 10:46:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count" value="45" startDate="2026-07-15 10:45:00 +0200" endDate="2026-07-15 11:00:00 +0200" creationDate="2026-07-15 11:01:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="ThirdParty Fitness" sourceVersion="1.0" device="Synthetic Tracker" unit="count" value="55" startDate="2026-07-15 10:45:00 +0200" endDate="2026-07-15 11:00:00 +0200" creationDate="2026-07-15 11:01:00 +0200"/>
+
+  <!-- Distance: expected daily total 2.5 km. -->
+  <Record type="HKQuantityTypeIdentifierDistanceWalkingRunning" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="km" value="1" startDate="2026-07-15 11:00:00 +0200" endDate="2026-07-15 11:15:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierDistanceWalkingRunning" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="km" value="2" startDate="2026-07-15 11:00:00 +0200" endDate="2026-07-15 11:15:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierDistanceWalkingRunning" sourceName="ThirdParty Fitness" sourceVersion="1.0" device="Synthetic Tracker" unit="km" value="0.5" startDate="2026-07-15 11:15:00 +0200" endDate="2026-07-15 11:30:00 +0200"/>
+
+  <!-- Active energy: expected daily total 160 kcal. -->
+  <Record type="HKQuantityTypeIdentifierActiveEnergyBurned" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="kcal" value="100" startDate="2026-07-15 12:00:00 +0200" endDate="2026-07-15 12:30:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierActiveEnergyBurned" sourceName="ThirdParty Fitness" sourceVersion="1.0" device="Synthetic Tracker" unit="kcal" value="120" startDate="2026-07-15 12:15:00 +0200" endDate="2026-07-15 12:45:00 +0200"/>
+
+  <!-- Discrete samples: expected heart-rate average 75 count/min and body-mass average 71 kg. -->
+  <Record type="HKQuantityTypeIdentifierHeartRate" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="count/min" value="70" startDate="2026-07-15 13:00:00 +0200" endDate="2026-07-15 13:01:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierHeartRate" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="count/min" value="80" startDate="2026-07-15 13:00:00 +0200" endDate="2026-07-15 13:01:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierHeartRate" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" unit="count/min" value="70" startDate="2026-07-15 13:00:00 +0200" endDate="2026-07-15 13:01:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="kg" value="70" startDate="2026-07-15 14:00:00 +0200" endDate="2026-07-15 14:00:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="ThirdParty Fitness" sourceVersion="1.0" device="Synthetic Tracker" unit="kg" value="72" startDate="2026-07-15 18:00:00 +0200" endDate="2026-07-15 18:00:00 +0200"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" unit="kg" value="70" startDate="2026-07-15 14:00:00 +0200" endDate="2026-07-15 14:00:00 +0200"/>
+
+  <!-- Sleep: expected total 3 h, split as 1 h on 15 July and 2 h on 16 July. -->
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-07-15 23:00:00 +0200" endDate="2026-07-16 01:00:00 +0200"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="iPhone" sourceVersion="1.0" device="Synthetic iPhone" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-07-15 23:00:00 +0200" endDate="2026-07-16 01:00:00 +0200"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="ThirdParty Fitness" sourceVersion="1.0" device="Synthetic Tracker" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-07-16 01:00:00 +0200" endDate="2026-07-16 02:00:00 +0200"/>
+
+  <!-- Workouts: expected 2 samples because only the first pair is exactly identical. -->
+  <Workout sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" workoutActivityType="HKWorkoutActivityTypeRunning" duration="1800" startDate="2026-07-15 16:00:00 +0200" endDate="2026-07-15 16:30:00 +0200" creationDate="2026-07-15 16:31:00 +0200"/>
+  <Workout sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" workoutActivityType="HKWorkoutActivityTypeRunning" duration="1800" startDate="2026-07-15 16:00:00 +0200" endDate="2026-07-15 16:30:00 +0200" creationDate="2026-07-15 16:31:00 +0200"/>
+  <Workout sourceName="Apple Watch" sourceVersion="1.0" device="Synthetic Watch" workoutActivityType="HKWorkoutActivityTypeRunning" duration="1860" startDate="2026-07-15 16:00:00 +0200" endDate="2026-07-15 16:31:00 +0200" creationDate="2026-07-15 16:32:00 +0200"/>
+</HealthData>

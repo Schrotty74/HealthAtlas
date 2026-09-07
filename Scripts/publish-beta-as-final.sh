@@ -69,7 +69,32 @@ require_gh() {
 }
 
 final_tree_from_beta() {
-    git rev-parse beta^{tree}
+    local english_readme german_readme tree_entries
+    english_readme="$(git show beta:README.md | sed '/^See \[what’s new and the complete feature overview\](FEATURES\.md)\.$/d' | git hash-object -w --stdin)"
+    german_readme="$(git show beta:README.de.md | sed '/^Neuigkeiten und alle Details stehen in der \[vollständigen Funktionsübersicht\](FEATURES\.de\.md)\.$/d' | git hash-object -w --stdin)"
+    tree_entries="$(git ls-tree beta | awk -F '\t' '$2 != "FEATURES.md" && $2 != "FEATURES.de.md" && $2 != "README.md" && $2 != "README.de.md"')"
+    {
+        printf '100644 blob %s\tREADME.md\n' "$english_readme"
+        printf '100644 blob %s\tREADME.de.md\n' "$german_readme"
+        printf '%s\n' "$tree_entries"
+    } | LC_ALL=C sort -k 2 | git mktree
+}
+
+bugfix_tree_from_dev() {
+    local main_ref="$1" temporary_index tree
+    if [[ -n "$(git diff --name-only --diff-filter=D "$main_ref" dev)" ]]; then
+        echo "Abbruch: Der direkte Dev-Bugfix würde Dateien aus main entfernen." >&2
+        echo "Bitte die Entfernung zuerst bewusst auf main vorbereiten." >&2
+        exit 1
+    fi
+
+    temporary_index="$(mktemp "${TMPDIR:-/tmp}/healthatlas-bugfix-index.XXXXXX")"
+    rm -f "$temporary_index"
+    GIT_INDEX_FILE="$temporary_index" git read-tree "$main_ref^{tree}"
+    git diff --binary --diff-filter=AM "$main_ref" dev | GIT_INDEX_FILE="$temporary_index" git apply --cached
+    tree="$(GIT_INDEX_FILE="$temporary_index" git write-tree)"
+    rm -f "$temporary_index"
+    echo "$tree"
 }
 
 backup_directory_for_version() {
@@ -89,14 +114,23 @@ last_final_tag() {
 }
 
 categorized_release_changes() {
-    local base_ref="$1"
+    local base_ref="$1" release_label="$2"
     local changed_paths
     changed_paths="$(git diff --name-only "$base_ref" HEAD -- Sources Tests HealthAtlas.xcodeproj HealthAtlas/Info.plist README.md README.de.md output/pdf Scripts 2>/dev/null | sort -u)"
     [[ -n "$changed_paths" ]] || return 1
 
-    printf '## Changelog\n\n'
-    if grep -q '^Sources/' <<<"$changed_paths"; then
-        printf '%s\n' '- HealthAtlas app functionality and interface updated.'
+    if [[ "$release_label" == "Bugfix" ]]; then
+        printf '## Fixed\n\n'
+        if grep -q '^Sources/HealthAtlasApp/DashboardViewController.swift$' <<<"$changed_paths"; then
+            printf '%s\n' '- Card backgrounds, borders and rounded corners now use the same clipped shape throughout the app.'
+        elif grep -q '^Sources/' <<<"$changed_paths"; then
+            printf '%s\n' '- Corrected an issue in the HealthAtlas app.'
+        fi
+    else
+        printf '## Changelog\n\n'
+        if grep -q '^Sources/' <<<"$changed_paths"; then
+            printf '%s\n' '- HealthAtlas app functionality and interface updated.'
+        fi
     fi
     if grep -Eq '^(HealthAtlas\.xcodeproj/|HealthAtlas/Info\.plist$)' <<<"$changed_paths"; then
         printf '%s\n' '- Xcode project configuration updated.'
@@ -105,7 +139,7 @@ categorized_release_changes() {
         printf '%s\n' '- Automated tests for local behavior updated.'
     fi
     if grep -Eq '^(README\.md|README\.de\.md|output/pdf/)' <<<"$changed_paths"; then
-        printf '%s\n' '- German and English documentation, screenshots and manuals updated.'
+        printf '%s\n' '- German and English project documentation updated.'
     fi
     if grep -q '^Scripts/' <<<"$changed_paths"; then
         printf '%s\n' '- Build, backup, privacy or release automation updated.'
@@ -115,8 +149,6 @@ categorized_release_changes() {
 write_release_notes() {
     local notes_file="$1" previous_final_tag="$2" changes="$3"
     cat > "$notes_file" <<EOF
-This stable release contains the latest HealthAtlas changes since ${previous_final_tag:-the first stable release}.
-
 $changes
 ## Privacy
 
@@ -129,21 +161,31 @@ EOF
 }
 
 create_github_release() {
-    local version="$1" target_commit="$2" notes_file="$3"; shift 3
-    GH_PROMPT_DISABLED=1 gh release create "v$version" "$@" --target "$target_commit" --title "Final $version" --notes-file "$notes_file"
+    local version="$1" release_label="$2" target_commit="$3" notes_file="$4"; shift 4
+    GH_PROMPT_DISABLED=1 gh release create "v$version" "$@" --target "$target_commit" --title "$release_label $version" --notes-file "$notes_file"
 }
 
 require_clean_worktree
 require_gh
-ensure_branch_exists beta main
 ensure_branch_exists main beta
-sync_branch_with_origin beta
 sync_branch_with_origin main
 bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
 
 version="$(release_version)"
-[[ "$version" =~ ^[1-9][0-9]*\.0\.0$ ]] || { echo "Abbruch: Final-Version muss X.0.0 sein." >&2; exit 1; }
+if [[ "$version" =~ ^[1-9][0-9]*\.0\.0$ ]]; then
+    release_label="Final"
+    source_branch="beta"
+    ensure_branch_exists beta main
+    sync_branch_with_origin beta
+elif [[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]*[1-9][0-9]*$ ]]; then
+    release_label="Bugfix"
+    source_branch="dev"
+    git show-ref --verify --quiet refs/heads/dev || { echo "Abbruch: Lokaler dev-Branch fehlt." >&2; exit 1; }
+else
+    echo "Abbruch: Final-Version muss X.0.0 und ein Bugfix X.Y.Z mit Z größer 0 sein." >&2
+    exit 1
+fi
 previous_final_tag="$(last_final_tag)"
 previous_release_note_ref="${previous_final_tag:-$(git rev-list --max-parents=0 HEAD)}"
 backup_directory="$(backup_directory_for_version "$version")"
@@ -154,15 +196,21 @@ zip_checksum_file="$zip_file.sha256"
 dmg_checksum_file="$dmg_file.sha256"
 release_notes_file="$backup_directory/HealthAtlas-$version-release-notes.md"
 
-git switch beta
-beta_commit="$(git rev-parse --short HEAD)"
+git switch "$source_branch"
+source_commit="$(git rev-parse --short HEAD)"
 main_before="$(git rev-parse refs/heads/main)"
-final_tree="$(final_tree_from_beta)"
-final_commit="$(printf 'Publish Final %s from beta\n' "$version" | git commit-tree "$final_tree" -p "$main_before")"
+if [[ "$release_label" == "Bugfix" ]]; then
+    final_tree="$(bugfix_tree_from_dev "$main_before")"
+    release_change_base="$main_before"
+else
+    final_tree="$(final_tree_from_beta)"
+    release_change_base="${previous_release_note_ref}"
+fi
+final_commit="$(printf 'Publish %s %s from %s\n' "$release_label" "$version" "$source_branch" | git commit-tree "$final_tree" -p "$main_before")"
 git update-ref refs/heads/main "$final_commit" "$main_before"
 git switch main
 
-release_changes="$(categorized_release_changes "${previous_release_note_ref}")" || {
+release_changes="$(categorized_release_changes "$release_change_base" "$release_label")" || {
     echo "Abbruch: Seit ${previous_final_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Kein Final ohne vollständigen Changelog erstellen." >&2
     exit 1
 }
@@ -175,12 +223,12 @@ HEALTHATLAS_ALLOW_PUSH=YES git push --set-upstream origin main
 release_tag="v$version"
 if gh release view "$release_tag" >/dev/null 2>&1; then
     gh release upload "$release_tag" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file" --clobber
-    gh release edit "$release_tag" --title "Final $version" --notes-file "$release_notes_file"
+    gh release edit "$release_tag" --title "$release_label $version" --notes-file "$release_notes_file"
 else
-    create_github_release "$version" "$(git rev-parse HEAD)" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
+    create_github_release "$version" "$release_label" "$(git rev-parse HEAD)" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi
 
-echo "Final wurde aus Beta veröffentlicht."
+echo "$release_label wurde aus $source_branch veröffentlicht."
 echo "Ausgabeordner: $backup_directory"
 echo "GitHub Release: $release_tag"
-echo "Beta-Commit: $beta_commit"
+echo "Quell-Commit: $source_commit"

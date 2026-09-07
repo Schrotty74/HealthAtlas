@@ -127,7 +127,7 @@ struct HealthDataTypeSummary: Equatable, Identifiable {
     var valueText: String {
         guard let average else { return recordCount.formatted() }
         let value: Double
-        if identifier == "HKQuantityTypeIdentifierStepCount" || identifier.contains("Energy") || identifier.contains("Distance") || identifier.contains("FlightsClimbed") {
+        if HealthDataAggregationRule.rule(for: identifier).usesTotalValue {
             value = sum
         } else {
             value = average
@@ -149,7 +149,7 @@ struct HealthDataTypeSummary: Equatable, Identifiable {
     }
 
     func displayValue(for dailyValue: HealthDailyValue) -> Double {
-        identifier == "HKQuantityTypeIdentifierStepCount" || identifier.contains("Energy") || identifier.contains("Distance") || identifier.contains("FlightsClimbed")
+        HealthDataAggregationRule.rule(for: identifier).usesTotalValue
             ? dailyValue.sum : dailyValue.average
     }
 
@@ -226,7 +226,13 @@ enum LocalImportResult: Equatable {
 
 enum LocalImportValidator {
     private static let supportedExtensions: Set<String> = ["xml", "zip"]
-    static let maximumBytes = 100 * 1024 * 1024
+    /// HealthAtlas supports local XML exports up to 500 MiB. The limit keeps
+    /// import work bounded without claiming an Apple Health or macOS limit.
+    static let maximumBytes = 500 * 1024 * 1024
+
+    static func supportsXMLByteCount(_ byteCount: Int) -> Bool {
+        byteCount > 0 && byteCount <= maximumBytes
+    }
 
     static func validate(url: URL) -> LocalImportResult {
         let extensionName = url.pathExtension.lowercased()
@@ -237,50 +243,95 @@ enum LocalImportValidator {
             return .rejected(AppLanguage.current.text(english: "Please select a regular local file.", german: "Bitte wähle eine normale lokale Datei aus."))
         }
         let byteCount = values.fileSize ?? 0
-        guard byteCount > 0, byteCount <= maximumBytes else {
-            return .rejected(AppLanguage.current.text(english: "The file must be between 1 byte and 100 MB.", german: "Die Datei muss zwischen 1 Byte und 100 MB groß sein."))
+        guard byteCount > 0 else {
+            return .rejected(AppLanguage.current.text(english: "The selected file is empty.", german: "Die ausgewählte Datei ist leer."))
         }
         if extensionName == "zip" {
+            guard AppleHealthImporter.supportsArchiveByteCount(byteCount) else {
+                return .rejected(AppLanguage.current.text(english: "HealthAtlas supports local Apple Health ZIP archives up to 500 MB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-ZIP-Archive bis 500 MB. Das ist eine Sicherheitsgrenze der App."))
+            }
             return AppleHealthImporter.importArchive(at: url, fileSize: byteCount)
         }
-        guard let data = try? Data(contentsOf: url, options: [.mappedIfSafe]), !data.prefix(512).contains(0) else {
+        guard supportsXMLByteCount(byteCount) else {
+            return .rejected(AppLanguage.current.text(english: "HealthAtlas supports local Apple Health XML files up to 500 MB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-XML-Dateien bis 500 MB. Das ist eine Sicherheitsgrenze der App."))
+        }
+        guard isReadableTextExport(at: url) else {
             return .rejected(AppLanguage.current.text(english: "The selected file is not a readable text export.", german: "Die ausgewählte Datei ist kein lesbarer Textexport."))
         }
-        if extensionName == "xml", let summary = AppleHealthImporter.importXML(data: data, fileName: url.lastPathComponent) {
+        if extensionName == "xml", let summary = AppleHealthImporter.importXML(at: url, fileName: url.lastPathComponent) {
             return .imported(summary)
         }
-        return .ready(LocalImportSummary(fileName: url.lastPathComponent, format: extensionName.uppercased(), byteCount: byteCount))
+        return .rejected(AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."))
+    }
+
+    private static func isReadableTextExport(at url: URL) -> Bool {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? handle.close() }
+        guard let prefix = try? handle.read(upToCount: 512), !prefix.isEmpty else { return false }
+        return !prefix.contains(0)
     }
 }
 
 enum AppleHealthImporter {
-    private static let maximumXMLBytes = 100 * 1024 * 1024
+    static let maximumArchiveBytes = 500 * 1024 * 1024
+    private static let maximumXMLBytes = LocalImportValidator.maximumBytes
+    private static let maximumZIPListingBytes = 2 * 1024 * 1024
+    private static let maximumZIPEntryInfoBytes = 64 * 1024
+
+    static func supportsArchiveByteCount(_ byteCount: Int) -> Bool {
+        byteCount > 0 && byteCount <= maximumArchiveBytes
+    }
 
     static func importArchive(at url: URL, fileSize: Int) -> LocalImportResult {
-        guard fileSize <= LocalImportValidator.maximumBytes else {
-            return .rejected(AppLanguage.current.text(english: "The archive is too large to import safely.", german: "Das Archiv ist für einen sicheren Import zu groß."))
+        guard supportsArchiveByteCount(fileSize) else {
+            return .rejected(AppLanguage.current.text(english: "HealthAtlas supports local Apple Health ZIP archives up to 500 MB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-ZIP-Archive bis 500 MB. Das ist eine Sicherheitsgrenze der App."))
         }
-        guard let entries = unzip(arguments: ["-Z1", url.path]),
-              let exportEntry = String(data: entries, encoding: .utf8)?.split(whereSeparator: \.isNewline).first(where: { entry in
-                  entry.split(separator: "/").last?.lowercased() == "export.xml"
-              }) else {
+        guard let entries = unzipOutput(arguments: ["-Z1", url.path], maximumBytes: maximumZIPListingBytes),
+              let listing = String(data: entries, encoding: .utf8) else {
+            return .rejected(AppLanguage.current.text(english: "The ZIP contents could not be read safely.", german: "Der Inhalt der ZIP-Datei konnte nicht sicher gelesen werden."))
+        }
+        let exportEntries = listing.split(whereSeparator: \.isNewline).filter { entry in
+            entry.split(separator: "/").last?.lowercased() == "export.xml"
+        }
+        guard exportEntries.count == 1, let exportEntry = exportEntries.first.map(String.init) else {
             return .rejected(AppLanguage.current.text(english: "This ZIP does not contain the required Export.xml data file.", german: "Dieses ZIP enthält nicht die erforderliche Datendatei Export.xml."))
         }
-        guard let xml = unzip(arguments: ["-p", url.path, String(exportEntry)]), xml.count <= maximumXMLBytes else {
+        guard let uncompressedBytes = uncompressedSize(of: exportEntry, in: url) else {
+            return .rejected(AppLanguage.current.text(english: "The Export.xml size in this ZIP could not be verified safely.", german: "Die Größe von Export.xml in dieser ZIP-Datei konnte nicht sicher geprüft werden."))
+        }
+        guard uncompressedBytes > 0, uncompressedBytes <= maximumXMLBytes else {
+            return .rejected(AppLanguage.current.text(english: "HealthAtlas supports an Export.xml up to 500 MB after decompression. This archive was not imported.", german: "HealthAtlas unterstützt eine Export.xml bis 500 MB nach dem Entpacken. Dieses Archiv wurde nicht importiert."))
+        }
+        guard let temporaryXMLURL = extractExportXML(entry: exportEntry, from: url) else {
             return .rejected(AppLanguage.current.text(english: "Apple Health data could not be read safely from this ZIP.", german: "Die Apple-Health-Daten konnten nicht sicher aus diesem ZIP gelesen werden."))
         }
-        guard let summary = importXML(data: xml, fileName: url.lastPathComponent) else {
+        defer { try? FileManager.default.removeItem(at: temporaryXMLURL) }
+        guard let summary = importXML(at: temporaryXMLURL, fileName: url.lastPathComponent) else {
             return .rejected(AppLanguage.current.text(english: "The ZIP does not contain readable Apple Health data.", german: "Das ZIP enthält keine lesbaren Apple-Health-Daten."))
         }
         return .imported(summary)
     }
 
+    static func importXML(at url: URL, fileName: String) -> ImportedHealthSummary? {
+        guard let byteCount = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+              byteCount > 0, byteCount <= maximumXMLBytes else { return nil }
+        return importXML(fileName: fileName) {
+            InputStream(url: url).map(XMLParser.init(stream:))
+        }
+    }
+
     static func importXML(data: Data, fileName: String) -> ImportedHealthSummary? {
         guard data.count <= maximumXMLBytes else { return nil }
-        let parserDelegate = AppleHealthXMLDelegate()
-        let parser = XMLParser(data: data)
-        parser.delegate = parserDelegate
-        guard parser.parse(), parserDelegate.recordCount > 0 else { return nil }
+        return importXML(fileName: fileName) { XMLParser(data: data) }
+    }
+
+    private static func importXML(fileName: String, makeParser: () -> XMLParser?) -> ImportedHealthSummary? {
+        guard let plan = makeAggregationPlan(makeParser: makeParser),
+              let summaryParser = makeParser() else { return nil }
+
+        let parserDelegate = AppleHealthXMLDelegate(plan: plan)
+        summaryParser.delegate = parserDelegate
+        guard summaryParser.parse(), parserDelegate.recordCount > 0 else { return nil }
         return ImportedHealthSummary(
             fileName: fileName,
             recordCount: parserDelegate.recordCount,
@@ -288,27 +339,309 @@ enum AppleHealthImporter {
         )
     }
 
-    private static func unzip(arguments: [String]) -> Data? {
+    private static func makeAggregationPlan(makeParser: () -> XMLParser?) -> HealthAggregationPlan? {
+        guard let parser = makeParser() else { return nil }
+        let planner = AppleHealthAggregationPlanner()
+        parser.delegate = planner
+        guard parser.parse() else { return nil }
+        return planner.makePlan()
+    }
+
+    private static func uncompressedSize(of entry: String, in archive: URL) -> Int? {
+        guard let output = unzipOutput(arguments: ["-l", archive.path, entry], maximumBytes: maximumZIPEntryInfoBytes),
+              let listing = String(data: output, encoding: .utf8) else { return nil }
+        for line in listing.split(whereSeparator: \.isNewline).reversed() where line.hasSuffix(entry) {
+            guard let firstField = line.split(maxSplits: 1, whereSeparator: \.isWhitespace).first,
+                  let byteCount = Int(firstField) else { continue }
+            return byteCount
+        }
+        return nil
+    }
+
+    private static func extractExportXML(entry: String, from archive: URL) -> URL? {
+        let temporaryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HealthAtlas-Import-\(UUID().uuidString)")
+            .appendingPathExtension("xml")
+        guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil),
+              let destination = try? FileHandle(forWritingTo: temporaryURL) else { return nil }
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
-        process.arguments = arguments
+        process.arguments = ["-p", archive.path, entry]
         let output = Pipe()
         process.standardOutput = output
         process.standardError = FileHandle.nullDevice
         do {
             try process.run()
-            let data = output.fileHandleForReading.readDataToEndOfFile()
+            var writtenBytes = 0
+            while let chunk = try output.fileHandleForReading.read(upToCount: 64 * 1024), !chunk.isEmpty {
+                writtenBytes += chunk.count
+                guard writtenBytes <= maximumXMLBytes else {
+                    process.terminate()
+                    process.waitUntilExit()
+                    try? destination.close()
+                    try? FileManager.default.removeItem(at: temporaryURL)
+                    return nil
+                }
+                try destination.write(contentsOf: chunk)
+            }
             process.waitUntilExit()
-            return process.terminationStatus == 0 ? data : nil
+            try destination.close()
+            guard process.terminationStatus == 0, writtenBytes > 0 else {
+                try? FileManager.default.removeItem(at: temporaryURL)
+                return nil
+            }
+            return temporaryURL
+        } catch {
+            process.terminate()
+            process.waitUntilExit()
+            try? destination.close()
+            try? FileManager.default.removeItem(at: temporaryURL)
+            return nil
+        }
+    }
+
+    private static func unzipOutput(arguments: [String], maximumBytes: Int) -> Data? {
+        let temporaryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HealthAtlas-ZIP-Listing-\(UUID().uuidString)")
+        guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil),
+              let output = try? FileHandle(forWritingTo: temporaryURL) else { return nil }
+        defer {
+            try? output.close()
+            try? FileManager.default.removeItem(at: temporaryURL)
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+        process.arguments = arguments
+        process.standardOutput = output
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            process.waitUntilExit()
+            let byteCount = try temporaryURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+            guard process.terminationStatus == 0, byteCount <= maximumBytes else { return nil }
+            return try Data(contentsOf: temporaryURL, options: [.mappedIfSafe])
         } catch {
             return nil
         }
     }
 }
 
+private enum HealthDataAggregationRule {
+    case cumulativeInterval
+    case sleepInterval
+    case sample
+
+    static func rule(for identifier: String) -> Self {
+        let value = identifier.lowercased()
+        if identifier == "HKCategoryTypeIdentifierSleepAnalysis" { return .sleepInterval }
+        if value.contains("stepcount") || value.contains("distance") || value.contains("activeenergyburned") || value.contains("basalenergyburned") || value.contains("flightsclimbed") || value.contains("pushcount") || value.contains("swimmingstrokecount") || value.contains("appleexercisetime") || value.contains("applemovetime") || value.contains("applestandtime") {
+            return .cumulativeInterval
+        }
+        return .sample
+    }
+
+    var usesTotalValue: Bool {
+        self == .cumulativeInterval || self == .sleepInterval
+    }
+}
+
+private struct AppleHealthSource: Hashable {
+    let name: String
+    let version: String
+    let device: String
+
+    init(attributes: [String: String]) {
+        name = attributes["sourceName"] ?? ""
+        version = attributes["sourceVersion"] ?? ""
+        device = attributes["device"] ?? ""
+    }
+
+    var stableName: String {
+        let locale = Locale(identifier: "en_US_POSIX")
+        let normalized = [name, version, device].map {
+            $0.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: locale)
+        }
+        // The raw form breaks the rare case-insensitive tie without making the
+        // normal alphabetical order depend on dictionary iteration.
+        return normalized.joined(separator: "\u{1F}") + "\u{1E}" + [name, version, device].joined(separator: "\u{1F}")
+    }
+}
+
+private struct RecordFingerprint: Hashable {
+    let first: UInt64
+    let second: UInt64
+
+    init(elementName: String, attributes: [String: String]) {
+        let canonical = ([elementName] + attributes.sorted { $0.key < $1.key }.flatMap { [$0.key, $0.value] }).joined(separator: "\u{1E}")
+        first = Self.hash(canonical.utf8, seed: 0xcbf29ce484222325)
+        second = Self.hash(canonical.utf8, seed: 0x84222325cbf29ce4)
+    }
+
+    private static func hash(_ bytes: String.UTF8View, seed: UInt64) -> UInt64 {
+        bytes.reduce(seed) { ($0 ^ UInt64($1)) &* 0x100000001b3 }
+    }
+}
+
+private struct AppleHealthRecord {
+    let elementName: String
+    let identifier: String
+    let valueText: String
+    let numericValue: Double?
+    let unit: String?
+    let source: AppleHealthSource
+    let startDate: Date?
+    let endDate: Date?
+    let creationDate: Date?
+    let fingerprint: RecordFingerprint
+
+    init(elementName: String, attributes: [String: String]) {
+        self.elementName = elementName
+        identifier = attributes["type"] ?? elementName
+        valueText = attributes["value"] ?? ""
+        numericValue = Double(valueText)
+        unit = attributes["unit"]
+        source = AppleHealthSource(attributes: attributes)
+        startDate = AppleHealthDateParser.date(from: attributes["startDate"])
+        endDate = AppleHealthDateParser.date(from: attributes["endDate"])
+        creationDate = AppleHealthDateParser.date(from: attributes["creationDate"])
+        fingerprint = RecordFingerprint(elementName: elementName, attributes: attributes)
+    }
+
+    var rule: HealthDataAggregationRule { HealthDataAggregationRule.rule(for: identifier) }
+    var isAsleep: Bool { valueText.localizedCaseInsensitiveContains("asleep") }
+}
+
+private struct AggregationSlot: Hashable {
+    let typeIndex: Int
+    let day: Date
+    let bucket: Int
+}
+
+private struct SourceAggregationSlot: Hashable {
+    let slot: AggregationSlot
+    let sourceIndex: Int
+}
+
+private struct IntervalContribution {
+    let slot: AggregationSlot
+    let day: Date
+    let duration: TimeInterval
+    let fraction: Double
+}
+
+private enum IntervalGrid {
+    static let bucketDuration: TimeInterval = 15 * 60
+    private static let maximumBucketsPerRecord = 10_000
+
+    static func contributions(for start: Date, end: Date, typeIndex: Int) -> [IntervalContribution] {
+        let calendar = Calendar.current
+        if end <= start {
+            let day = calendar.startOfDay(for: start)
+            let bucket = Int(start.timeIntervalSince(day) / bucketDuration)
+            return [IntervalContribution(slot: AggregationSlot(typeIndex: typeIndex, day: day, bucket: bucket), day: day, duration: 1, fraction: 1)]
+        }
+
+        let totalDuration = end.timeIntervalSince(start)
+        var result: [IntervalContribution] = []
+        var cursor = start
+        while cursor < end, result.count < maximumBucketsPerRecord {
+            let absoluteBucket = floor(cursor.timeIntervalSinceReferenceDate / bucketDuration) * bucketDuration
+            let boundary = Date(timeIntervalSinceReferenceDate: absoluteBucket + bucketDuration)
+            let next = min(end, boundary)
+            let duration = next.timeIntervalSince(cursor)
+            let day = calendar.startOfDay(for: cursor)
+            let bucket = Int(cursor.timeIntervalSince(day) / bucketDuration)
+            result.append(IntervalContribution(
+                slot: AggregationSlot(typeIndex: typeIndex, day: day, bucket: bucket),
+                day: day,
+                duration: duration,
+                fraction: duration / totalDuration
+            ))
+            cursor = next
+        }
+        return cursor == end ? result : []
+    }
+}
+
+private struct HealthAggregationPlan {
+    let typeIndices: [String: Int]
+    let sourceIndices: [AppleHealthSource: Int]
+    let selectedSourceBySlot: [AggregationSlot: Int]
+
+    func contributions(for record: AppleHealthRecord) -> [(IntervalContribution, Int)]? {
+        guard let typeIndex = typeIndices[record.identifier], let sourceIndex = sourceIndices[record.source], let start = record.startDate else { return nil }
+        let end = record.endDate ?? start
+        let contributions = IntervalGrid.contributions(for: start, end: end, typeIndex: typeIndex)
+        return contributions.isEmpty ? nil : contributions.map { ($0, sourceIndex) }
+    }
+
+    func isSelected(_ contribution: IntervalContribution, sourceIndex: Int) -> Bool {
+        selectedSourceBySlot[contribution.slot] == sourceIndex
+    }
+}
+
+private final class AppleHealthAggregationPlanner: NSObject, XMLParserDelegate {
+    private var seenRecords: Set<RecordFingerprint> = []
+    private var typeIndices: [String: Int] = [:]
+    private var sources: [AppleHealthSource: Int] = [:]
+    private var sourcesByIndex: [AppleHealthSource] = []
+    private var coverage: [SourceAggregationSlot: TimeInterval] = [:]
+
+    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
+        guard elementName == "Record" else { return }
+        let record = AppleHealthRecord(elementName: elementName, attributes: attributeDict)
+        let shouldPlan = record.rule == .cumulativeInterval || (record.rule == .sleepInterval && record.isAsleep)
+        guard shouldPlan, seenRecords.insert(record.fingerprint).inserted, let start = record.startDate else { return }
+
+        let typeIndex = typeIndices[record.identifier, default: typeIndices.count]
+        typeIndices[record.identifier] = typeIndex
+        let sourceIndex: Int
+        if let existing = sources[record.source] {
+            sourceIndex = existing
+        } else {
+            sourceIndex = sourcesByIndex.count
+            sources[record.source] = sourceIndex
+            sourcesByIndex.append(record.source)
+        }
+        let end = record.endDate ?? start
+        for contribution in IntervalGrid.contributions(for: start, end: end, typeIndex: typeIndex) {
+            let key = SourceAggregationSlot(slot: contribution.slot, sourceIndex: sourceIndex)
+            let previous = coverage[key] ?? 0
+            coverage[key] = min(IntervalGrid.bucketDuration, previous + contribution.duration)
+        }
+    }
+
+    func makePlan() -> HealthAggregationPlan {
+        var selections: [AggregationSlot: (sourceIndex: Int, coverage: TimeInterval)] = [:]
+        for (key, duration) in coverage {
+            if let current = selections[key.slot] {
+                let currentName = sourcesByIndex[current.sourceIndex].stableName
+                let candidateName = sourcesByIndex[key.sourceIndex].stableName
+                if duration > current.coverage || (duration == current.coverage && candidateName < currentName) {
+                    selections[key.slot] = (key.sourceIndex, duration)
+                }
+            } else {
+                selections[key.slot] = (key.sourceIndex, duration)
+            }
+        }
+        return HealthAggregationPlan(
+            typeIndices: typeIndices,
+            sourceIndices: sources,
+            selectedSourceBySlot: selections.mapValues(\.sourceIndex)
+        )
+    }
+}
+
 private final class AppleHealthXMLDelegate: NSObject, XMLParserDelegate {
-    var recordCount = 0
+    private(set) var recordCount = 0
+    private let plan: HealthAggregationPlan
     private var accumulators: [String: HealthDataTypeAccumulator] = [:]
+
+    init(plan: HealthAggregationPlan) {
+        self.plan = plan
+    }
 
     var dataTypes: [HealthDataTypeSummary] {
         accumulators.values.map(\.summary).sorted {
@@ -319,15 +652,11 @@ private final class AppleHealthXMLDelegate: NSObject, XMLParserDelegate {
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
         let supportedElements: Set<String> = ["Record", "Correlation", "Workout", "ActivitySummary", "ClinicalRecord", "Audiogram", "VisionPrescription"]
         guard supportedElements.contains(elementName) else { return }
-        let identifier = attributeDict["type"] ?? elementName
-        if elementName == "Record" { recordCount += 1 }
-        var accumulator = accumulators[identifier] ?? HealthDataTypeAccumulator(identifier: identifier)
-        accumulator.append(
-            value: Double(attributeDict["value"] ?? ""),
-            unit: attributeDict["unit"],
-            date: AppleHealthDateParser.date(from: attributeDict["startDate"])
-        )
-        accumulators[identifier] = accumulator
+        let record = AppleHealthRecord(elementName: elementName, attributes: attributeDict)
+        var accumulator = accumulators[record.identifier] ?? HealthDataTypeAccumulator(identifier: record.identifier)
+        let accepted = accumulator.append(record: record, plan: plan)
+        accumulators[record.identifier] = accumulator
+        if elementName == "Record", accepted { recordCount += 1 }
     }
 }
 
@@ -337,24 +666,85 @@ private struct HealthDataTypeAccumulator {
     var sum = 0.0
     var numericCount = 0
     var unit: String?
+    private var seenRecords: Set<RecordFingerprint> = []
     private var dailyTotals: [Date: (sum: Double, count: Int)] = [:]
+    private var acceptedSleepBySlot: [AggregationSlot: TimeInterval] = [:]
 
     init(identifier: String) {
         self.identifier = identifier
     }
 
-    mutating func append(value: Double?, unit: String?, date: Date?) {
+    mutating func append(record: AppleHealthRecord, plan: HealthAggregationPlan) -> Bool {
+        guard seenRecords.insert(record.fingerprint).inserted else { return false }
+        switch record.rule {
+        case .cumulativeInterval:
+            return appendCumulative(record: record, plan: plan)
+        case .sleepInterval where record.isAsleep:
+            return appendSleep(record: record, plan: plan)
+        default:
+            appendSample(record: record)
+            return true
+        }
+    }
+
+    private mutating func appendSample(record: AppleHealthRecord) {
         recordCount += 1
-        if let value {
-            sum += value
-            numericCount += 1
+        guard let value = record.numericValue else { return }
+        sum += value
+        numericCount += 1
+        if unit == nil { unit = record.unit }
+        if let date = record.startDate {
+            appendDaily(value: value, on: date)
         }
-        if self.unit == nil { self.unit = unit }
-        if let value, let date {
-            let day = Calendar.current.startOfDay(for: date)
-            let previous = dailyTotals[day] ?? (0, 0)
-            dailyTotals[day] = (previous.sum + value, previous.count + 1)
+    }
+
+    private mutating func appendCumulative(record: AppleHealthRecord, plan: HealthAggregationPlan) -> Bool {
+        guard let value = record.numericValue, let contributions = plan.contributions(for: record) else {
+            appendSample(record: record)
+            return true
         }
+        var acceptedValue = 0.0
+        for (contribution, sourceIndex) in contributions where plan.isSelected(contribution, sourceIndex: sourceIndex) {
+            let partialValue = value * contribution.fraction
+            acceptedValue += partialValue
+            appendDaily(value: partialValue, on: contribution.day)
+        }
+        guard acceptedValue > 0 else { return false }
+        recordCount += 1
+        sum += acceptedValue
+        numericCount += 1
+        if unit == nil { unit = record.unit }
+        return true
+    }
+
+    private mutating func appendSleep(record: AppleHealthRecord, plan: HealthAggregationPlan) -> Bool {
+        guard let contributions = plan.contributions(for: record) else {
+            recordCount += 1
+            return true
+        }
+        var acceptedDuration: TimeInterval = 0
+        for (contribution, sourceIndex) in contributions where plan.isSelected(contribution, sourceIndex: sourceIndex) {
+            let alreadyAccepted = acceptedSleepBySlot[contribution.slot] ?? 0
+            let permitted = max(0, IntervalGrid.bucketDuration - alreadyAccepted)
+            let accepted = min(contribution.duration, permitted)
+            guard accepted > 0 else { continue }
+            acceptedSleepBySlot[contribution.slot] = alreadyAccepted + accepted
+            let hours = accepted / 3600
+            acceptedDuration += accepted
+            appendDaily(value: hours, on: contribution.day)
+        }
+        guard acceptedDuration > 0 else { return false }
+        recordCount += 1
+        sum += acceptedDuration / 3600
+        numericCount += 1
+        if unit == nil { unit = "h" }
+        return true
+    }
+
+    private mutating func appendDaily(value: Double, on date: Date) {
+        let day = Calendar.current.startOfDay(for: date)
+        let previous = dailyTotals[day] ?? (0, 0)
+        dailyTotals[day] = (previous.sum + value, previous.count + 1)
     }
 
     var summary: HealthDataTypeSummary {
