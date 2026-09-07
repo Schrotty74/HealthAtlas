@@ -12,7 +12,7 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 
 ## Aktueller Stand
 
-- Die aktuelle öffentliche Final-Version ist `v1.0.1` mit ZIP, DMG und SHA-256-Dateien. Sie behebt die Darstellung rechteckiger Hintergrundanteile an abgerundeten Card-Ecken. Die letzte öffentliche Vorabversion bleibt `v0.1.0-beta.9` vom 5. September 2026.
+- Die aktuelle öffentliche Final-Version ist `v1.0.1` mit ZIP, DMG und SHA-256-Dateien. Sie behebt die Darstellung rechteckiger Hintergrundanteile an abgerundeten Card-Ecken. Die aktuelle öffentliche Vorabversion ist `Beta 1.1.0` mit technischem Tag `v1.1.0-beta` vom 7. September 2026.
 - `dev` ist ausschließlich die lokale Arbeitslinie; auf GitHub liegen nur die getrennten Release-Linien `beta` und `main`.
 - Die App bietet lokale Importansicht, Quellen-Auswahl, Übersichten mit separat auswählbarem gemeinsamen Verlauf, Verläufe für 7T, 15T, 30T, 3M, 6M und 1J, beschreibende Einblicke, Zeitraumvergleiche, anklickbare Datenkalendertage für 7T, 15T, 4W, 3M, 6M und 1J mit lokalem Wert, Musterkarte, Vollbild-Fokus, konfigurierbare Karten und Kartensortierung.
 - Direkte `Export.xml`-Dateien sowie ZIP-Archive werden vollständig lokal bis jeweils 500 MiB verarbeitet. XML wird inkrementell aus einem Dateistream gelesen; bei ZIP prüft HealthAtlas zusätzlich die entpackte `Export.xml`, schreibt sie begrenzt temporär lokal und verarbeitet sie anschließend ebenfalls streambasiert. Die Grenze ist eine HealthAtlas-Sicherheitsgrenze, keine Grenze von Apple Health oder macOS.
@@ -42,7 +42,7 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 | Branch | Zweck | Grenze |
 | --- | --- | --- |
 | `dev` | ausschließlich lokale Arbeitslinie | wird nicht nach GitHub gepusht; Änderungen erst nach ausdrücklichem Beta-Auftrag übernehmen |
-| `beta` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion; zuletzt `v0.1.0-beta.9` |
+| `beta` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion `Beta 1.1.0` |
 | `main` | Final-Linie auf GitHub | enthält die ausdrücklich freigegebene Final-Version `v1.0.1` |
 
 Die Branches haben unterschiedliche Historien und Dokumentationsstände. Dateien nicht allein zur Vereinheitlichung zwischen Branches kopieren oder zusammenführen. Die ausführlichen Funktionsübersichten `FEATURES.md` und `FEATURES.de.md` werden jedoch auf `dev`, `beta` und `main` gepflegt. Sie ergänzen README und Projektkontext, ersetzen aber keine Branch- oder Release-Regeln.
