@@ -266,7 +266,7 @@ def cover(title, subtitle, language, edition, styles):
 
 def manual_de(styles):
     s = []
-    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Final 1.0.0", styles)
+    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.2.0", styles)
     s += section("Willkommen", "HealthAtlas liest einen von dir ausgewählten Apple-Health-Export lokal auf deinem Mac. Anschließend entscheidest du selbst, welche erkannten Datentypen im Dashboard erscheinen. Die App erstellt keine Diagnose und gibt keine Behandlungsempfehlungen.", styles,
         bullets_list=[
             "Die App startet bei jedem normalen Start ohne importierte Gesundheitsdaten.",
@@ -297,8 +297,10 @@ def manual_de(styles):
     s += [PageBreak()]
     s += section("Apple-Health-Export importieren", "HealthAtlas akzeptiert genau zwei lokale Dateiformate: eine direkte <b>Export.xml</b> oder ein Apple-Health-<b>ZIP</b>-Archiv, das darin eine Datei namens Export.xml enthält. Das ZIP muss vorher nicht entpackt werden; HealthAtlas liest die Export.xml lokal aus dem Archiv.", styles,
         bullets_list=[
-            "Direkte Export.xml-Dateien und ZIP-Archive dürfen jeweils bis zu 500 MB groß sein. Die enthaltene Export.xml darf nach dem Entpacken ebenfalls höchstens 500 MB groß sein. Das sind Sicherheitsgrenzen von HealthAtlas, keine Grenze von Apple Health oder macOS.",
-            "HealthAtlas verarbeitet die XML in zwei lokalen Streaming-Durchläufen. Vollständig gleiche exportierte Records werden nur einmal gezählt.",
+            "Direkte Export.xml-Dateien und ZIP-Archive dürfen jeweils bis zu 5 GiB groß sein. Die enthaltene Export.xml darf nach dem Entpacken ebenfalls höchstens 5 GiB groß sein. Das sind Sicherheitsgrenzen von HealthAtlas, keine Grenze von Apple Health oder macOS.",
+            "HealthAtlas liest die ursprüngliche XML sequenziell einmal. Nur relevante Intervallwerte werden für die Quellenregel in einer temporären lokalen Zwischenablage weiterverarbeitet. Vollständig gleiche exportierte Records werden nur einmal gezählt.",
+            "<b>Referenzmessung:</b> Auf einem Mac Studio M4 Max mit 36 GB RAM benötigte der Import einer synthetischen 500-MB-Datei ungefähr 41 Sekunden und einer 1-GB-Datei ungefähr 1 Minute 25 Sekunden.",
+            "<b>Orientierungswerte:</b> Bei ähnlichem Dateiinhalt ergibt die annähernd lineare Hochrechnung etwa 2:50 Minuten für 2 GB, 4:15 Minuten für 3 GB, 5:40 Minuten für 4 GB und 7:05 Minuten für 5 GB. Auf anderen Macs kann der Import abhängig von Prozessor, SSD, Dateninhalt und Systemauslastung länger dauern.",
             "Schritte, Distanz und aktive Energie werden je 15-Minuten-Intervall gegen Quellenüberlappungen abgegrenzt. Einzelmessungen wie Herzfrequenz und Gewicht bleiben getrennt; Schlaf wird ebenfalls pro Intervall begrenzt. Workouts werden nur bei exakt gleichen Attributen dedupliziert.",
             "Der Export enthält keine nachbildbare Apple-Quellenpriorität. HealthAtlas verwendet deshalb eine feste lokale Regel und behauptet keine identischen Werte zur Health-App. Bei gleicher Abdeckung entscheidet eine stabile alphabetische Quellenreihenfolge ohne Unterschied von Groß- und Kleinschreibung oder Akzenten.",
             "Es kann jeweils nur eine Datei gewählt werden.",
@@ -317,7 +319,6 @@ def manual_de(styles):
             "Interaktive Karten und Diagramme sind als Bedienelemente für macOS-Assistenzfunktionen erreichbar.",
             "Die GitHub- und Discord-Icons über dem Datenschutz-Status öffnen die Projektseite bzw. die Community im Standardbrowser.",
         ])
-    s += [PageBreak()]
     s += section("Übersicht", "Nach einem erfolgreichen Import zeigt die Übersicht nur die Datentypen, die unter Quellen aktiviert sind. Jede Karte hat eine zu ihrem Typ passende Akzentfarbe und grafische Behandlung. Die angezeigten Zahlen beziehen sich auf den jeweils letzten verfügbaren Tageswert.", styles,
         bullets_list=[
             "<b>Dein Zeitraum in Kürze</b> beschreibt nur, wie viele aktivierte Typen in den letzten sieben lokalen Erfassungstagen Werte enthalten — ohne Ziel, Bewertung oder Diagnose.",
@@ -407,7 +408,7 @@ def manual_de(styles):
             "Im Finder die App mit Control-Klick öffnen und " + '"Öffnen"' + " wählen. Im folgenden Hinweis nochmals bestätigen.",
             "Falls nötig: Systemeinstellungen > Datenschutz & Sicherheit öffnen und für genau diesen HealthAtlas-Build " + '"Dennoch öffnen"' + " wählen.",
             "Gatekeeper nicht systemweit deaktivieren. Nur Builds aus dem offiziellen HealthAtlas-Projekt oder eigene Builds öffnen.",
-            "Bei Importfehlern prüfen: ZIP enthält Export.xml, Datei ist nicht leer, innerhalb der HealthAtlas-Grenze von 500 MB und lokal erreichbar.",
+            "Bei Importfehlern prüfen: ZIP enthält Export.xml, Datei ist nicht leer, innerhalb der HealthAtlas-Grenze von 5 GiB und lokal erreichbar.",
             "Wenn keine Werte erscheinen: zuerst unter Quellen mindestens einen Datentyp aktivieren; für Verläufe sind mindestens zwei Tageswerte im gewählten Zeitraum nötig.",
         ], callout_data=("Build-Varianten", "Dev, Beta und Final verwenden getrennte lokale Einstellungen. Ein Theme oder eine Auswahl in Dev ändert nicht die Einstellungen einer Beta oder Final-App.", GOLD))
     s += [PageBreak()]
@@ -452,7 +453,7 @@ def manual_de(styles):
 
 def manual_en(styles):
     s = []
-    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Final 1.0.0", styles)
+    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.2.0", styles)
     s += section("Welcome", "HealthAtlas reads an Apple Health export that you choose locally on your Mac. You then decide exactly which recognised data types appear in the dashboard. The app does not diagnose conditions or recommend treatment.", styles,
         bullets_list=[
             "Every normal launch starts without imported health data.",
@@ -483,8 +484,10 @@ def manual_en(styles):
     s += [PageBreak()]
     s += section("Importing an Apple Health export", "HealthAtlas accepts exactly two local formats: a direct <b>Export.xml</b> file or an Apple Health <b>ZIP</b> archive containing Export.xml. You do not need to unpack the ZIP first; HealthAtlas reads Export.xml locally from the archive.", styles,
         bullets_list=[
-            "Direct Export.xml files and ZIP archives can each be up to 500 MB. The contained Export.xml can also be up to 500 MB after decompression. These are HealthAtlas safety limits, not Apple Health or macOS limits.", "Only one file can be selected at a time.",
-            "HealthAtlas processes XML in two local streaming passes. Fully identical exported records are counted only once.",
+            "Direct Export.xml files and ZIP archives can each be up to 5 GiB. The contained Export.xml can also be up to 5 GiB after decompression. These are HealthAtlas safety limits, not Apple Health or macOS limits.", "Only one file can be selected at a time.",
+            "HealthAtlas reads the original XML sequentially once. Only relevant interval values are processed further in a temporary local spool for the source rule. Fully identical exported records are counted only once.",
+            "<b>Reference measurement:</b> On a Mac Studio M4 Max with 36 GB of RAM, importing a synthetic 500 MB file took about 41 seconds and a 1 GB file took about 1 minute 25 seconds.",
+            "<b>Estimated guidance:</b> With similar file contents, near-linear scaling gives about 2:50 minutes for 2 GB, 4:15 minutes for 3 GB, 5:40 minutes for 4 GB and 7:05 minutes for 5 GB. Importing may take longer on other Macs depending on processor, SSD, file contents and current system load.",
             "Steps, distance and active energy use local 15-minute intervals to avoid adding overlapping sources twice. Discrete samples such as heart rate and body mass remain separate; sleep is likewise bounded per interval. Workouts are deduplicated only when their attributes match exactly.",
             "The export does not provide a reproducible Apple source-priority order. HealthAtlas therefore uses a fixed local rule and does not claim identical values to the Health app. Equal coverage uses a stable alphabetical source order that ignores case and diacritics.",
             "The clinical companion file in an Apple Health export is intentionally not imported.",
@@ -500,7 +503,6 @@ def manual_en(styles):
             "Interactive cards and charts are available as controls for macOS assistive technologies.",
             "The GitHub and Discord icons above the privacy status open the project page and community in the default browser.",
         ])
-    s += [PageBreak()]
     s += section("Overview", "After a successful import, Overview shows only the types enabled in Sources. Every card has a type-specific accent colour and graphic treatment. The displayed numbers use the most recent available daily value.", styles,
         bullets_list=[
             "<b>Your period at a glance</b> only describes how many enabled types contain values across the latest seven locally recorded days — never a goal, rating or diagnosis.",
@@ -589,7 +591,7 @@ def manual_en(styles):
             "In Finder, Control-click the app and choose " + '"Open"' + ". Confirm Open in the following dialog.",
             "If necessary, go to System Settings > Privacy & Security and choose " + '"Open Anyway"' + " for that exact HealthAtlas build.",
             "Do not disable Gatekeeper system-wide. Open only your own build or one from the official HealthAtlas project.",
-            "For import errors, confirm that the ZIP contains Export.xml, the file is not empty, is within the 500 MB HealthAtlas limit and is stored locally.",
+            "For import errors, confirm that the ZIP contains Export.xml, the file is not empty, is within the 5 GiB HealthAtlas limit and is stored locally.",
             "If no values appear, enable at least one type in Sources. Trends need at least two daily values in the chosen period.",
         ], callout_data=("Build variants", "Dev, Beta and Final use separate local preferences. A theme or selection in Dev does not alter the settings of a Beta or Final app.", GOLD))
     s += [PageBreak()]

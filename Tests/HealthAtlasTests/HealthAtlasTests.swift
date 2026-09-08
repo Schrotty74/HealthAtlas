@@ -185,6 +185,33 @@ struct HealthAtlasTests {
         #expect(!AppleHealthImporter.supportsArchiveByteCount(AppleHealthImporter.maximumArchiveBytes + 1))
     }
 
+    @Test func importCanBeCancelledBeforeParsingBegins() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        try Data("<?xml version=\"1.0\"?><HealthData><Record type=\"HKQuantityTypeIdentifierStepCount\" value=\"1\" startDate=\"2026-01-01 00:00:00 +0000\" /></HealthData>".utf8).write(to: xmlURL)
+        let cancellationToken = ImportCancellationToken()
+        cancellationToken.cancel()
+
+        #expect(LocalImportValidator.validate(url: xmlURL, cancellationToken: cancellationToken) == .cancelled)
+    }
+
+    @Test func importCanBeCancelledWhileStreamingRecords() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        try writeManySourceRecords(to: xmlURL, count: 5_000)
+        let cancellationToken = ImportCancellationToken()
+        DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(10)) {
+            cancellationToken.cancel()
+        }
+
+        if case .cancelled = LocalImportValidator.validate(url: xmlURL, cancellationToken: cancellationToken) {
+            return
+        }
+        Issue.record("Expected the streaming import to stop after cancellation.")
+    }
+
     @Test func streamingImportHandles126MiBXMLAndZIPArchive() throws {
         let directory = try makeTemporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -206,13 +233,14 @@ struct HealthAtlasTests {
         #expect(zipSummary.recordCount == 1)
     }
 
-    @Test func optionalFullScaleStreamingImportHandles500MiBXML() throws {
+    @Test func optionalLargeStreamingImportHandles500MiBXML() throws {
         guard ProcessInfo.processInfo.environment["HEALTHATLAS_RUN_LARGE_IMPORT_TESTS"] == "1" else { return }
         let directory = try makeTemporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let xmlURL = directory.appendingPathComponent("Export.xml")
         let archiveURL = directory.appendingPathComponent("Export.zip")
-        try writeSyntheticXML(to: xmlURL, byteCount: LocalImportValidator.maximumBytes)
+        let testByteCount = 500 * 1024 * 1024
+        try writeSyntheticXML(to: xmlURL, byteCount: testByteCount)
 
         guard case let .imported(summary) = LocalImportValidator.validate(url: xmlURL) else {
             Issue.record("Expected the 500 MiB XML export to import.")
@@ -236,6 +264,19 @@ struct HealthAtlasTests {
         } else {
             Issue.record("Expected a ZIP with an oversized uncompressed XML entry to be rejected.")
         }
+    }
+
+    @Test func optionalExternalPerformanceImport() {
+        guard let path = ProcessInfo.processInfo.environment["HEALTHATLAS_EXTERNAL_IMPORT_TEST_PATH"] else { return }
+        let started = ContinuousClock.now
+        let url = URL(fileURLWithPath: path)
+        let result = AppleHealthImporter.importXML(at: url, fileName: url.lastPathComponent)
+        let elapsed = started.duration(to: .now)
+        guard result != nil else {
+            Issue.record("Expected the external performance fixture to import.")
+            return
+        }
+        print("External performance import completed in \(elapsed).")
     }
 
     @Test func importValidationRejectsInvalidAndEmptyInputs() throws {

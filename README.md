@@ -80,8 +80,10 @@ Apple Health ZIP archives containing `Export.xml` and direct `Export.xml` files
 are read locally. The clinical companion file is intentionally not imported.
 There is no direct HealthKit or cloud-service connection.
 
-HealthAtlas reads the XML incrementally in two local passes and supports files
-up to 500 MiB. Exact records with the same exported attributes are counted once.
+HealthAtlas reads the original XML sequentially once and supports files up to
+5 GiB. Only cumulative interval records and asleep intervals needed for source
+overlap handling are written to a bounded local temporary spool. Exact records
+with the same exported attributes are counted once.
 For cumulative interval types such as steps, distance and active energy, records
 from different sources are compared in local 15-minute intervals so overlapping
 portions are not added twice. Discrete measurements such as heart rate and body

@@ -510,6 +510,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     private var overviewPage = 0
     private var isImporting = false
     private var importProgressOverlay: ImportProgressOverlayView?
+    private var activeImportCancellationToken: ImportCancellationToken?
     private let appUpdateService = AppUpdateService()
     private var appUpdateState: AppUpdateCheckResult?
     private var isCheckingForUpdate = false
@@ -1818,11 +1819,13 @@ private final class HealthWorkspaceViewController: NSViewController {
 
     private func beginImport(from url: URL) {
         guard !isImporting else { return }
+        let cancellationToken = ImportCancellationToken()
+        activeImportCancellationToken = cancellationToken
         isImporting = true
         onActivityChanged?(true)
         showImportProgress()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let result = LocalImportValidator.validate(url: url)
+            let result = LocalImportValidator.validate(url: url, cancellationToken: cancellationToken)
             DispatchQueue.main.async {
                 self?.finishImport(with: result)
             }
@@ -1831,15 +1834,17 @@ private final class HealthWorkspaceViewController: NSViewController {
 
     private func showImportProgress() {
         importProgressOverlay?.removeFromSuperview()
-        let overlay = ImportProgressOverlayView(language: AppLanguage.current)
+        let overlay = ImportProgressOverlayView(language: AppLanguage.current) { [weak self] in
+            self?.cancelActiveImport()
+        }
         overlay.translatesAutoresizingMaskIntoConstraints = false
         overlay.alphaValue = 0
         view.addSubview(overlay)
         NSLayoutConstraint.activate([
             overlay.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             overlay.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            overlay.widthAnchor.constraint(equalToConstant: 350),
-            overlay.heightAnchor.constraint(equalToConstant: 154)
+            overlay.widthAnchor.constraint(equalToConstant: 410),
+            overlay.heightAnchor.constraint(equalToConstant: 238)
         ])
         importProgressOverlay = overlay
         guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
@@ -1859,7 +1864,13 @@ private final class HealthWorkspaceViewController: NSViewController {
         CATransaction.commit()
     }
 
+    private func cancelActiveImport() {
+        activeImportCancellationToken?.cancel()
+        importProgressOverlay?.showCancelling()
+    }
+
     private func finishImport(with result: LocalImportResult) {
+        activeImportCancellationToken = nil
         let overlay = importProgressOverlay
         importProgressOverlay = nil
         let completeImport: @MainActor () -> Void = { [weak self, weak overlay] in
@@ -1915,6 +1926,8 @@ private final class HealthWorkspaceViewController: NSViewController {
             alert.alertStyle = .informational
             alert.messageText = AppLanguage.current.text(english: "File checked locally", german: "Datei lokal geprüft")
             alert.informativeText = "\(file.fileName) · \(file.format)"
+        case .cancelled:
+            return
         case .rejected(let reason):
             alert.alertStyle = .warning
             alert.messageText = AppLanguage.current.text(english: "File not imported", german: "Datei nicht importiert")
@@ -1966,7 +1979,13 @@ private final class HealthWorkspaceViewController: NSViewController {
 }
 
 private final class ImportProgressOverlayView: RoundedEffectView {
-    init(language: AppLanguage) {
+    private let language: AppLanguage
+    private let onCancel: () -> Void
+    private let cancelButton = NSButton()
+
+    init(language: AppLanguage, onCancel: @escaping () -> Void) {
+        self.language = language
+        self.onCancel = onCancel
         super.init(cornerRadius: 20)
         material = .hudWindow
         blendingMode = .withinWindow
@@ -1988,10 +2007,24 @@ private final class ImportProgressOverlayView: RoundedEffectView {
         detail.alignment = .center
         detail.maximumNumberOfLines = 2
         detail.lineBreakMode = .byWordWrapping
-        let stack = NSStackView(views: [spinner, title, detail])
+        let warning = NSTextField(wrappingLabelWithString: language.text(
+            english: "Imports larger than 500 MB can take a long time. From 1 GB, importing can take several minutes.",
+            german: "Der Import von Dateien über 500 MB kann lange dauern. Ab 1 GB kann der Import mehrere Minuten dauern."
+        ))
+        warning.font = .systemFont(ofSize: 11, weight: .semibold)
+        warning.textColor = NSColor.white.withAlphaComponent(0.62)
+        warning.alignment = .center
+        warning.maximumNumberOfLines = 2
+        warning.lineBreakMode = .byWordWrapping
+        cancelButton.title = language.text(english: "Cancel", german: "Abbrechen")
+        cancelButton.bezelStyle = .rounded
+        cancelButton.target = self
+        cancelButton.action = #selector(cancelImport)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        let stack = NSStackView(views: [spinner, title, detail, warning, cancelButton])
         stack.orientation = .vertical
         stack.alignment = .centerX
-        stack.spacing = 10
+        stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         NSLayoutConstraint.activate([
@@ -2001,6 +2034,16 @@ private final class ImportProgressOverlayView: RoundedEffectView {
             spinner.widthAnchor.constraint(equalToConstant: 26),
             spinner.heightAnchor.constraint(equalToConstant: 26)
         ])
+    }
+
+    func showCancelling() {
+        cancelButton.isEnabled = false
+        cancelButton.title = language.text(english: "Cancelling…", german: "Abbruch läuft …")
+    }
+
+    @objc private func cancelImport() {
+        showCancelling()
+        onCancel()
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
