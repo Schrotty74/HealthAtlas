@@ -147,8 +147,10 @@ categorized_release_changes() {
 
 write_release_notes() {
     local notes_file="$1" previous_beta_tag="$2" changes="$3" release_label="$4"
+    local release_label_lower
+    release_label_lower="$(printf '%s' "$release_label" | tr '[:upper:]' '[:lower:]')"
     cat > "$notes_file" <<EOF
-This ${release_label:l} pre-release contains the latest HealthAtlas fixes and improvements since ${previous_beta_tag:-the first beta}.
+This $release_label_lower pre-release contains the latest HealthAtlas fixes and improvements since ${previous_beta_tag:-the first beta}.
 
 $changes
 ## Privacy
