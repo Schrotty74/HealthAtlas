@@ -4,7 +4,22 @@ set -euo pipefail
 
 root_directory="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root_directory"
-requested_version="${1:-}"
+requested_version=""
+
+require_beta_publication_authorization() {
+    if (( $# == 2 )) && [[ "$1" == "--publish-beta" ]] && [[ "$2" == "--confirm-publish-beta" ]]; then
+        return
+    fi
+    if (( $# == 3 )) && [[ "$2" == "--publish-beta" ]] && [[ "$3" == "--confirm-publish-beta" ]]; then
+        requested_version="$1"
+        return
+    fi
+    echo "Abbruch: Eine öffentliche Beta benötigt beide ausdrücklichen Freigabe-Flags." >&2
+    echo "Verwendung: Scripts/create-beta-from-dev.sh [X.Y.Z] --publish-beta --confirm-publish-beta" >&2
+    exit 1
+}
+
+require_beta_publication_authorization "$@"
 
 build_setting() {
     local name="$1"

@@ -4,7 +4,22 @@ set -euo pipefail
 
 root_directory="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root_directory"
-requested_version="${1:-}"
+requested_version=""
+
+require_final_publication_authorization() {
+    if (( $# == 2 )) && [[ "$1" == "--publish-final" ]] && [[ "$2" == "--confirm-publish-final" ]]; then
+        return
+    fi
+    if (( $# == 3 )) && [[ "$2" == "--publish-final" ]] && [[ "$3" == "--confirm-publish-final" ]]; then
+        requested_version="$1"
+        return
+    fi
+    echo "Abbruch: Eine öffentliche Final-Veröffentlichung benötigt beide ausdrücklichen Freigabe-Flags." >&2
+    echo "Verwendung: Scripts/publish-beta-as-final.sh [X.Y.Z] --publish-final --confirm-publish-final" >&2
+    exit 1
+}
+
+require_final_publication_authorization "$@"
 
 build_setting() {
     local name="$1"
