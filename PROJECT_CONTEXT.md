@@ -12,7 +12,7 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 
 ## Aktueller Stand
 
-- Die aktuelle öffentliche Final-Version ist `v1.0.1` mit ZIP, DMG und SHA-256-Dateien. Sie behebt die Darstellung rechteckiger Hintergrundanteile an abgerundeten Card-Ecken. Die aktuelle öffentliche Vorabversion ist `Beta 1.2.0` mit technischem Tag `v1.2.0-beta` vom 8. September 2026. Sie erweitert den lokalen Import auf 5 GiB, verarbeitet große XML-Dateien speicherschonend, erlaubt das Abbrechen eines Imports und führt eine nachvollziehbare Quellen-, Dubletten- und Überlappungslogik ein.
+- Die aktuelle öffentliche Final-Version ist `v1.0.1` mit ZIP, DMG und SHA-256-Dateien. Sie behebt die Darstellung rechteckiger Hintergrundanteile an abgerundeten Card-Ecken. Die aktuelle öffentliche Vorabversion ist `Beta 1.3.0` mit technischem Tag `v1.3.0-beta` vom 12. September 2026. Sie erweitert den lokalen Import auf 5 GiB, verarbeitet große XML-Dateien speicherschonend, erlaubt das Abbrechen eines Imports und führt eine nachvollziehbare Quellen-, Dubletten- und Überlappungslogik ein. Außerdem enthält sie die überarbeitete Oberfläche für Design-Studio, Karten und Quellen sowie aktualisierte öffentliche Handbücher.
 - `dev` ist ausschließlich die lokale Arbeitslinie; auf GitHub liegen nur die getrennten Release-Linien `beta` und `main`.
 - Die Arbeitskopie enthält 23 vorgemerkte Dateien zum veröffentlichten Beta-1.2.0-Arbeitsstand sowie weitere noch nicht vorgemerkte lokale Änderungen an Oberfläche, Dokumentation und Release-Skripten. Dazu gehören die ruhig gegliederte Design-Studio-Seite, vereinheitlichte Bedienelemente, die kompakte Kartenüberschrift und das Quellenmenü „Anzeigen & anpinnen“. Nichts davon ohne ausdrücklichen Auftrag verwerfen, committen oder veröffentlichen. `dev` selbst bleibt absichtlich ohne Remote-Branch. Vor weiterer Arbeit zuerst `git status` und den Vergleich mit `beta` prüfen; eine nächste Beta entsteht erst aus neuen, ausdrücklich beauftragten Änderungen.
 - Die App bietet lokale Importansicht, Quellen-Auswahl mit Datentyp-Suche, Übersichten mit separat auswählbarem gemeinsamen Verlauf, Verläufe für 7T, 15T, 30T, 3M, 6M und 1J, beschreibende Einblicke, Zeitraumvergleiche, anklickbare Datenkalendertage für 7T, 15T, 4W, 3M, 6M und 1J mit lokalem Wert, Musterkarte, Vollbild-Fokus, konfigurierbare Karten und Kartensortierung.
@@ -51,7 +51,7 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 | Branch | Zweck | Grenze |
 | --- | --- | --- |
 | `dev` | ausschließlich lokale Arbeitslinie | wird nicht nach GitHub gepusht; Änderungen erst nach ausdrücklichem Beta-Auftrag übernehmen |
-| `beta` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion `Beta 1.2.0` |
+| `beta` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion `Beta 1.3.0` |
 | `main` | Final-Linie auf GitHub | enthält die ausdrücklich freigegebene Final-Version `v1.0.1` |
 
 Die Branches haben unterschiedliche Historien und Dokumentationsstände. Dateien nicht allein zur Vereinheitlichung zwischen Branches kopieren oder zusammenführen. Die ausführlichen Funktionsübersichten `FEATURES.md` und `FEATURES.de.md` werden jedoch auf `dev`, `beta` und `main` gepflegt. Sie ergänzen README und Projektkontext, ersetzen aber keine Branch- oder Release-Regeln.
@@ -70,6 +70,7 @@ Scripts/build-development.sh
 - `Scripts/create-beta-from-dev.sh` erstellt vom lokalen Branch `dev` eine Beta `X.Y.0` oder einen Beta-Bugfix `X.Y.Z` und veröffentlicht ihn nach `beta`.
 - `Scripts/publish-beta-as-final.sh` erstellt einen Final-Snapshot `X.0.0` aus der freigegebenen `beta`-Linie auf `main`. Die getrennten Branch-Historien bleiben dabei erhalten.
 - Vor Releases `Scripts/privacy-check.sh` ausführen; Release-Paketierung und Backups benötigen ihre jeweils explizite Umgebungsfreigabe.
+- Nach jeder Neuerstellung oder Änderung der PDF-Handbücher beide Ausgaben rendern und jede Seite visuell prüfen. Seitenumbrüche so anpassen, dass keine überwiegend leeren Inhaltsseiten entstehen; Text, Tabellen, Grafiken und Bildbeschriftungen dürfen weder überlappen noch abgeschnitten werden.
 - Die allgemeinen Regeln für Builds, Commits, Pushes, Tags, Releases und Backups stehen in `AGENTS.md`.
 - GitHub-Changelog-Titel beginnen ausschließlich mit `Final X.0.0`, `Beta X.Y.0` oder `Bugfix X.Y.Z`. Bei Final-Releases steigt die erste Stelle, bei Betas die zweite und bei Bugfixes die dritte Stelle auf Basis der letzten Veröffentlichung. Technische Git-Tags bleiben maschinenlesbar, etwa `v1.0.0` oder `v1.1.0-beta`.
 
