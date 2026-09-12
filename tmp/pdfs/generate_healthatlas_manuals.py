@@ -405,9 +405,10 @@ def manual_de(styles):
         ], callout_data=("Bei Beschwerden oder Unsicherheit", "Bitte medizinisches Fachpersonal kontaktieren. Eine visuelle Änderung im Diagramm ist keine medizinische Aussage.", PINK))
     s += section("Fehlerbehebung und Gatekeeper", "HealthAtlas wird ohne Apple-Developer-Account ad-hoc signiert. Daher kann macOS Gatekeeper beim ersten Öffnen eines Dev-, Beta- oder Final-Builds warnen.", styles,
         bullets_list=[
-            "Im Finder die App mit Control-Klick öffnen und " + '"Öffnen"' + " wählen. Im folgenden Hinweis nochmals bestätigen.",
-            "Falls nötig: Systemeinstellungen > Datenschutz & Sicherheit öffnen und für genau diesen HealthAtlas-Build " + '"Dennoch öffnen"' + " wählen.",
-            "Gatekeeper nicht systemweit deaktivieren. Nur Builds aus dem offiziellen HealthAtlas-Projekt oder eigene Builds öffnen.",
+            "Die App einmal normal öffnen. macOS blockiert den Start.",
+            "Systemeinstellungen > Datenschutz & Sicherheit öffnen, zum Bereich Sicherheit scrollen und für genau diesen HealthAtlas-Build " + '"Dennoch öffnen"' + " wählen.",
+            "Die Warnung mit " + '"Öffnen"' + " bestätigen und bei Bedarf authentifizieren. " + '"Dennoch öffnen"' + " erscheint nur für begrenzte Zeit nach dem blockierten Startversuch.",
+            "Dadurch wird nur für diesen Build eine Ausnahme angelegt; Gatekeeper nicht systemweit deaktivieren. Nur Builds aus dem offiziellen HealthAtlas-GitHub-Release öffnen.",
             "Bei Importfehlern prüfen: ZIP enthält Export.xml, Datei ist nicht leer, innerhalb der HealthAtlas-Grenze von 5 GiB und lokal erreichbar.",
             "Wenn keine Werte erscheinen: zuerst unter Quellen mindestens einen Datentyp aktivieren; für Verläufe sind mindestens zwei Tageswerte im gewählten Zeitraum nötig.",
         ], callout_data=("Build-Varianten", "Dev, Beta und Final verwenden getrennte lokale Einstellungen. Ein Theme oder eine Auswahl in Dev ändert nicht die Einstellungen einer Beta oder Final-App.", GOLD))
@@ -588,9 +589,10 @@ def manual_en(styles):
         ], callout_data=("Symptoms or uncertainty", "Please contact qualified healthcare professionals. A visual change in a chart is not a medical statement.", PINK))
     s += section("Troubleshooting and Gatekeeper", "HealthAtlas is ad-hoc signed because the project has no Apple Developer account. macOS Gatekeeper may therefore warn when opening a Dev, Beta or Final build for the first time.", styles,
         bullets_list=[
-            "In Finder, Control-click the app and choose " + '"Open"' + ". Confirm Open in the following dialog.",
-            "If necessary, go to System Settings > Privacy & Security and choose " + '"Open Anyway"' + " for that exact HealthAtlas build.",
-            "Do not disable Gatekeeper system-wide. Open only your own build or one from the official HealthAtlas project.",
+            "Open the app normally once. macOS blocks the launch.",
+            "Open System Settings > Privacy & Security, scroll to Security and choose " + '"Open Anyway"' + " for that exact HealthAtlas build.",
+            "Confirm the warning with " + '"Open"' + " and authenticate if macOS asks. " + '"Open Anyway"' + " is shown only for a limited time after the blocked launch attempt.",
+            "This creates an exception only for that build; do not disable Gatekeeper system-wide. Open only a build from the official HealthAtlas GitHub release.",
             "For import errors, confirm that the ZIP contains Export.xml, the file is not empty, is within the 5 GiB HealthAtlas limit and is stored locally.",
             "If no values appear, enable at least one type in Sources. Trends need at least two daily values in the chosen period.",
         ], callout_data=("Build variants", "Dev, Beta and Final use separate local preferences. A theme or selection in Dev does not alter the settings of a Beta or Final app.", GOLD))

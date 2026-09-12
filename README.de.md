@@ -7,7 +7,7 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 ## Was HealthAtlas bietet
 
 - Eine lokale Apple-Health-`Export.xml`-Datei oder ein ZIP-Archiv importieren und die erkannten Datentypen gezielt auswählen.
-- Quellen nach Kategorie oder Suche durchsuchen sowie getrennte Pins und lokale Reihenfolgen für Übersicht, Verläufe und Einblicke verwalten.
+- Quellen nach Kategorie oder Suche durchsuchen. Das Menü **Anzeigen & anpinnen** zeigt oder verbirgt alle Typen und legt fest, ob Pin für Übersicht, Verläufe oder Einblicke gilt.
 - 4, 8 oder 12 Übersichtskacheln, ihre Dichte und lokale Reihenfolge festlegen.
 - Ein bis vier Datentypen unabhängig für den gemeinsamen Gesundheitsverlauf auswählen.
 - Einen Wert über 7T, 15T, 30T, 3M, 6M und 1J verfolgen, mit anklickbaren Punkten und anklickbarem lokalem Kalender.

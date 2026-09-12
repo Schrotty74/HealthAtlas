@@ -9,7 +9,7 @@ It starts empty, imports only a file you choose, and turns selected health data 
 ## What HealthAtlas offers
 
 - Import a local Apple Health `Export.xml` file or ZIP archive and choose the recognised data types to show.
-- Browse Sources by category or search, then keep separate pins and local ordering for Overview, Trends and Insights.
+- Browse Sources by category or search. The **Show & pin** menu lets you show or hide all types and choose whether Pin applies to Overview, Trends or Insights.
 - Configure 4, 8 or 12 overview cards, their density and their local order.
 - Choose one to four data types independently for the shared health timeline.
 - Follow a selected metric across 7D, 15D, 30D, 3M, 6M and 1Y, with clickable points and a clickable local calendar.

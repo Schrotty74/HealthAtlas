@@ -524,6 +524,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				OBJROOT = "$(PROJECT_DIR)/.build/dev/DerivedData/Build/Intermediates.noindex";
+				SYMROOT = "$(PROJECT_DIR)/.build/dev/DerivedData/Build";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_VERSION = 6.0;
 			};
@@ -563,6 +565,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				OBJROOT = "$(PROJECT_DIR)/.build/beta/DerivedData/Build/Intermediates.noindex";
+				SYMROOT = "$(PROJECT_DIR)/.build/beta/DerivedData/Build";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_VERSION = 6.0;
 			};
@@ -602,6 +606,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				OBJROOT = "$(PROJECT_DIR)/.build/final/DerivedData/Build/Intermediates.noindex";
+				SYMROOT = "$(PROJECT_DIR)/.build/final/DerivedData/Build";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_VERSION = 6.0;
 			};

@@ -156,7 +156,7 @@ HealthAtlas starts without personal data. The included demo is synthetic; import
 
 ## Gatekeeper
 
-This build is ad-hoc signed. In Finder, Control-click the app, choose Open, then confirm Open.
+This build is ad-hoc signed. Open the app normally once; if macOS blocks it, go to System Settings > Privacy & Security, scroll to Security, choose Open Anyway for that build, then confirm Open and authenticate if asked. Open Anyway is available only for a limited time after the blocked launch and creates an exception only for that build; do not disable Gatekeeper system-wide. Use this only for the official GitHub release.
 EOF
 }
 

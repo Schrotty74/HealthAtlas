@@ -250,13 +250,13 @@ private struct SidebarLiquidGlassView: View {
                             Spacer(minLength: 0)
                         }
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(section == selectedSection ? Color.black.opacity(0.82) : .white)
+                        .foregroundStyle(.white)
                         .padding(.horizontal, 16)
                         .frame(minHeight: 44)
                         .background {
                             if section == selectedSection {
                                 RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                    .fill(Color.yellow)
+                                    .fill(Color.cyan.opacity(0.68))
                                     .matchedGeometryEffect(id: "sidebarSelection", in: selectionNamespace)
                             }
                         }
@@ -706,7 +706,9 @@ private final class HealthWorkspaceViewController: NSViewController {
         displayControl.segmentStyle = .texturedRounded
         let exportReport = NSButton(title: AppLanguage.current.text(english: "Export local PDF report…", german: "Lokalen PDF-Bericht exportieren …"), target: self, action: #selector(exportLocalReport))
         exportReport.bezelStyle = .rounded
+        exportReport.font = .systemFont(ofSize: 13, weight: .semibold)
         exportReport.contentTintColor = .white
+        exportReport.heightAnchor.constraint(equalToConstant: 38).isActive = true
         let densityControl = NSSegmentedControl(
             labels: [
                 AppLanguage.current.text(english: "Compact", german: "Kompakt"),
@@ -721,10 +723,14 @@ private final class HealthWorkspaceViewController: NSViewController {
         densityControl.segmentStyle = .texturedRounded
         let resetLayout = NSButton(title: AppLanguage.current.text(english: "Reset layout", german: "Anordnung zurücksetzen"), target: self, action: #selector(resetDashboardLayout))
         resetLayout.bezelStyle = .rounded
+        resetLayout.font = .systemFont(ofSize: 13, weight: .semibold)
         resetLayout.contentTintColor = .white
+        resetLayout.heightAnchor.constraint(equalToConstant: 38).isActive = true
         let configureTimeline = NSButton(title: AppLanguage.current.text(english: "Choose timeline…", german: "Verlauf auswählen …"), target: self, action: #selector(configureCombinedTimeline))
         configureTimeline.bezelStyle = .rounded
+        configureTimeline.font = .systemFont(ofSize: 13, weight: .semibold)
         configureTimeline.contentTintColor = .white
+        configureTimeline.heightAnchor.constraint(equalToConstant: 38).isActive = true
         let displayRow = NSStackView(views: [
             NSTextField(labelWithString: AppLanguage.current.text(english: "Cards shown", german: "Angezeigte Karten")),
             displayControl,
@@ -949,11 +955,27 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 
     private func buildSettings() {
+        func section() -> NSStackView {
+            let stack = NSStackView()
+            stack.orientation = .vertical
+            stack.alignment = .leading
+            stack.spacing = 10
+            stack.edgeInsets = NSEdgeInsets(top: 18, left: 20, bottom: 18, right: 20)
+            stack.wantsLayer = true
+            stack.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.07).cgColor
+            stack.layer?.cornerRadius = 16
+            stack.layer?.masksToBounds = true
+            body.addArrangedSubview(stack)
+            stack.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+            return stack
+        }
+
+        let appearanceSection = section()
         let label = NSTextField(labelWithString: AppLanguage.current.text(english: "Appearance", german: "Erscheinungsbild"))
         label.setAccessibilityIdentifier("design-studio-heading")
         label.font = .systemFont(ofSize: 16, weight: .bold)
         label.textColor = .white
-        body.addArrangedSubview(label)
+        appearanceSection.addArrangedSubview(label)
         let languageButton = NSPopUpButton()
         languageButton.addItems(withTitles: AppLanguage.allCases.map(\.displayName))
         languageButton.selectItem(withTitle: AppLanguage.current.displayName)
@@ -966,7 +988,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         ])
         languageRow.spacing = 10
         languageRow.alignment = .centerY
-        body.addArrangedSubview(languageRow)
+        appearanceSection.addArrangedSubview(languageRow)
         let row = NSStackView()
         row.orientation = .horizontal
         row.distribution = .fillEqually
@@ -976,44 +998,52 @@ private final class HealthWorkspaceViewController: NSViewController {
             card.identifier = NSUserInterfaceItemIdentifier(theme.rawValue)
             card.bezelStyle = .rounded
             card.contentTintColor = theme.accent
+            card.font = .systemFont(ofSize: 12, weight: .semibold)
             card.wantsLayer = true
             card.layer?.backgroundColor = theme.previewColor.cgColor
             card.layer?.cornerRadius = 14
             card.layer?.masksToBounds = true
-            card.heightAnchor.constraint(equalToConstant: 104).isActive = true
+            card.layer?.borderWidth = theme == AppTheme.current ? 2 : 0
+            card.layer?.borderColor = NSColor.white.withAlphaComponent(0.82).cgColor
+            card.heightAnchor.constraint(equalToConstant: 88).isActive = true
             row.addArrangedSubview(card)
         }
         row.translatesAutoresizingMaskIntoConstraints = false
-        body.addArrangedSubview(row)
-        row.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        appearanceSection.addArrangedSubview(row)
+        row.widthAnchor.constraint(equalTo: appearanceSection.widthAnchor, constant: -40).isActive = true
         let note = NSTextField(wrappingLabelWithString: AppLanguage.current.text(english: "Clear Glass keeps the blue surface slightly transparent. The sidebar is a translucent glass layer in every theme.", german: "Clear Glass hält die blaue Oberfläche leicht durchscheinend. Die Sidebar bleibt in jedem Theme eine transparente Glasfläche."))
         note.font = .systemFont(ofSize: 12, weight: .medium)
         note.textColor = NSColor.white.withAlphaComponent(0.75)
-        body.addArrangedSubview(note)
-        note.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        appearanceSection.addArrangedSubview(note)
+        note.widthAnchor.constraint(equalTo: appearanceSection.widthAnchor, constant: -40).isActive = true
 
+        let manualSection = section()
         let help = FirstLaunchHelpContent(language: AppLanguage.current)
         let manualHelpLabel = NSTextField(labelWithString: help.manualExplanationHeading)
         manualHelpLabel.font = .systemFont(ofSize: 16, weight: .bold)
         manualHelpLabel.textColor = .white
-        body.addArrangedSubview(manualHelpLabel)
+        manualSection.addArrangedSubview(manualHelpLabel)
         let manualHelpDescription = NSTextField(wrappingLabelWithString: help.manualExplanationDescription)
         manualHelpDescription.font = .systemFont(ofSize: 12, weight: .medium)
         manualHelpDescription.textColor = NSColor.white.withAlphaComponent(0.75)
         manualHelpDescription.maximumNumberOfLines = 3
-        body.addArrangedSubview(manualHelpDescription)
-        manualHelpDescription.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        manualSection.addArrangedSubview(manualHelpDescription)
+        manualHelpDescription.widthAnchor.constraint(equalTo: manualSection.widthAnchor, constant: -40).isActive = true
         let germanManual = NSButton(title: help.germanManualButtonTitle, target: self, action: #selector(openGermanManual))
         germanManual.bezelStyle = .rounded
+        germanManual.font = .systemFont(ofSize: 13, weight: .semibold)
         germanManual.contentTintColor = .white
+        germanManual.heightAnchor.constraint(equalToConstant: 38).isActive = true
         let englishManual = NSButton(title: help.englishManualButtonTitle, target: self, action: #selector(openEnglishManual))
         englishManual.bezelStyle = .rounded
+        englishManual.font = .systemFont(ofSize: 13, weight: .semibold)
         englishManual.contentTintColor = .white
+        englishManual.heightAnchor.constraint(equalToConstant: 38).isActive = true
         let manualButtons = NSStackView(views: [germanManual, englishManual])
         manualButtons.orientation = .horizontal
         manualButtons.spacing = 10
         manualButtons.alignment = .centerY
-        body.addArrangedSubview(manualButtons)
+        manualSection.addArrangedSubview(manualButtons)
         let aiButtons = NSStackView()
         aiButtons.orientation = .horizontal
         aiButtons.spacing = 10
@@ -1024,12 +1054,13 @@ private final class HealthWorkspaceViewController: NSViewController {
             serviceButton.widthAnchor.constraint(equalToConstant: 148).isActive = true
             serviceButton.heightAnchor.constraint(equalToConstant: 38).isActive = true
         }
-        body.addArrangedSubview(aiButtons)
+        manualSection.addArrangedSubview(aiButtons)
 
+        let updatesSection = section()
         let updatesLabel = NSTextField(labelWithString: AppLanguage.current.text(english: "App updates", german: "App-Aktualisierungen"))
         updatesLabel.font = .systemFont(ofSize: 16, weight: .bold)
         updatesLabel.textColor = .white
-        body.addArrangedSubview(updatesLabel)
+        updatesSection.addArrangedSubview(updatesLabel)
         let automaticChecks = NSButton(checkboxWithTitle: AppLanguage.current.text(english: "Check automatically", german: "Automatisch prüfen"), target: self, action: #selector(automaticUpdateChecksChanged(_:)))
         automaticChecks.state = automaticUpdateChecksEnabled ? .on : .off
         automaticChecks.contentTintColor = .white
@@ -1043,31 +1074,35 @@ private final class HealthWorkspaceViewController: NSViewController {
         cadenceRow.orientation = .horizontal
         cadenceRow.spacing = 10
         cadenceRow.alignment = .centerY
-        body.addArrangedSubview(cadenceRow)
+        updatesSection.addArrangedSubview(cadenceRow)
         let installedVersion = NSTextField(labelWithString: AppLanguage.current.text(english: "Installed: \(InstalledAppVersion.marketing) · Build \(InstalledAppVersion.build) · \(BuildChannel.current.displayName)", german: "Installiert: \(InstalledAppVersion.marketing) · Build \(InstalledAppVersion.build) · \(BuildChannel.current.displayName)"))
         installedVersion.font = .systemFont(ofSize: 12, weight: .semibold)
         installedVersion.textColor = .white
-        body.addArrangedSubview(installedVersion)
+        updatesSection.addArrangedSubview(installedVersion)
         let updateStatus = NSTextField(wrappingLabelWithString: updateStatusText())
         updateStatus.font = .systemFont(ofSize: 12, weight: .medium)
         updateStatus.textColor = NSColor.white.withAlphaComponent(0.75)
         updateStatus.maximumNumberOfLines = 2
-        body.addArrangedSubview(updateStatus)
-        updateStatus.widthAnchor.constraint(equalTo: body.widthAnchor).isActive = true
+        updatesSection.addArrangedSubview(updateStatus)
+        updateStatus.widthAnchor.constraint(equalTo: updatesSection.widthAnchor, constant: -40).isActive = true
         let checkNow = NSButton(title: AppLanguage.current.text(english: "Check now", german: "Jetzt prüfen"), target: self, action: #selector(checkForAppUpdateNow))
         checkNow.bezelStyle = .rounded
+        checkNow.font = .systemFont(ofSize: 13, weight: .semibold)
         checkNow.contentTintColor = .white
         checkNow.isEnabled = !isCheckingForUpdate
+        checkNow.heightAnchor.constraint(equalToConstant: 38).isActive = true
         let updateControls = NSStackView(views: [checkNow])
         updateControls.orientation = .horizontal
         updateControls.spacing = 10
         if case let .updateAvailable(release)? = appUpdateState {
             let openRelease = NSButton(title: AppLanguage.current.text(english: "Open \(release.versionText)", german: "\(release.versionText) öffnen"), target: self, action: #selector(openAvailableUpdate))
             openRelease.bezelStyle = .rounded
+            openRelease.font = .systemFont(ofSize: 13, weight: .semibold)
             openRelease.contentTintColor = .systemCyan
+            openRelease.heightAnchor.constraint(equalToConstant: 38).isActive = true
             updateControls.addArrangedSubview(openRelease)
         }
-        body.addArrangedSubview(updateControls)
+        updatesSection.addArrangedSubview(updateControls)
     }
 
     private var automaticUpdateChecksEnabled: Bool {
@@ -1387,8 +1422,10 @@ private final class HealthWorkspaceViewController: NSViewController {
         glassButton.translatesAutoresizingMaskIntoConstraints = false
         let manualButton = NSButton(title: help.manualButtonTitle, target: self, action: #selector(openFirstLaunchManual))
         manualButton.bezelStyle = .rounded
+        manualButton.font = .systemFont(ofSize: 13, weight: .semibold)
         manualButton.contentTintColor = .white
         manualButton.toolTip = help.manualButtonTitle
+        manualButton.heightAnchor.constraint(equalToConstant: 38).isActive = true
         let actionRow = NSStackView(views: [glassButton, manualButton])
         actionRow.orientation = .horizontal
         actionRow.spacing = 10
@@ -1520,9 +1557,10 @@ private final class HealthWorkspaceViewController: NSViewController {
         let background = MetricCardBackgroundView(title: metric.localizedTitle, accent: accent(for: metric.color))
         background.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(background)
-        let title = NSTextField(labelWithString: metric.localizedTitle)
+        let title = NSTextField(labelWithString: dashboardCardTitle(for: metric))
         title.font = .systemFont(ofSize: 12, weight: .semibold)
         title.textColor = NSColor.white.withAlphaComponent(0.74)
+        title.heightAnchor.constraint(equalToConstant: dashboardDensity == 0 ? 20 : 16).isActive = true
         let value = NSTextField(labelWithString: metric.value)
         value.font = .systemFont(ofSize: 25, weight: .bold)
         value.textColor = .white
@@ -1533,7 +1571,9 @@ private final class HealthWorkspaceViewController: NSViewController {
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 5
-        stack.edgeInsets = NSEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        stack.edgeInsets = dashboardDensity == 0
+            ? NSEdgeInsets(top: 14, left: 16, bottom: 10, right: 16)
+            : NSEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         stack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(stack)
         NSLayoutConstraint.activate([
@@ -1544,6 +1584,13 @@ private final class HealthWorkspaceViewController: NSViewController {
             card.heightAnchor.constraint(equalToConstant: dashboardDensity == 0 ? 96 : (dashboardDensity == 2 ? 178 : 126))
         ])
         return card
+    }
+
+    private func dashboardCardTitle(for metric: HealthMetric) -> String {
+        guard metric.identifier == "HKQuantityTypeIdentifierAppleSleepingWristTemperature" else {
+            return metric.localizedTitle
+        }
+        return AppLanguage.current.text(english: "Wrist Temperature", german: "Handgelenktemperatur")
     }
 
     private func moveDashboardMetric(_ source: String, before destination: String) {
@@ -1768,10 +1815,20 @@ private final class HealthWorkspaceViewController: NSViewController {
         let language = AppLanguage.current
         let replace = NSButton(title: language.text(english: "Replace import…", german: "Import ersetzen …"), target: self, action: #selector(importFile))
         replace.bezelStyle = .rounded
+        replace.font = .systemFont(ofSize: 13, weight: .semibold)
         replace.contentTintColor = .white
-        let delete = NSButton(title: language.text(english: "Delete all local data…", german: "Alle lokalen Daten löschen …"), target: self, action: #selector(confirmDeleteLocalData))
+        replace.heightAnchor.constraint(equalToConstant: 38).isActive = true
+        let deleteTitle = language.text(english: "Delete all local data…", german: "Alle lokalen Daten löschen …")
+        let delete = NSButton(title: deleteTitle, target: self, action: #selector(confirmDeleteLocalData))
         delete.bezelStyle = .rounded
-        delete.contentTintColor = .systemRed
+        delete.font = .systemFont(ofSize: 13, weight: .semibold)
+        delete.contentTintColor = .white
+        delete.bezelColor = .systemRed
+        delete.attributedTitle = NSAttributedString(
+            string: deleteTitle,
+            attributes: [.font: NSFont.systemFont(ofSize: 13, weight: .semibold), .foregroundColor: NSColor.white]
+        )
+        delete.heightAnchor.constraint(equalToConstant: 38).isActive = true
         let timestamp = importTimestamp.map { date in
             language.text(english: "Imported in this session: \(date.formatted(date: .abbreviated, time: .shortened))", german: "In dieser Sitzung importiert: \(date.formatted(date: .abbreviated, time: .shortened))")
         } ?? language.text(english: "No local import in this session", german: "Kein lokaler Import in dieser Sitzung")
@@ -2124,10 +2181,6 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         self.metricOrder = metricOrder
         self.onChange = onChange
         super.init(accent: .systemCyan)
-        let all = NSButton(title: AppLanguage.current.text(english: "Show all", german: "Alle anzeigen"), target: self, action: #selector(showAllMetrics))
-        all.bezelStyle = .rounded
-        let none = NSButton(title: AppLanguage.current.text(english: "Show none", german: "Keine anzeigen"), target: self, action: #selector(selectNone))
-        none.bezelStyle = .rounded
         let categoryButton = NSPopUpButton()
         categoryButton.addItem(withTitle: AppLanguage.current.text(english: "All categories", german: "Alle Kategorien"))
         HealthDataCategory.allCases.forEach { category in categoryButton.addItem(withTitle: category.displayName(for: .current)) }
@@ -2140,11 +2193,29 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         search.translatesAutoresizingMaskIntoConstraints = false
         search.widthAnchor.constraint(equalToConstant: 190).isActive = true
         search.setContentCompressionResistancePriority(.required, for: .horizontal)
-        let pinPicker = NSSegmentedControl(labels: MetricPinArea.allCases.map { $0.title(for: .current) }, trackingMode: .selectOne, target: self, action: #selector(pinAreaChanged(_:)))
-        pinPicker.selectedSegment = 0
-        pinPicker.segmentStyle = .texturedRounded
-        pinPicker.toolTip = AppLanguage.current.text(english: "Choose where the star pins a data type", german: "Wähle, wo der Stern einen Datentyp anpinnt")
-        let controls = NSStackView(views: [all, none, categoryButton, search, pinPicker])
+        let selectionMenu = NSPopUpButton()
+        selectionMenu.pullsDown = true
+        selectionMenu.addItem(withTitle: AppLanguage.current.text(english: "Show & pin", german: "Anzeigen & anpinnen"))
+        selectionMenu.menu?.addItem(.separator())
+        let all = NSMenuItem(title: AppLanguage.current.text(english: "Show all", german: "Alle anzeigen"), action: #selector(showAllMetrics), keyEquivalent: "")
+        all.target = self
+        selectionMenu.menu?.addItem(all)
+        let none = NSMenuItem(title: AppLanguage.current.text(english: "Show none", german: "Keine anzeigen"), action: #selector(selectNone), keyEquivalent: "")
+        none.target = self
+        selectionMenu.menu?.addItem(none)
+        selectionMenu.menu?.addItem(.separator())
+        MetricPinArea.allCases.enumerated().forEach { index, area in
+            let title = AppLanguage.current.text(
+                english: "Pin for \(area.title(for: .english))",
+                german: "Anpinnen für \(area.title(for: .german))"
+            )
+            let item = NSMenuItem(title: title, action: #selector(pinAreaMenuChanged(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = index
+            selectionMenu.menu?.addItem(item)
+        }
+        selectionMenu.toolTip = AppLanguage.current.text(english: "Show all data types, hide them, or choose the area for Pin", german: "Alle Datentypen anzeigen, ausblenden oder das Ziel für Pin wählen")
+        let controls = NSStackView(views: [categoryButton, search, selectionMenu])
         controls.spacing = 8
         controls.translatesAutoresizingMaskIntoConstraints = false
 
@@ -2261,6 +2332,10 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
     }
     @objc private func pinAreaChanged(_ sender: NSSegmentedControl) {
         selectedPinArea = MetricPinArea.allCases[sender.selectedSegment]
+        table.reloadData()
+    }
+    @objc private func pinAreaMenuChanged(_ sender: NSMenuItem) {
+        selectedPinArea = MetricPinArea.allCases[sender.tag]
         table.reloadData()
     }
     @objc private func moveMetricUp(_ sender: NSButton) { moveMetric(at: sender.tag, direction: -1) }
