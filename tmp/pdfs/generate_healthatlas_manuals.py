@@ -225,6 +225,27 @@ def success_image_block(name, title, text, styles):
     return [panel]
 
 
+def detail_image_block(name, title, text, styles):
+    image = Image(str(SHOTS / name))
+    max_w = 34 * mm
+    max_h = 38 * mm
+    scale = min(max_w / image.imageWidth, max_h / image.imageHeight)
+    image.drawWidth = image.imageWidth * scale
+    image.drawHeight = image.imageHeight * scale
+    explanation = [P(title, styles["H3HA"]), P(text, styles["SmallHA"])]
+    panel = Table([[image, explanation]], colWidths=[44 * mm, PAGE_W - LEFT - RIGHT - 44 * mm])
+    panel.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), PANEL),
+        ("BACKGROUND", (1, 0), (1, 0), colors.Color(0.08, 0.16, 0.36, alpha=0.88)),
+        ("BOX", (0, 0), (-1, -1), 0.7, CYAN),
+        ("INNERGRID", (0, 0), (-1, -1), 0.35, colors.Color(0.26, 0.77, 0.93, alpha=0.25)),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    return [panel]
+
+
 def at_a_glance(items, styles):
     cells = [P(f'<font color="#42C5EE"><b>{title}</b></font><br/>{text}', styles["SmallHA"]) for title, text in items]
     panel = Table([cells], colWidths=[(PAGE_W - LEFT - RIGHT) / 3] * 3)
@@ -266,7 +287,7 @@ def cover(title, subtitle, language, edition, styles):
 
 def manual_de(styles):
     s = []
-    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.2.0", styles)
+    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.3.0", styles)
     s += section("Willkommen", "HealthAtlas liest einen von dir ausgewählten Apple-Health-Export lokal auf deinem Mac. Anschließend entscheidest du selbst, welche erkannten Datentypen im Dashboard erscheinen. Die App erstellt keine Diagnose und gibt keine Behandlungsempfehlungen.", styles,
         bullets_list=[
             "Die App startet bei jedem normalen Start ohne importierte Gesundheitsdaten.",
@@ -283,7 +304,7 @@ def manual_de(styles):
     s += [PageBreak()]
     s += section("Schnellstart in 5 Schritten", "Für einen sicheren ersten Test liegt im Repository eine vollständig synthetische Demo vor. Sie enthält keine persönlichen Gesundheitsdaten und fiktive Werte für alle aktuell unterstützten, nicht veralteten Apple-Health-Exporttypen.", styles,
         bullets_list=[
-            "HealthAtlas öffnen. In der Mitte der leeren Übersicht erscheint der Import-Button.",
+            "HealthAtlas öffnen. In der leeren Importansicht erscheint der Import-Button.",
             "Auf " + '"ZIP oder Export.xml importieren ..."' + " klicken.",
             "Die Demo-Datei <b>Demo/AppleHealthDemo/Export.xml</b> oder einen eigenen Apple-Health-Export auswählen.",
             "Nach dem Import zu <b>Quellen</b> wechseln und die gewünschten Datentypen ein- oder ausblenden.",
@@ -326,6 +347,7 @@ def manual_de(styles):
             "Bei mehr ausgewählten Datentypen erscheinen Vor- und Zurück-Schalter zum Blättern.",
             "Ein Klick auf eine Karte öffnet eine echte Vollbild-Fokusansicht mit Verlauf, Zeitraumvergleich und Jahreskalender; dort führt <b>Verläufe öffnen</b> zur Detailansicht. Mit <b>Vollbild beenden</b> kehrst du zurück. Vor dem lokalen PDF-Bericht wählst du Zeitraum, Datentypen und das Bericht-Theme; gespeichert wird nur an einem selbst gewählten Ort.",
             "Mit <b>Verlauf auswählen ...</b> bestimmst du unabhängig von Karten, Pins und Quellen, welche ein bis vier aktiven Typen im gemeinsamen Gesundheitsverlauf verglichen werden.",
+            "In der kompakten Dichte bleibt für den Kartentitel eine feste Textfläche. Der vollständige Apple-Name für die Handgelenktemperatur wird dort zu <b>Handgelenktemperatur</b> verkürzt; Quellen und Detailansichten verwenden weiterhin den vollständigen Namen.",
             "Unter den Karten zeigen ein gemeinsamer Mehrfach-Verlauf und Tagesringe letzte lokale Werte mehrerer Typen. Die Ringe sind weder Ziele noch Bewertungen. Bei schmaleren Fenstern bleiben die Legenden innerhalb ihrer Karte.",
             "Schritte, Energie, Distanz und Stockwerke werden als Tages-Summe dargestellt. Andere numerische Typen werden als Tages-Durchschnitt dargestellt.",
             "Name, Wert, Einheit und Datum stammen aus dem importierten Export und werden gemäß der gewählten App-Sprache formatiert.",
@@ -336,21 +358,21 @@ def manual_de(styles):
             "Kartenzahl, Dichte und Reihenfolge bleiben von der Auswahl für den gemeinsamen Verlauf getrennt.",
         ], screenshot_note_title="Neu in der Übersicht")
     s += [PageBreak(), Spacer(1, 12 * mm)]
-    s += section("Quellen", "Quellen ist die zentrale Auswahl. Hier listet HealthAtlas jeden erkannten Datentyp auf: mit Ein-/Aus-Schalter, Anzahl der Messwerte und zusammengefasstem Wert. Die Tabelle kann vertikal scrollen, wenn der Export viele Typen enthält.", styles,
+    s += section("Quellen", "Quellen ist die zentrale Auswahl. Hier listet HealthAtlas jeden erkannten Datentyp auf: mit Ein-/Aus-Schalter, Anzahl der Messwerte und zusammengefasstem Wert. Kategorie, Suche und <b>Anzeigen &amp; anpinnen</b> bleiben über der Tabelle sichtbar. Die Tabelle kann vertikal scrollen, wenn der Export viele Typen enthält.", styles,
         bullets_list=[
-            "<b>Alle anzeigen</b> aktiviert alle erkannten Datentypen.",
-            "<b>Keine anzeigen</b> deaktiviert alle Datentypen.",
+            "<b>Anzeigen &amp; anpinnen</b> bündelt <b>Alle anzeigen</b>, <b>Keine anzeigen</b> und das Ziel für Pin.",
             "Der Schalter in jeder Zeile entscheidet sofort, ob ein Typ in Übersicht, Verläufen und Einblicken zur Verfügung steht.",
-            "Suche und Kategorien helfen bei großen Exporten. Wähle zuerst Übersicht, Verläufe oder Einblicke als Pin-Ziel; der Stern setzt den Favoriten nur für diesen Bereich. Pfeile ordnen Datentypen für das aktuelle Dashboard-Layout.",
+            "Wähle im Menü <b>Anpinnen für Übersicht</b>, <b>Verläufe</b> oder <b>Einblicke</b>. Der Stern setzt den Favoriten nur für diesen Bereich. Pfeile ordnen Datentypen für das aktuelle Dashboard-Layout.",
             "Beim ersten eigenen Import werden standardmäßig die ersten vier erkannten Typen gewählt. Eine passende frühere Auswahl wird wiederverwendet, soweit diese Typen im neuen Import vorkommen.",
             "<b>Lokale Datenqualität</b> zählt Auswahl, datierte Typen, lokale Tage und Messwerte. Zusätzlich nennt sie fehlende Tage im aktuellen lokalen Zeitraum sowie Typen mit wenigen Werten. Sie bewertet keine Gesundheitsdaten.",
             "<b>Import ersetzen</b> öffnet den lokalen Dateidialog erneut. <b>Alle lokalen Daten löschen</b> entfernt die aktuelle Sitzung erst nach Bestätigung. Der sichtbare Importzeitpunkt gilt nur für die laufende Sitzung.",
         ], screenshot="final-sources.png", caption="Quellen mit synthetischen Demodaten. Die Auswahl bestimmt die Inhalte aller anderen Bereiche.",
         screenshot_notes=[
-            "Oben bestimmen Alle anzeigen, Keine anzeigen, Kategorie und Suche die sichtbaren Datentypen.",
-            "Pins und Pfeile sind bereichsspezifisch: Die Auswahl für Übersicht, Verläufe und Einblicke bleibt getrennt.",
+            "Kategorie, Suche und Anzeigen &amp; anpinnen bleiben über der Tabelle sichtbar.",
+            "Das Menü zeigt oder verbirgt alle Datentypen und legt das Ziel für Pin fest.",
             "Lokale Datenqualität beschreibt nur Abdeckung und Anzahl der importierten Werte.",
         ], screenshot_note_title="Auswahl und Ordnung")
+    s += [Spacer(1, 3 * mm)] + detail_image_block("final-sources-menu.png", "Anzeigen &amp; anpinnen", "Das Menü enthält Alle anzeigen, Keine anzeigen sowie Anpinnen für Übersicht, Verläufe oder Einblicke. Anschließend setzt der Stern in einer Zeile den Pin für den gewählten Bereich.", styles)
     s += [PageBreak(), Spacer(1, 12 * mm)]
     s += section("Verläufe", "Dieser Bereich visualisiert einen aktiven Datentyp passend zu seinem lokalen Format: Schritte und Energie als Balken, Schlaf als Bereich und andere Zahlen als Linie. Du wählst oben zunächst den Zeitraum; anschließend kannst du im Auswahlmenü innerhalb der aktivierten Datentypen wechseln.", styles,
         bullets_list=[
@@ -378,18 +400,19 @@ def manual_de(styles):
             "Momentaufnahme, lokale Abdeckung und Erfassungsmuster sind beschreibend und keine medizinische Bewertung.",
         ], screenshot_note_title="Beschreibende Einblicke")
     s += [PageBreak()]
-    s += section("Design-Studio", "Im Design-Studio passt du Sprache und Stil der Oberfläche an. Änderungen werden sofort übernommen und für die jeweilige App-Variante lokal gespeichert.", styles,
+    s += section("Design-Studio", "Im Design-Studio sind Erscheinungsbild, Hilfe zum Handbuch und App-Aktualisierungen in drei Bereiche gegliedert. Änderungen werden sofort übernommen und für die jeweilige App-Variante lokal gespeichert.", styles,
         bullets_list=[
             "<b>Sprache:</b> Deutsch oder English. Navigation, Beschriftungen und bekannte Datentypnamen wechseln mit der Auswahl.",
-            "<b>Themes:</b> Clear Glass verbindet eine Milchglasfläche mit ruhigem Cyan-, Blau-, Violett- und Rosaglow; Midnight Glass ist dunkelblau, Aurora türkis und Warmpaper warm rötlich-violett.",
+            "<b>Themes:</b> Clear Glass verbindet eine Milchglasfläche mit ruhigem Cyan-, Blau-, Violett- und Rosaglow; Midnight Glass ist dunkelblau, Aurora türkis und Warmpaper warm rötlich-violett. Das aktive Theme ist umrandet.",
             "Karten und Seiten wechseln sanft. Clear Glass ergänzt das Design um sehr dezente Bewegung, die bei " + '"Bewegung reduzieren"' + " und während des Imports stark reduziert bzw. pausiert wird.",
             "HealthAtlas öffnet neu im 16:9-Format und bleibt danach frei skalierbar. Die Darstellung passt sich der gewählten Fenstergröße an.",
             "Unter <b>Hilfe zum Handbuch</b> öffnen <b>Handbuch Deutsch</b> und <b>Manual English</b> die beiden öffentlichen Handbücher getrennt.",
             "ChatGPT, Gemini und Claude kopieren erst nach einem Klick nur eine allgemeine Frage mit passendem öffentlichen Handbuch-Link in die Zwischenablage und öffnen dann den gewählten Dienst. Lokale oder importierte Gesundheitsdaten werden nicht übertragen; erst mit Cmd+V entscheidest du, ob du die Frage einfügst.",
             "Unter <b>App-Aktualisierungen</b> zeigt HealthAtlas die installierte Version mit Buildnummer. Die Prüfung der öffentlichen GitHub-Release-Liste ist optional: manuell, bei jedem Start, täglich, wöchentlich oder monatlich.",
             "Eine Update-Prüfung überträgt keine Gesundheitsdaten. Ist eine passende neuere Veröffentlichung vorhanden, wird ihre GitHub-Seite erst nach einem bewussten Klick geöffnet.",
-        ], screenshot="final-design-studio.png", caption="Design-Studio. Themes verändern nur die Anzeige. Handbuchhilfe und optionale Update-Prüfung verwenden ausschließlich öffentliche Links.",
+        ], screenshot="final-design-studio.png", caption="Design-Studio mit den Bereichen Erscheinungsbild, Hilfe zum Handbuch und App-Aktualisierungen. Handbuchhilfe und optionale Update-Prüfung verwenden ausschließlich öffentliche Links.",
         screenshot_notes=[
+            "Das aktive Theme ist mit einer hellen Umrandung markiert.",
             "Die zwei Handbuch-Buttons öffnen die öffentlichen Handbücher getrennt.",
             "Die drei Dienste erhalten nur eine allgemeine Handbuchfrage, keine lokalen Werte.",
             "Automatisch prüfen bleibt optional; die App fragt nur die öffentliche Release-Liste ab.",
@@ -429,8 +452,9 @@ def manual_de(styles):
         ["Verläufe", "Datentyp-Menü", "Wechselt die dargestellte Zeitreihe."],
         ["Verläufe", "Punkt / Hover", "Hebt den Punkt hervor bzw. zeigt Datum, Wert und Mini-Trend."],
         ["Quellen", "Zeilen-Schalter", "Aktiviert oder entfernt einen Datentyp."],
-        ["Quellen", "Suche / Kategorie / Stern / Pfeile", "Filtert, favorisiert und ordnet Datentypen lokal."],
-        ["Quellen", "Alle / Keine · Datenqualität", "Aktiviert Typen bzw. zählt nur lokale Abdeckung."],
+        ["Quellen", "Kategorie / Suche", "Filtert die sichtbaren Datentypen."],
+        ["Quellen", "Anzeigen &amp; anpinnen", "Zeigt oder verbirgt alle Typen und legt das Ziel für Pin fest."],
+        ["Quellen", "Stern / Pfeile", "Pinnt einen Typ für den gewählten Bereich oder ordnet ihn lokal."],
         ["Einblicke", "Datentyp-Menü", "Wechselt die beschreibende Momentaufnahme."],
         ["Design-Studio", "Sprache", "Wechselt Deutsch und English."],
         ["Design-Studio", "Theme-Karten", "Wählt Clear Glass, Midnight Glass, Aurora oder Warmpaper."],
@@ -454,7 +478,7 @@ def manual_de(styles):
 
 def manual_en(styles):
     s = []
-    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.2.0", styles)
+    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.3.0", styles)
     s += section("Welcome", "HealthAtlas reads an Apple Health export that you choose locally on your Mac. You then decide exactly which recognised data types appear in the dashboard. The app does not diagnose conditions or recommend treatment.", styles,
         bullets_list=[
             "Every normal launch starts without imported health data.",
@@ -471,7 +495,7 @@ def manual_en(styles):
     s += [PageBreak()]
     s += section("Quick start in 5 steps", "The repository includes a fully synthetic demo export for a safe first test. It contains no personal health information and fictional values for every currently supported, non-deprecated Apple Health export type.", styles,
         bullets_list=[
-            "Open HealthAtlas. The empty overview presents a central import button.",
+            "Open HealthAtlas. The empty import view presents a central import button.",
             "Click " + '"Import ZIP or Export.xml ..."' + ".",
             "Choose <b>Demo/AppleHealthDemo/Export.xml</b> or your own Apple Health export.",
             "Open <b>Sources</b> after import and turn the data types you want on or off.",
@@ -511,6 +535,7 @@ def manual_en(styles):
             "Previous and next controls appear when more selected types exist than fit on one page.",
             "Click a card to open a true full-screen focus view with a trend, period comparison and yearly calendar; <b>Open Trends</b> leads to the detailed view. <b>Exit full screen</b> returns to the app. Before a local PDF report, choose period, data types and report theme; it writes only to a location you choose.",
             "Use <b>Choose timeline ...</b> independently from cards, pins and Sources to select the one to four active types compared in the shared health timeline.",
+            "Compact cards reserve a fixed text area for their title. The full Apple name for wrist temperature is shortened to <b>Wrist Temperature</b> there; Sources and detail views keep the full name.",
             "Below the cards, a shared multi-metric timeline and daily rings show recent local values from several types. Rings are neither goals nor ratings. At narrower window sizes, legends remain within their card.",
             "Steps, energy, distance and flights climbed are shown as daily sums. Other numeric types are shown as daily averages.",
             "Name, value, unit and date come from the selected export and follow the app language formatting.",
@@ -521,20 +546,21 @@ def manual_en(styles):
             "Card count, density and order remain separate from the shared-timeline choice.",
         ], screenshot_note_title="New in Overview")
     s += [PageBreak(), Spacer(1, 12 * mm)]
-    s += section("Sources", "Sources is the central selection area. It lists every recognised data type with an on/off switch, number of samples and a summary value. The table scrolls vertically when an export contains many types.", styles,
+    s += section("Sources", "Sources is the central selection area. It lists every recognised data type with an on/off switch, number of samples and a summary value. Category, search and <b>Show &amp; pin</b> remain visible above the table. The table scrolls vertically when an export contains many types.", styles,
         bullets_list=[
-            "<b>Show all</b> enables every recognised data type.", "<b>Show none</b> disables all data types.",
+            "<b>Show &amp; pin</b> contains <b>Show all</b>, <b>Show none</b> and the Pin destination.",
             "The switch in each row immediately determines whether a type is available in Overview, Trends and Insights.",
-            "Search and categories help with large exports. First choose Overview, Trends or Insights as the pin target; the star then marks a favourite only for that area. Arrows set the order for the current dashboard layout.",
+            "Choose <b>Pin for Overview</b>, <b>Trends</b> or <b>Insights</b> from the menu. The star marks a favourite only for that area. Arrows set the order for the current dashboard layout.",
             "For a first personal import, the first four recognised types are selected by default. A compatible earlier selection is reused when its types occur in the new import.",
             "<b>Local data quality</b> counts selection, dated types, local days and samples. It also names missing days in the current local period and types with few values. It does not rate health data.",
             "<b>Replace import</b> opens the local file picker again. <b>Delete all local data</b> clears the current session only after confirmation. The visible import time applies only to the current session.",
         ], screenshot="final-sources.png", caption="Sources with synthetic demo data. This selection controls the content of all other areas.",
         screenshot_notes=[
-            "Show all, Show none, category and search determine the visible data types.",
-            "Pins and arrows are area-specific: Overview, Trends and Insights keep separate choices.",
+            "Category, search and Show &amp; pin remain visible above the table.",
+            "The menu shows or hides all data types and selects the Pin destination.",
             "Local data quality describes coverage and imported values only.",
         ], screenshot_note_title="Selection and order")
+    s += [Spacer(1, 3 * mm)] + detail_image_block("final-sources-menu.png", "Show &amp; pin", "The menu contains Show all, Show none and Pin for Overview, Trends or Insights. The star in a row then sets the Pin for the selected area.", styles)
     s += [PageBreak(), Spacer(1, 12 * mm)]
     s += section("Trends", "This section visualises one active type according to its local format: bars for steps and energy, an area for sleep, and a line for other numeric types. Select a period first, then choose one of the enabled types in the menu.", styles,
         bullets_list=[
@@ -562,18 +588,19 @@ def manual_en(styles):
             "Snapshot, local coverage and recording pattern are descriptive, not a medical assessment.",
         ], screenshot_note_title="Descriptive insights")
     s += [PageBreak()]
-    s += section("Design Studio", "Use Design Studio to set the interface language and appearance. Changes take effect immediately and are stored locally for the current app variant.", styles,
+    s += section("Design Studio", "Design Studio groups Appearance, Manual help and App updates into three sections. Changes take effect immediately and are stored locally for the current app variant.", styles,
         bullets_list=[
             "<b>Language:</b> Deutsch or English. Navigation, labels and known data-type names change with the selection.",
-            "<b>Themes:</b> Clear Glass combines a frosted layer with a calm cyan, blue, violet and pink glow; Midnight Glass is dark blue, Aurora teal and Warmpaper warm red-violet.",
+            "<b>Themes:</b> Clear Glass combines a frosted layer with a calm cyan, blue, violet and pink glow; Midnight Glass is dark blue, Aurora teal and Warmpaper warm red-violet. The selected theme has an outline.",
             "Cards and pages use gentle transitions. Clear Glass adds very subtle motion, substantially reduced or paused with macOS Reduce Motion and while importing.",
             "HealthAtlas opens in 16:9 and remains freely resizable afterwards. The layout adapts to the selected window size.",
             "Under <b>Manual help</b>, <b>German manual</b> and <b>English manual</b> open the two public manuals separately.",
             "ChatGPT, Gemini and Claude copy only a general question with the matching public manual link to the clipboard after your click, then open the selected service. No local or imported health data is sent; only Cmd+V lets you decide whether to paste it.",
             "Under <b>App updates</b>, HealthAtlas shows the installed version and build number. Checking the public GitHub release list is optional: manually, at every launch, daily, weekly or monthly.",
             "An update check never sends health data. When a matching newer release is available, its GitHub page opens only after an explicit click.",
-        ], screenshot="final-design-studio.png", caption="Design Studio. Themes change appearance only. Manual help and the optional update check use public links only.",
+        ], screenshot="final-design-studio.png", caption="Design Studio with Appearance, Manual help and App updates. Manual help and the optional update check use public links only.",
         screenshot_notes=[
+            "An outline marks the selected theme.",
             "The two manual buttons open the public manuals separately.",
             "The three services receive only a general manual question, never local values.",
             "Automatic checks remain optional and query only the public release list.",
@@ -608,8 +635,9 @@ def manual_en(styles):
         ["Overview", "Timeline / rings", "Shows several local types; no goal or rating."],
         ["Trends", "7D / 15D / 30D / 3M / 6M / 1Y", "Limits displayed days; the calendar offers 1 week to 1 year including 15 days."], ["Trends", "Data type menu", "Changes the displayed timeline."],
         ["Trends", "Data point / hover", "Highlights a point or shows date, value and mini-trend."], ["Sources", "Row switch", "Enables or removes one type."],
-        ["Sources", "Search / category / star / arrows", "Filters, favourites and orders types locally."],
-        ["Sources", "Show all / none · data quality", "Enables types or counts local coverage only."], ["Insights", "Data type menu", "Changes the descriptive snapshot."],
+        ["Sources", "Category / search", "Filters the visible data types."],
+        ["Sources", "Show &amp; pin", "Shows or hides all types and selects the Pin destination."],
+        ["Sources", "Star / arrows", "Pins a type for the selected area or orders it locally."], ["Insights", "Data type menu", "Changes the descriptive snapshot."],
         ["Design Studio", "Language", "Switches Deutsch and English."], ["Design Studio", "Theme cards", "Selects Clear Glass, Midnight Glass, Aurora or Warmpaper."],
         ["Design Studio", "Manual help", "Opens the public manuals or prepares a general question for a chosen AI service; local values stay in HealthAtlas."],
         ["Design Studio", "App updates", "Shows version and build; optionally checks the public release list on the selected schedule."],
