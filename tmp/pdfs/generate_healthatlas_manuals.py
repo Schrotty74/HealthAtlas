@@ -357,7 +357,9 @@ def manual_de(styles):
             "Der lokale PDF-Bericht besitzt eine eigene Auswahl für Zeitraum, Datentypen und Theme. Nichts wird hochgeladen.",
             "Kartenzahl, Dichte und Reihenfolge bleiben von der Auswahl für den gemeinsamen Verlauf getrennt.",
         ], screenshot_note_title="Neu in der Übersicht")
-    s += [PageBreak(), Spacer(1, 12 * mm)]
+    # Keep the following Sources section flowing after the overview panel. A
+    # forced page break here can strand that panel on a mostly empty page.
+    s += [Spacer(1, 6 * mm)]
     s += section("Quellen", "Quellen ist die zentrale Auswahl. Hier listet HealthAtlas jeden erkannten Datentyp auf: mit Ein-/Aus-Schalter, Anzahl der Messwerte und zusammengefasstem Wert. Kategorie, Suche und <b>Anzeigen &amp; anpinnen</b> bleiben über der Tabelle sichtbar. Die Tabelle kann vertikal scrollen, wenn der Export viele Typen enthält.", styles,
         bullets_list=[
             "<b>Anzeigen &amp; anpinnen</b> bündelt <b>Alle anzeigen</b>, <b>Keine anzeigen</b> und das Ziel für Pin.",
@@ -373,7 +375,7 @@ def manual_de(styles):
             "Lokale Datenqualität beschreibt nur Abdeckung und Anzahl der importierten Werte.",
         ], screenshot_note_title="Auswahl und Ordnung")
     s += [Spacer(1, 3 * mm)] + detail_image_block("final-sources-menu.png", "Anzeigen &amp; anpinnen", "Das Menü enthält Alle anzeigen, Keine anzeigen sowie Anpinnen für Übersicht, Verläufe oder Einblicke. Anschließend setzt der Stern in einer Zeile den Pin für den gewählten Bereich.", styles)
-    s += [PageBreak(), Spacer(1, 12 * mm)]
+    s += [Spacer(1, 6 * mm)]
     s += section("Verläufe", "Dieser Bereich visualisiert einen aktiven Datentyp passend zu seinem lokalen Format: Schritte und Energie als Balken, Schlaf als Bereich und andere Zahlen als Linie. Du wählst oben zunächst den Zeitraum; anschließend kannst du im Auswahlmenü innerhalb der aktivierten Datentypen wechseln.", styles,
         bullets_list=[
             "<b>7T</b>: letzte 7 Tage.", "<b>15T</b>: letzte 15 Tage.", "<b>30T</b>: letzte 30 Tage.", "<b>3M</b>: letzte 90 Tage.", "<b>6M</b>: letzte 182 Tage.", "<b>1J</b>: letzte 365 Tage.",
@@ -387,7 +389,8 @@ def manual_de(styles):
             "Im Kalender ist 15 Tage eine eigene Auswahl neben 1 Woche, 4 Wochen, 3 Monaten, 6 Monaten und 1 Jahr.",
             "Ein Punkt im Diagramm oder ein Kalendertag zeigt ausschließlich lokale Details zum ausgewählten Datum.",
         ], screenshot_note_title="Zeiträume und Kalender")
-    s += [PageBreak()]
+    # Continue with Insights so the Trends image does not leave a mostly empty page.
+    s += [Spacer(1, 6 * mm)]
     s += section("Einblicke", "Einblicke verdichtet einen aktivierten Datentyp zu einer lokalen, beschreibenden Momentaufnahme. Du wählst den Typ im Auswahlmenü. Die Ansicht enthält den letzten Tageswert, dessen Datum, lokale Abdeckung und ein Erfassungsmuster; sie enthält bewusst keinen Detailverlauf oder Datenkalender.", styles,
         bullets_list=[
             "Die lokale Abdeckung nennt nur Tage mit und ohne Wert im aktuellen kurzen Zeitraum. Das Muster nennt den am häufigsten erfassten Wochentag. Beides ist keine Bewertung.",
@@ -399,7 +402,8 @@ def manual_de(styles):
             "Das Menü legt fest, welcher aktivierte Datentyp zusammengefasst wird.",
             "Momentaufnahme, lokale Abdeckung und Erfassungsmuster sind beschreibend und keine medizinische Bewertung.",
         ], screenshot_note_title="Beschreibende Einblicke")
-    s += [PageBreak()]
+    # Let Design Studio use the remaining space after the Insights panel.
+    s += [Spacer(1, 6 * mm)]
     s += section("Design-Studio", "Im Design-Studio sind Erscheinungsbild, Hilfe zum Handbuch und App-Aktualisierungen in drei Bereiche gegliedert. Änderungen werden sofort übernommen und für die jeweilige App-Variante lokal gespeichert.", styles,
         bullets_list=[
             "<b>Sprache:</b> Deutsch oder English. Navigation, Beschriftungen und bekannte Datentypnamen wechseln mit der Auswahl.",
@@ -417,7 +421,7 @@ def manual_de(styles):
             "Die drei Dienste erhalten nur eine allgemeine Handbuchfrage, keine lokalen Werte.",
             "Automatisch prüfen bleibt optional; die App fragt nur die öffentliche Release-Liste ab.",
         ], screenshot_note_title="Handbuchhilfe und Updates")
-    s += [PageBreak(), Spacer(1, 12 * mm)]
+    s += [Spacer(1, 6 * mm)]
     s += section("Datenschutz und Grenzen", "HealthAtlas ist als lokale Visualisierung konzipiert. Es gibt weder Konto, Analyse, Werbung, Tracking noch versteckten Upload. Die App sendet importierte Gesundheitswerte nicht an HealthAtlas, GitHub, Discord oder einen anderen Dienst.", styles,
         bullets_list=[
             "Daten bleiben während der offenen Sitzung im Arbeitsspeicher und werden beim nächsten normalen App-Start nicht erneut geladen.",
@@ -435,7 +439,8 @@ def manual_de(styles):
             "Bei Importfehlern prüfen: ZIP enthält Export.xml, Datei ist nicht leer, innerhalb der HealthAtlas-Grenze von 5 GiB und lokal erreichbar.",
             "Wenn keine Werte erscheinen: zuerst unter Quellen mindestens einen Datentyp aktivieren; für Verläufe sind mindestens zwei Tageswerte im gewählten Zeitraum nötig.",
         ], callout_data=("Build-Varianten", "Dev, Beta und Final verwenden getrennte lokale Einstellungen. Ein Theme oder eine Auswahl in Dev ändert nicht die Einstellungen einer Beta oder Final-App.", GOLD))
-    s += [PageBreak()]
+    # Let the control reference use the remaining space after privacy notes.
+    s += [Spacer(1, 2 * mm)]
     s += section("Funktionsübersicht", "Diese Tabelle fasst alle Bereiche, Bedienoptionen und ihre Wirkung zusammen.", styles)
     rows = [
         ["Bereich", "Option", "Wirkung"],
@@ -470,7 +475,7 @@ def manual_de(styles):
         ("BACKGROUND", (0, 1), (-1, -1), colors.Color(0.06, 0.13, 0.29, alpha=0.84)),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-        ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     s += [table]
     return s
@@ -545,7 +550,9 @@ def manual_en(styles):
             "The local PDF report has its own period, data-type and theme choices. Nothing is uploaded.",
             "Card count, density and order remain separate from the shared-timeline choice.",
         ], screenshot_note_title="New in Overview")
-    s += [PageBreak(), Spacer(1, 12 * mm)]
+    # Keep the following Sources section flowing after the overview panel. A
+    # forced page break here can strand that panel on a mostly empty page.
+    s += [Spacer(1, 6 * mm)]
     s += section("Sources", "Sources is the central selection area. It lists every recognised data type with an on/off switch, number of samples and a summary value. Category, search and <b>Show &amp; pin</b> remain visible above the table. The table scrolls vertically when an export contains many types.", styles,
         bullets_list=[
             "<b>Show &amp; pin</b> contains <b>Show all</b>, <b>Show none</b> and the Pin destination.",
@@ -561,7 +568,7 @@ def manual_en(styles):
             "Local data quality describes coverage and imported values only.",
         ], screenshot_note_title="Selection and order")
     s += [Spacer(1, 3 * mm)] + detail_image_block("final-sources-menu.png", "Show &amp; pin", "The menu contains Show all, Show none and Pin for Overview, Trends or Insights. The star in a row then sets the Pin for the selected area.", styles)
-    s += [PageBreak(), Spacer(1, 12 * mm)]
+    s += [Spacer(1, 6 * mm)]
     s += section("Trends", "This section visualises one active type according to its local format: bars for steps and energy, an area for sleep, and a line for other numeric types. Select a period first, then choose one of the enabled types in the menu.", styles,
         bullets_list=[
             "<b>7D</b>: last 7 days.", "<b>15D</b>: last 15 days.", "<b>30D</b>: last 30 days.", "<b>3M</b>: last 90 days.", "<b>6M</b>: last 182 days.", "<b>1Y</b>: last 365 days.",
@@ -575,7 +582,8 @@ def manual_en(styles):
             "The calendar has a dedicated 15-day option alongside 1 week, 4 weeks, 3 months, 6 months and 1 year.",
             "A chart point or calendar day reveals local details for the selected date only.",
         ], screenshot_note_title="Ranges and calendar")
-    s += [PageBreak()]
+    # Continue with Insights so the Trends image does not leave a mostly empty page.
+    s += [Spacer(1, 6 * mm)]
     s += section("Insights", "Insights condenses one enabled data type into a local descriptive snapshot. Choose the type from the menu. The view shows the latest daily value, its date, local coverage and a recording pattern; it intentionally contains no detailed trend or data calendar.", styles,
         bullets_list=[
             "Local coverage only names days with and without a value in the current short period. The pattern names the most frequently recorded weekday. Neither is a rating.",
@@ -587,7 +595,8 @@ def manual_en(styles):
             "The menu selects the enabled data type to summarise.",
             "Snapshot, local coverage and recording pattern are descriptive, not a medical assessment.",
         ], screenshot_note_title="Descriptive insights")
-    s += [PageBreak()]
+    # Let Design Studio use the remaining space after the Insights panel.
+    s += [Spacer(1, 6 * mm)]
     s += section("Design Studio", "Design Studio groups Appearance, Manual help and App updates into three sections. Changes take effect immediately and are stored locally for the current app variant.", styles,
         bullets_list=[
             "<b>Language:</b> Deutsch or English. Navigation, labels and known data-type names change with the selection.",
@@ -605,7 +614,7 @@ def manual_en(styles):
             "The three services receive only a general manual question, never local values.",
             "Automatic checks remain optional and query only the public release list.",
         ], screenshot_note_title="Manual help and updates")
-    s += [PageBreak(), Spacer(1, 12 * mm)]
+    s += [Spacer(1, 6 * mm)]
     s += section("Privacy and limits", "HealthAtlas is designed as a local visualisation. It has no account, analytics, advertising, tracking or hidden upload. The app does not send imported health values to HealthAtlas, GitHub, Discord or another service.", styles,
         bullets_list=[
             "Data remains in memory while the app is open and is not loaded again at the next normal launch.",
@@ -623,7 +632,8 @@ def manual_en(styles):
             "For import errors, confirm that the ZIP contains Export.xml, the file is not empty, is within the 5 GiB HealthAtlas limit and is stored locally.",
             "If no values appear, enable at least one type in Sources. Trends need at least two daily values in the chosen period.",
         ], callout_data=("Build variants", "Dev, Beta and Final use separate local preferences. A theme or selection in Dev does not alter the settings of a Beta or Final app.", GOLD))
-    s += [PageBreak()]
+    # Let the control reference use the remaining space after privacy notes.
+    s += [Spacer(1, 2 * mm)]
     s += section("Complete control reference", "This table summarises every current area, control and outcome.", styles)
     rows = [
         ["Area", "Control", "Outcome"],
@@ -648,7 +658,7 @@ def manual_en(styles):
         ("BACKGROUND", (0, 0), (-1, 0), PANEL_LIGHT), ("TEXTCOLOR", (0, 0), (-1, 0), WHITE), ("FONTNAME", (0, 0), (-1, 0), "HealthAtlasBold"),
         ("GRID", (0, 0), (-1, -1), 0.35, colors.Color(0.26, 0.77, 0.93, alpha=0.30)),
         ("BACKGROUND", (0, 1), (-1, -1), colors.Color(0.06, 0.13, 0.29, alpha=0.84)), ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6), ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6), ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     s += [table]
     return s
