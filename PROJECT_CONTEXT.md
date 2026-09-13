@@ -1,6 +1,6 @@
 # HealthAtlas – Projektkontext
 
-Stand: 6. September 2026 · Releasebranch: `main`
+Stand: 13. September 2026 · Releasebranch: `main`
 
 HealthAtlas ist eine native macOS-App zur lokalen Darstellung eines bewusst
 ausgewählten Apple-Health-Exports. Sie startet ohne Daten, verarbeitet nur eine
@@ -12,13 +12,11 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 
 ## Aktueller Stand
 
-- Die aktuelle öffentliche Final-Version ist `v1.0.1` mit ZIP, DMG und SHA-256-Dateien. Sie behebt die Darstellung rechteckiger Hintergrundanteile an abgerundeten Card-Ecken. Die aktuelle öffentliche Vorabversion ist `Bugfix 1.1.1` mit dem technischen Tag `v1.1.1-beta`; sie behebt die zu schmale Datentyp-Suche in Quellen.
-- `dev` ist ausschließlich die lokale Arbeitslinie; auf GitHub liegen nur die getrennten Release-Linien `beta` und `main`.
+- Die aktuelle öffentliche Final-Version ist `v1.0.1` mit ZIP, DMG und SHA-256-Dateien. Die aktuelle öffentliche Vorabversion ist `Beta 1.3.0` mit technischem Tag `v1.3.0-beta`; sie erweitert den lokalen Import, die Quellenlogik und die Oberfläche.
 - Die App bietet lokale Importansicht, Quellen-Auswahl, Übersichten mit separat auswählbarem gemeinsamen Verlauf, Verläufe für 7T, 15T, 30T, 3M, 6M und 1J, beschreibende Einblicke, Zeitraumvergleiche, anklickbare Datenkalendertage für 7T, 15T, 4W, 3M, 6M und 1J mit lokalem Wert, Musterkarte, Vollbild-Fokus, konfigurierbare Karten und Kartensortierung.
 - Deutsch und Englisch, die Themes Clear Glass, Midnight Glass, Aurora und Warmpaper sowie die datensparsame Ersthilfe sind umgesetzt. Im Design-Studio bleiben die drei KI-Dienste für eine Erklärung des passenden öffentlichen Handbuchs dauerhaft verfügbar; die deutschen und englischen Handbücher lassen sich dort getrennt öffnen. Das Design-Studio zeigt zudem die installierte Version und kann die öffentliche GitHub-Release-Liste nach frei wählbarem Intervall oder manuell prüfen; dabei werden keine Gesundheitsdaten übertragen.
 - Die App verwendet eine native Menüleiste für Import, PDF-Export, Ansicht und Fenstersteuerung; die Sidebar lässt sich über einen App-Button und das View-Menü ein- und ausblenden. Der PDF-Export ist ohne importierte Daten deaktiviert.
 - Eigene interaktive Diagramm- und Kartenansichten sind als AppKit-Accessibility-Controls erreichbar; die bestehenden Themes bleiben unverändert.
-- `Demo/AppleHealthDemo/Export.xml` enthält ausschließlich synthetische Daten. Öffentliche Screenshots und Handbücher müssen ebenso synthetisch bleiben.
 
 ## Architektur
 
@@ -40,10 +38,12 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 | Branch | Zweck | Grenze |
 | --- | --- | --- |
 | `dev` | ausschließlich lokale Arbeitslinie | wird nicht nach GitHub gepusht; Änderungen erst nach ausdrücklichem Beta-Auftrag übernehmen |
-| `beta` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion `Bugfix 1.1.1` |
+| `beta` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion `Beta 1.3.0` |
 | `main` | Final-Linie auf GitHub | enthält die ausdrücklich freigegebene Final-Version `v1.0.1` |
 
 Die Branches haben unterschiedliche Historien und Dokumentationsstände. Dateien nicht allein zur Vereinheitlichung zwischen Branches kopieren oder zusammenführen. Die ausführlichen Funktionsübersichten `FEATURES.md` und `FEATURES.de.md` werden jedoch auf `dev`, `beta` und `main` gepflegt. Sie ergänzen README und Projektkontext, ersetzen aber keine Branch- oder Release-Regeln.
+
+Die lokalen Refs `beta` und `main` entsprechen jeweils `origin/beta` und `origin/main`. Weder zu `main` wechseln noch Branches zusammenführen, sofern dies nicht ausdrücklich beauftragt wurde.
 
 ## Build, Test und Veröffentlichung
 
@@ -63,8 +63,5 @@ Scripts/build-development.sh
 
 ## Projektspezifische Regeln
 
-- Die freiwillige KI-Ersthilfe kopiert nur eine feste allgemeine Frage mit öffentlichem Handbuch-Link; Gesundheitsdaten werden nicht gelesen oder übertragen.
-- Die optionale Update-Prüfung ruft ausschließlich die öffentliche GitHub-Release-Liste ab; sie überträgt keine importierten Gesundheitsdaten und öffnet eine Veröffentlichung erst nach Nutzerklick.
 - Dev, Beta und Final verwenden getrennte App-IDs und lokale Einstellungen.
 - Bei sichtbaren Funktions-, Bedienungs- oder Datenschutzänderungen README, beide Handbücher und die Kontextdateien gegen den tatsächlichen Stand abgleichen.
-- Vor öffentlichen Builds und Releases die vorhandenen Datenschutzskripte verwenden und ausschließlich synthetische Demo-/Testdaten einsetzen.

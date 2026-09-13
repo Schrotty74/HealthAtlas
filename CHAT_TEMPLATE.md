@@ -13,20 +13,12 @@ Bitte lies vor Beginn vollständig:
 1. `AGENTS.md`
 2. `PROJECT_CONTEXT.md`
 3. `NEXT_STEPS.md`
-4. `README.md` und bei deutschen Texten `README.de.md`
-5. Bei Demo- oder Testdatenarbeit `Demo/README.md`
 
-Die verbindlichen allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md` und gelten vollständig.
+Lies danach nur die Dateien, die für den Auftrag nötig sind. Bei nutzersichtbaren Texten gehören dazu das passende README, bei Demo- oder Testdaten `Demo/README.md`.
 
 Prüfe vor Aussagen oder Änderungen den tatsächlichen Projektzustand und halte `PROJECT_CONTEXT.md` sowie `NEXT_STEPS.md` bei wichtigen Änderungen aktuell.
 
-HealthAtlas-spezifisch:
-
-- Für Tests, Screenshots und Repository-Inhalte ausschließlich synthetische Apple-Health-Daten verwenden.
-- Keine HealthKit-Integration, Cloud-Synchronisierung, Diagnose- oder Behandlungsaussagen beginnen, sofern dies nicht ausdrücklich als Produktänderung beauftragt wurde.
-- Bestehende Architektur und Release-Skripte nicht unnötig umstellen.
-- Vor App-Arbeit Dokumentation, Manifeste, Build-Skripte und relevante CI-Konfiguration prüfen; projektgebundene Abhängigkeiten nicht automatisch global installieren.
-- Wenn dieses lokale Projekt bereits eine aktuellere `dev`-Arbeitslinie enthält, damit weiterarbeiten. Nach einem vollständigen lokalen Neustart zuerst die aktuelle öffentliche `main`-Version klonen und für neue Arbeit einen lokalen `dev`-Branch daraus erstellen. Falls eine öffentliche `beta` neuer als `main` ist, stattdessen von `beta` ausgehen. `FEATURES.md` und `FEATURES.de.md` stehen auf allen drei Linien als vollständige Funktionsübersicht zur Verfügung.
+Die verbindlichen Arbeits-, Datenschutz-, Branch- und Produktregeln stehen in den drei Pflichtdateien.
 
 Aktueller Auftrag:
 
