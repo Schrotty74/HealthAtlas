@@ -1,6 +1,6 @@
 # HealthAtlas – Projektkontext
 
-Stand: 13. September 2026 · Arbeitsbranch: `dev`
+Stand: 13. September 2026 · Veröffentlichungsbranch: `beta`
 
 HealthAtlas ist eine native macOS-App zur lokalen Darstellung eines bewusst
 ausgewählten Apple-Health-Exports. Sie startet ohne Daten, verarbeitet nur eine
@@ -13,7 +13,7 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
 ## Aktueller Stand
 
 - Die aktuelle öffentliche Final-Version ist `v1.0.1` mit ZIP, DMG und SHA-256-Dateien. Sie behebt die Darstellung rechteckiger Hintergrundanteile an abgerundeten Card-Ecken. Die aktuelle öffentliche Vorabversion ist `Beta 1.4.0` mit technischem Tag `v1.4.0-beta` vom 13. September 2026. Sie erweitert den lokalen Import auf 5 GiB, verarbeitet große XML-Dateien speicherschonend, erlaubt das Abbrechen eines Imports und führt eine nachvollziehbare Quellen-, Dubletten- und Überlappungslogik ein. Außerdem enthält sie die überarbeitete Oberfläche für Design-Studio, Karten und Quellen, optimierte lokale Animationen sowie die korrigierte Scrollleisten-Anzeige.
-- Die Arbeitskopie behält den vorgemerkten Stand, aus dem Beta 1.4.0 erstellt wurde. `dev` bleibt ohne Remote-Branch. Den Stand nicht ohne ausdrücklichen Auftrag verwerfen oder in `dev` committen. Vor weiterer Arbeit zuerst `git status` und den Vergleich mit `beta` prüfen; eine weitere Beta entsteht erst aus neuen, ausdrücklich beauftragten Änderungen.
+- Der öffentliche Branch `beta` enthält Beta 1.4.0 und entspricht `origin/beta`. Der lokale Arbeitsbranch `dev` bleibt ohne Remote-Branch; eine weitere Beta entsteht erst aus neuen, ausdrücklich beauftragten Änderungen.
 - Der lokale Dev-Build nutzt zusätzlich den geprüften Optimierungsstand: Karten teilen sich einen Animationstakt, nicht sichtbare Hintergrundanimationen pausieren, wiederholt benötigte Datentypnamen und Quellen-Normalisierungen werden zwischengespeichert. Die Scrollleiste erscheint nur bei tatsächlichem vertikalem Überlauf.
 - Die App bietet lokale Importansicht, Quellen-Auswahl mit Datentyp-Suche, Übersichten mit separat auswählbarem gemeinsamen Verlauf, Verläufe für 7T, 15T, 30T, 3M, 6M und 1J, beschreibende Einblicke, Zeitraumvergleiche, anklickbare Datenkalendertage für 7T, 15T, 4W, 3M, 6M und 1J mit lokalem Wert, Musterkarte, Vollbild-Fokus, konfigurierbare Karten und Kartensortierung.
 - In der kompakten Übersicht hat die obere Titelzeile jeder Karte eine feste, ausreichend hohe Textfläche, damit die Schrift nicht angeschnitten wird. Die besonders lange Apple-Handgelenktemperatur heißt dort verkürzt „Wrist Temperature“ beziehungsweise „Handgelenktemperatur“, ohne den vollständigen Namen in Quellen oder Detailansichten zu verändern.
