@@ -1,6 +1,6 @@
 # HealthAtlas – Projektkontext
 
-Stand: 13. September 2026 · Arbeitsbranch: `dev`
+Stand: 13. September 2026 · lokale Arbeitslinie: `dev`
 
 HealthAtlas ist eine native macOS-App zur lokalen Darstellung eines bewusst
 ausgewählten Apple-Health-Exports. Sie startet ohne Daten, verarbeitet nur eine
