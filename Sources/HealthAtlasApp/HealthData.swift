@@ -869,11 +869,12 @@ private final class AppleHealthAggregationPlanner: NSObject, XMLParserDelegate {
     }
 
     func makePlan() -> HealthAggregationPlan {
+        let stableSourceNames = sourcesByIndex.map(\.stableName)
         var selections: [AggregationSlot: (sourceIndex: Int, coverage: TimeInterval)] = [:]
         for (key, duration) in coverage {
             if let current = selections[key.slot] {
-                let currentName = sourcesByIndex[current.sourceIndex].stableName
-                let candidateName = sourcesByIndex[key.sourceIndex].stableName
+                let currentName = stableSourceNames[current.sourceIndex]
+                let candidateName = stableSourceNames[key.sourceIndex]
                 if duration > current.coverage || (duration == current.coverage && candidateName < currentName) {
                     selections[key.slot] = (key.sourceIndex, duration)
                 }
@@ -1207,28 +1208,30 @@ private enum AppleHealthDateParser {
 }
 
 enum HealthDataTypeName {
+    private static let english: [String: String] = [
+        "HKQuantityTypeIdentifierStepCount": "Steps", "HKQuantityTypeIdentifierHeartRate": "Heart Rate",
+        "HKCategoryTypeIdentifierSleepAnalysis": "Sleep Analysis", "HKQuantityTypeIdentifierActiveEnergyBurned": "Active Energy",
+        "HKQuantityTypeIdentifierBasalEnergyBurned": "Resting Energy", "HKQuantityTypeIdentifierDistanceWalkingRunning": "Walking + Running Distance",
+        "HKQuantityTypeIdentifierBodyMass": "Body Mass", "HKQuantityTypeIdentifierBodyMassIndex": "Body Mass Index",
+        "HKQuantityTypeIdentifierBodyFatPercentage": "Body Fat Percentage", "HKQuantityTypeIdentifierFlightsClimbed": "Flights Climbed",
+        "HKQuantityTypeIdentifierDietaryWater": "Dietary Water", "HKQuantityTypeIdentifierBloodPressureSystolic": "Blood Pressure Systolic",
+        "HKQuantityTypeIdentifierBloodPressureDiastolic": "Blood Pressure Diastolic", "Workout": "Workouts",
+        "ActivitySummary": "Activity Summaries", "ClinicalRecord": "Clinical Records"
+    ]
+
+    private static let german: [String: String] = [
+        "HKQuantityTypeIdentifierStepCount": "Schritte", "HKQuantityTypeIdentifierHeartRate": "Herzfrequenz",
+        "HKCategoryTypeIdentifierSleepAnalysis": "Schlafanalyse", "HKQuantityTypeIdentifierActiveEnergyBurned": "Aktive Energie",
+        "HKQuantityTypeIdentifierBasalEnergyBurned": "Ruheenergie", "HKQuantityTypeIdentifierDistanceWalkingRunning": "Geh- und Laufdistanz",
+        "HKQuantityTypeIdentifierBodyMass": "Körpergewicht", "HKQuantityTypeIdentifierBodyMassIndex": "Body-Mass-Index",
+        "HKQuantityTypeIdentifierBodyFatPercentage": "Körperfettanteil", "HKQuantityTypeIdentifierFlightsClimbed": "Gestiegene Stockwerke",
+        "HKQuantityTypeIdentifierDietaryWater": "Getrunkenes Wasser", "HKQuantityTypeIdentifierBloodPressureSystolic": "Blutdruck systolisch",
+        "HKQuantityTypeIdentifierBloodPressureDiastolic": "Blutdruck diastolisch", "Workout": "Trainings",
+        "ActivitySummary": "Aktivitätsübersichten", "ClinicalRecord": "Klinische Datensätze"
+    ]
+
     static func displayName(for identifier: String, language: AppLanguage = .current) -> String {
-        let english: [String: String] = [
-            "HKQuantityTypeIdentifierStepCount": "Steps", "HKQuantityTypeIdentifierHeartRate": "Heart Rate",
-            "HKCategoryTypeIdentifierSleepAnalysis": "Sleep Analysis", "HKQuantityTypeIdentifierActiveEnergyBurned": "Active Energy",
-            "HKQuantityTypeIdentifierBasalEnergyBurned": "Resting Energy", "HKQuantityTypeIdentifierDistanceWalkingRunning": "Walking + Running Distance",
-            "HKQuantityTypeIdentifierBodyMass": "Body Mass", "HKQuantityTypeIdentifierBodyMassIndex": "Body Mass Index",
-            "HKQuantityTypeIdentifierBodyFatPercentage": "Body Fat Percentage", "HKQuantityTypeIdentifierFlightsClimbed": "Flights Climbed",
-            "HKQuantityTypeIdentifierDietaryWater": "Dietary Water", "HKQuantityTypeIdentifierBloodPressureSystolic": "Blood Pressure Systolic",
-            "HKQuantityTypeIdentifierBloodPressureDiastolic": "Blood Pressure Diastolic", "Workout": "Workouts",
-            "ActivitySummary": "Activity Summaries", "ClinicalRecord": "Clinical Records"
-        ]
-        let german: [String: String] = [
-            "HKQuantityTypeIdentifierStepCount": "Schritte", "HKQuantityTypeIdentifierHeartRate": "Herzfrequenz",
-            "HKCategoryTypeIdentifierSleepAnalysis": "Schlafanalyse", "HKQuantityTypeIdentifierActiveEnergyBurned": "Aktive Energie",
-            "HKQuantityTypeIdentifierBasalEnergyBurned": "Ruheenergie", "HKQuantityTypeIdentifierDistanceWalkingRunning": "Geh- und Laufdistanz",
-            "HKQuantityTypeIdentifierBodyMass": "Körpergewicht", "HKQuantityTypeIdentifierBodyMassIndex": "Body-Mass-Index",
-            "HKQuantityTypeIdentifierBodyFatPercentage": "Körperfettanteil", "HKQuantityTypeIdentifierFlightsClimbed": "Gestiegene Stockwerke",
-            "HKQuantityTypeIdentifierDietaryWater": "Getrunkenes Wasser", "HKQuantityTypeIdentifierBloodPressureSystolic": "Blutdruck systolisch",
-            "HKQuantityTypeIdentifierBloodPressureDiastolic": "Blutdruck diastolisch", "Workout": "Trainings",
-            "ActivitySummary": "Aktivitätsübersichten", "ClinicalRecord": "Klinische Datensätze"
-        ]
-        if let name = (language == .german ? german : english)[identifier] { return name }
+        if let name = (language == .german ? Self.german : Self.english)[identifier] { return name }
         let stem = identifier
             .replacingOccurrences(of: "HKQuantityTypeIdentifier", with: "")
             .replacingOccurrences(of: "HKCategoryTypeIdentifier", with: "")

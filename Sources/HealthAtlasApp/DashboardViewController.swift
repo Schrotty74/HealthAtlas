@@ -538,6 +538,11 @@ private final class HealthWorkspaceViewController: NSViewController {
         checkForAppUpdateIfNeeded()
     }
 
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        updateContentScrollerVisibility()
+    }
+
     @objc func importFromMenu(_ sender: Any?) {
         importFile()
     }
@@ -587,6 +592,9 @@ private final class HealthWorkspaceViewController: NSViewController {
         body.setContentHuggingPriority(.required, for: .vertical)
         body.wantsLayer = true
         contentScrollView.drawsBackground = false
+        // AppKit decides from the actual document size whether scrolling is
+        // needed. Keeping the scroller available lets `autohidesScrollers`
+        // hide it for short pages and reveal it for overflowing ones.
         contentScrollView.hasVerticalScroller = true
         contentScrollView.autohidesScrollers = true
         contentScrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -654,6 +662,21 @@ private final class HealthWorkspaceViewController: NSViewController {
         clearGlassEffect.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.055).cgColor
     }
 
+    private func updateContentScrollerVisibility() {
+        let visibleHeight = contentScrollView.contentView.bounds.height
+        guard visibleHeight > 0 else { return }
+
+        // Measure the lowest arranged view instead of AppKit's document
+        // reserve. A compact bottom inset avoids a scrollbar for the import
+        // screen while leaving space below its visible content.
+        let contentBottom = body.arrangedSubviews.reduce(body.frame.minY) { bottom, arrangedView in
+            max(bottom, body.frame.minY + arrangedView.frame.maxY)
+        }
+        let needsVerticalScroller = contentBottom + 16 > visibleHeight + 0.5
+        guard contentScrollView.hasVerticalScroller != needsVerticalScroller else { return }
+        contentScrollView.hasVerticalScroller = needsVerticalScroller
+    }
+
     private func rebuildBody() {
         body.arrangedSubviews.forEach { body.removeArrangedSubview($0); $0.removeFromSuperview() }
         body.layer?.removeAllAnimations()
@@ -681,6 +704,10 @@ private final class HealthWorkspaceViewController: NSViewController {
         }
 
         animateBodyEntrance()
+        view.needsLayout = true
+        DispatchQueue.main.async { [weak self] in
+            self?.updateContentScrollerVisibility()
+        }
     }
 
     private func buildOverview() {
@@ -2414,20 +2441,57 @@ private final class GradientBackdropView: NSView {
     private var theme = AppTheme.current
     private var phase: CGFloat = 0
     private var timer: Timer?
+    private var isObservingAnimationState = false
 
     func apply(theme: AppTheme) { self.theme = theme; needsDisplay = true }
     override var isOpaque: Bool { false }
 
+    isolated deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        guard window != nil, timer == nil, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
+        observeAnimationState()
+        refreshAnimationState()
+    }
+
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        if newWindow == nil { stopTimer() }
+        super.viewWillMove(toWindow: newWindow)
+    }
+
+    private func observeAnimationState() {
+        guard !isObservingAnimationState else { return }
+        isObservingAnimationState = true
+        let center = NotificationCenter.default
+        let selector = #selector(animationStateDidChange(_:))
+        [NSApplication.didBecomeActiveNotification, NSApplication.didResignActiveNotification,
+         NSWindow.didChangeOcclusionStateNotification, NSWindow.didMiniaturizeNotification,
+         NSWindow.didDeminiaturizeNotification].forEach {
+            center.addObserver(self, selector: selector, name: $0, object: nil)
+        }
+    }
+
+    @objc private func animationStateDidChange(_ notification: Notification) { refreshAnimationState() }
+
+    private var shouldAnimate: Bool {
+        guard let window, NSApp.isActive, !window.isMiniaturized,
+              !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return false }
+        let occlusionState = window.occlusionState
+        return occlusionState.isEmpty || occlusionState.contains(.visible)
+    }
+
+    private func refreshAnimationState() {
+        guard shouldAnimate else { stopTimer(); return }
+        guard timer == nil else { return }
         timer = Timer.scheduledTimer(timeInterval: 1.0 / 30.0, target: self, selector: #selector(advance), userInfo: nil, repeats: true)
         RunLoop.main.add(timer!, forMode: .common)
     }
 
-    override func viewWillMove(toWindow newWindow: NSWindow?) {
-        if newWindow == nil { timer?.invalidate(); timer = nil }
-        super.viewWillMove(toWindow: newWindow)
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
     }
 
     @objc private func advance() {
@@ -2470,6 +2534,7 @@ private final class ClearGlassAtmosphereView: NSView {
     private var isPerformanceSensitive = false
     private let drawsAmbient: Bool
     private let emitsSparks: Bool
+    private var isObservingAnimationState = false
 
     init(drawsAmbient: Bool, emitsSparks: Bool) {
         self.drawsAmbient = drawsAmbient
@@ -2478,6 +2543,10 @@ private final class ClearGlassAtmosphereView: NSView {
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    isolated deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 
     override var isOpaque: Bool { false }
 
@@ -2498,6 +2567,7 @@ private final class ClearGlassAtmosphereView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        observeAnimationState()
         refreshAnimationState()
     }
 
@@ -2510,8 +2580,28 @@ private final class ClearGlassAtmosphereView: NSView {
         NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
     }
 
+    private func observeAnimationState() {
+        guard !isObservingAnimationState else { return }
+        isObservingAnimationState = true
+        let center = NotificationCenter.default
+        let selector = #selector(animationStateDidChange(_:))
+        [NSApplication.didBecomeActiveNotification, NSApplication.didResignActiveNotification,
+         NSWindow.didChangeOcclusionStateNotification, NSWindow.didMiniaturizeNotification,
+         NSWindow.didDeminiaturizeNotification].forEach {
+            center.addObserver(self, selector: selector, name: $0, object: nil)
+        }
+    }
+
+    @objc private func animationStateDidChange(_ notification: Notification) { refreshAnimationState() }
+
+    private var shouldAnimate: Bool {
+        guard let window, NSApp.isActive, !window.isMiniaturized else { return false }
+        let occlusionState = window.occlusionState
+        return occlusionState.isEmpty || occlusionState.contains(.visible)
+    }
+
     private func refreshAnimationState() {
-        guard window != nil, theme == .clearGlass, !isPerformanceSensitive, !shouldReduceMotion else {
+        guard shouldAnimate, theme == .clearGlass, !isPerformanceSensitive, !shouldReduceMotion else {
             stopTimer()
             return
         }
@@ -3025,7 +3115,6 @@ private final class MetricCardBackgroundView: NSView {
     private let title: String
     private let accent: NSColor
     private var phase: CGFloat = 0
-    private var timer: Timer?
     private let icon: NSImageView
 
     init(title: String, accent: NSColor) {
@@ -3050,29 +3139,26 @@ private final class MetricCardBackgroundView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        startAnimationIfNeeded()
+        CardAnimationScheduler.shared.register(self)
     }
 
     override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
         // Stack views can attach a freshly rebuilt card after the window move.
-        // Retry on the next main-loop pass so its visual timer is not skipped.
-        DispatchQueue.main.async { [weak self] in self?.startAnimationIfNeeded() }
-    }
-
-    private func startAnimationIfNeeded() {
-        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
-        guard window != nil, timer == nil else { return }
-        timer = Timer.scheduledTimer(timeInterval: 1.0 / 24.0, target: self, selector: #selector(advance), userInfo: nil, repeats: true)
-        RunLoop.main.add(timer!, forMode: .common)
+        // Retry on the next main-loop pass so a freshly rebuilt card joins the
+        // shared animation clock only after it has a window.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            CardAnimationScheduler.shared.register(self)
+        }
     }
 
     override func viewWillMove(toWindow newWindow: NSWindow?) {
-        if newWindow == nil { timer?.invalidate(); timer = nil }
+        if newWindow == nil { CardAnimationScheduler.shared.unregister(self) }
         super.viewWillMove(toWindow: newWindow)
     }
 
-    @objc private func advance() {
+    fileprivate func advanceAnimation() {
         phase += 0.11
         if title.contains("herz") || title.contains("heart") {
             // Hearts pulse in place. Translating and rotating a small symbol
@@ -3166,6 +3252,67 @@ private final class MetricCardBackgroundView: NSView {
         if lower.contains("gewicht") || lower.contains("mass") { return "scalemass.fill" }
         if lower.contains("energie") || lower.contains("energy") { return "bolt.heart.fill" }
         return "waveform.path.ecg"
+    }
+}
+
+/// Overview cards share one 24-fps clock. This keeps their existing motion and
+/// drawing intact while avoiding one repeating timer for every visible card.
+@MainActor
+private final class CardAnimationScheduler: NSObject {
+    static let shared = CardAnimationScheduler()
+
+    private let cards = NSHashTable<MetricCardBackgroundView>.weakObjects()
+    private var timer: Timer?
+
+    private override init() {
+        super.init()
+        let center = NotificationCenter.default
+        let selector = #selector(animationStateDidChange(_:))
+        [NSApplication.didBecomeActiveNotification, NSApplication.didResignActiveNotification,
+         NSWindow.didChangeOcclusionStateNotification, NSWindow.didMiniaturizeNotification,
+         NSWindow.didDeminiaturizeNotification].forEach {
+            center.addObserver(self, selector: selector, name: $0, object: nil)
+        }
+    }
+
+    @objc private func animationStateDidChange(_ notification: Notification) { refreshTimer() }
+
+    func register(_ card: MetricCardBackgroundView) {
+        cards.add(card)
+        refreshTimer()
+    }
+
+    func unregister(_ card: MetricCardBackgroundView) {
+        cards.remove(card)
+        refreshTimer()
+    }
+
+    private func canAnimate(_ card: MetricCardBackgroundView) -> Bool {
+        guard let window = card.window, NSApp.isActive, !window.isMiniaturized,
+              !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return false }
+        let occlusionState = window.occlusionState
+        return occlusionState.isEmpty || occlusionState.contains(.visible)
+    }
+
+    private func refreshTimer() {
+        guard cards.allObjects.contains(where: canAnimate) else {
+            timer?.invalidate()
+            timer = nil
+            return
+        }
+        guard timer == nil else { return }
+        let timer = Timer.scheduledTimer(timeInterval: 1.0 / 24.0, target: self, selector: #selector(advance), userInfo: nil, repeats: true)
+        self.timer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    @objc private func advance() {
+        let visibleCards = cards.allObjects.filter(canAnimate)
+        guard !visibleCards.isEmpty else {
+            refreshTimer()
+            return
+        }
+        visibleCards.forEach { $0.advanceAnimation() }
     }
 }
 

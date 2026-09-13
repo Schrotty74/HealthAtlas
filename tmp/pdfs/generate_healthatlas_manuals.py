@@ -287,7 +287,7 @@ def cover(title, subtitle, language, edition, styles):
 
 def manual_de(styles):
     s = []
-    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.3.0", styles)
+    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.4.0", styles)
     s += section("Willkommen", "HealthAtlas liest einen von dir ausgewählten Apple-Health-Export lokal auf deinem Mac. Anschließend entscheidest du selbst, welche erkannten Datentypen im Dashboard erscheinen. Die App erstellt keine Diagnose und gibt keine Behandlungsempfehlungen.", styles,
         bullets_list=[
             "Die App startet bei jedem normalen Start ohne importierte Gesundheitsdaten.",
@@ -483,7 +483,7 @@ def manual_de(styles):
 
 def manual_en(styles):
     s = []
-    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.3.0", styles)
+    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.4.0", styles)
     s += section("Welcome", "HealthAtlas reads an Apple Health export that you choose locally on your Mac. You then decide exactly which recognised data types appear in the dashboard. The app does not diagnose conditions or recommend treatment.", styles,
         bullets_list=[
             "Every normal launch starts without imported health data.",
