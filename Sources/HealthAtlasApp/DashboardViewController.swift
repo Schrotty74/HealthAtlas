@@ -127,7 +127,10 @@ final class DashboardViewController: NSViewController, NSMenuItemValidation {
         sidebarToggleButton.image = NSImage(systemSymbolName: "sidebar.left", accessibilityDescription: nil)
         sidebarToggleButton.imagePosition = .imageOnly
         sidebarToggleButton.bezelStyle = .texturedRounded
-        sidebarToggleButton.contentTintColor = .white
+        // The title bar stays an Aqua surface in light appearance, even when a
+        // coloured workspace theme is selected. A semantic tint keeps this
+        // control legible on both native appearances.
+        sidebarToggleButton.contentTintColor = .controlTextColor
         sidebarToggleButton.target = self
         sidebarToggleButton.action = #selector(toggleSidebar(_:))
         updateSidebarToggleButton()
@@ -226,13 +229,13 @@ private struct SidebarLiquidGlassView: View {
             HStack(spacing: 12) {
                 Image(systemName: "heart.text.square.fill")
                     .font(.title.weight(.bold))
-                    .foregroundStyle(.pink)
+                    .foregroundStyle(AppTheme.current.isNativeMonochrome ? Color(nsColor: .labelColor) : .pink)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("HealthAtlas")
                         .font(.title2.weight(.bold))
                     Text(AppLanguage.current.text(english: "Health, in your hands", german: "Gesundheit in deiner Hand"))
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.72))
+                        .foregroundStyle(Color(nsColor: .secondaryLabelColor))
                 }
             }
             .padding(.top, 27)
@@ -250,13 +253,13 @@ private struct SidebarLiquidGlassView: View {
                             Spacer(minLength: 0)
                         }
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color(nsColor: .labelColor))
                         .padding(.horizontal, 16)
                         .frame(minHeight: 44)
                         .background {
                             if section == selectedSection {
                                 RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                    .fill(Color.cyan.opacity(0.68))
+                                    .fill(AppTheme.current.isNativeMonochrome ? Color(nsColor: .selectedControlColor) : Color.cyan.opacity(0.68))
                                     .matchedGeometryEffect(id: "sidebarSelection", in: selectionNamespace)
                             }
                         }
@@ -270,21 +273,20 @@ private struct SidebarLiquidGlassView: View {
             Spacer(minLength: 0)
 
             HStack(spacing: 10) {
-                CommunityLinkButton(imageName: "GitHubMark", backgroundColor: .white, destination: "https://github.com/Schrotty74/HealthAtlas", label: "HealthAtlas on GitHub")
-                CommunityLinkButton(imageName: "DiscordMark", backgroundColor: Color(red: 0.35, green: 0.40, blue: 0.95), destination: "https://discord.gg/RbsvqRCPQ", label: "HealthAtlas community on Discord")
+                CommunityLinkButton(imageName: "GitHubMark", backgroundColor: AppTheme.current.isNativeMonochrome ? Color(nsColor: .controlBackgroundColor) : .white, destination: "https://github.com/Schrotty74/HealthAtlas", label: "HealthAtlas on GitHub")
+                CommunityLinkButton(imageName: "DiscordMark", backgroundColor: AppTheme.current.isNativeMonochrome ? Color(nsColor: .controlBackgroundColor) : Color(red: 0.35, green: 0.40, blue: 0.95), destination: "https://discord.gg/RbsvqRCPQ", label: "HealthAtlas community on Discord")
             }
             .padding(.horizontal, 22)
             .padding(.bottom, 12)
 
             Label(AppLanguage.current.text(english: "Private · Local only", german: "Privat · Nur lokal"), systemImage: "circle.fill")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(.green)
+                .foregroundStyle(AppTheme.current.isNativeMonochrome ? Color(nsColor: .secondaryLabelColor) : .green)
                 .padding(.horizontal, 22)
                 .padding(.bottom, 23)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())
-        .preferredColorScheme(.dark)
         .id(refreshToken)
         .animation(.spring(response: 0.32, dampingFraction: 0.82), value: selectedSection)
     }
@@ -435,6 +437,9 @@ private final class FlippedContentView: NSView {
     override var isFlipped: Bool { true }
 }
 
+/// AppKit's standard bezel can ignore `attributedTitle` for an accent-tinted
+/// button. These persistent header controls sit on every dark workspace, so
+/// render their titles explicitly after AppKit has drawn the bezel.
 @available(macOS 26.0, *)
 private struct GlassImportButton: View {
     let title: String
@@ -553,6 +558,7 @@ private final class HealthWorkspaceViewController: NSViewController {
 
     override func loadView() {
         view = backdrop
+        applyWorkspaceAppearance()
         backdrop.apply(theme: .current)
         configureClearGlassSurface(for: .current)
         titleLabel.font = .systemFont(ofSize: 30, weight: .bold)
@@ -646,6 +652,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     @objc private func themeChanged(_ sender: NSPopUpButton) {
         guard let title = sender.titleOfSelectedItem, let theme = AppTheme.allCases.first(where: { $0.displayName == title }) else { return }
         theme.save()
+        applyWorkspaceAppearance()
         backdrop.apply(theme: theme)
         configureClearGlassSurface(for: theme)
         onThemeChanged?(theme)
@@ -678,6 +685,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 
     private func rebuildBody() {
+        applyHeaderTheme()
         body.arrangedSubviews.forEach { body.removeArrangedSubview($0); $0.removeFromSuperview() }
         body.layer?.removeAllAnimations()
         body.alphaValue = shouldAnimateInterface ? 0 : 1
@@ -703,11 +711,51 @@ private final class HealthWorkspaceViewController: NSViewController {
         case .settings: buildSettings()
         }
 
+        applyThemeSemantics(to: contentDocumentView)
+
         animateBodyEntrance()
         view.needsLayout = true
         DispatchQueue.main.async { [weak self] in
             self?.updateContentScrollerVisibility()
         }
+    }
+
+    /// Header labels outlive the rebuilt body. Reset them on every theme
+    /// change so a previous Black & White selection cannot leave dark labels
+    /// behind on a coloured workspace.
+    private func applyHeaderTheme() {
+        let usesNativeLabels = AppTheme.current.isNativeMonochrome
+        titleLabel.textColor = usesNativeLabels ? .labelColor : .white
+        subtitleLabel.textColor = usesNativeLabels ? .secondaryLabelColor : NSColor.white.withAlphaComponent(0.72)
+        statusLabel.textColor = usesNativeLabels ? .labelColor : .white
+        importButton.contentTintColor = usesNativeLabels ? .controlTextColor : .white
+    }
+
+    /// Coloured themes are intentionally dark workspaces, even when the host
+    /// macOS appearance is Aqua. Giving only this content tree Dark Aqua lets
+    /// AppKit draw its own controls once with the correct contrast; the
+    /// sidebar and titlebar remain in the user's system appearance.
+    private func applyWorkspaceAppearance() {
+        view.appearance = AppTheme.current.isNativeMonochrome ? nil : NSAppearance(named: .darkAqua)
+    }
+
+    /// The legacy themes intentionally use a high-contrast white-on-dark
+    /// palette. Black & White instead follows the system's label hierarchy so
+    /// the same layout remains readable in both Aqua and Dark Aqua.
+    private func applyThemeSemantics(to root: NSView) {
+        guard AppTheme.current.isNativeMonochrome else { return }
+        func visit(_ view: NSView) {
+            if let label = view as? NSTextField,
+               let color = label.textColor,
+               color.alphaComponent > 0.5 {
+                label.textColor = color.alphaComponent < 0.9 ? .secondaryLabelColor : .labelColor
+            }
+            if let button = view as? NSButton {
+                button.contentTintColor = .controlTextColor
+            }
+            view.subviews.forEach(visit)
+        }
+        visit(root)
     }
 
     private func buildOverview() {
@@ -1208,6 +1256,7 @@ private final class HealthWorkspaceViewController: NSViewController {
         guard let id = sender.identifier?.rawValue, let theme = AppTheme(rawValue: id) else { return }
         themeButton.selectItem(withTitle: theme.displayName)
         theme.save()
+        applyWorkspaceAppearance()
         backdrop.apply(theme: theme)
         configureClearGlassSurface(for: theme)
         onThemeChanged?(theme)
@@ -1788,7 +1837,7 @@ private final class HealthWorkspaceViewController: NSViewController {
     }
 
     private func accent(for color: String) -> NSColor {
-        switch color {
+        return switch color {
         case "purple": .systemPurple
         case "pink": .systemPink
         case "green": .systemGreen
@@ -2139,7 +2188,7 @@ private final class ImportSuccessShimmerView: RoundedEffectView {
     init(language: AppLanguage, onDismiss: @escaping () -> Void) {
         self.onDismiss = onDismiss
         super.init(cornerRadius: 20)
-        material = .hudWindow
+        material = AppTheme.current.isNativeMonochrome ? .contentBackground : .hudWindow
         blendingMode = .withinWindow
         state = .active
         layer?.borderWidth = 1
@@ -2147,13 +2196,14 @@ private final class ImportSuccessShimmerView: RoundedEffectView {
         let icon = NSImageView(image: NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil) ?? NSImage())
         icon.contentTintColor = .systemGreen
         let title = NSTextField(labelWithString: language.text(english: "Import successful", german: "Import erfolgreich"))
-        title.font = .systemFont(ofSize: 18, weight: .bold); title.textColor = .white
+        title.font = .systemFont(ofSize: 18, weight: .bold); title.textColor = AppTheme.current.isNativeMonochrome ? .labelColor : .white
         let detail = NSTextField(wrappingLabelWithString: language.text(english: "Your selected data stays on this Mac. You can choose the displayed types in Sources.", german: "Deine ausgewählten Daten bleiben auf diesem Mac. Unter Quellen wählst du die angezeigten Datentypen."))
-        detail.font = .systemFont(ofSize: 12, weight: .medium); detail.textColor = NSColor.white.withAlphaComponent(0.74); detail.maximumNumberOfLines = 2
+        detail.font = .systemFont(ofSize: 12, weight: .medium); detail.textColor = AppTheme.current.isNativeMonochrome ? .secondaryLabelColor : NSColor.white.withAlphaComponent(0.74); detail.maximumNumberOfLines = 2
         let labels = NSStackView(views: [title, detail]); labels.orientation = .vertical; labels.alignment = .leading; labels.spacing = 5
         let stack = NSStackView(views: [icon, labels]); stack.orientation = .horizontal; stack.alignment = .centerY; stack.spacing = 13; stack.translatesAutoresizingMaskIntoConstraints = false
         let dismiss = NSButton(title: language.text(english: "Close", german: "Schließen"), target: self, action: #selector(dismissSuccess))
         dismiss.bezelStyle = .rounded
+        dismiss.contentTintColor = AppTheme.current.isNativeMonochrome ? .controlTextColor : .white
         dismiss.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         addSubview(dismiss)
@@ -2253,7 +2303,7 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         table.headerView = NSTableHeaderView()
         table.rowHeight = 31
         table.gridStyleMask = [.solidHorizontalGridLineMask]
-        table.gridColor = NSColor.white.withAlphaComponent(0.08)
+        table.gridColor = AppTheme.current.isNativeMonochrome ? .separatorColor : NSColor.white.withAlphaComponent(0.08)
         table.backgroundColor = .clear
         table.delegate = self
         table.dataSource = self
@@ -2309,14 +2359,20 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
             favorite.setAccessibilityLabel(AppLanguage.current.text(english: "Pin \(metric.localizedDisplayName)", german: "\(metric.localizedDisplayName) anpinnen"))
             favorite.isBordered = false
             favorite.font = .systemFont(ofSize: 17, weight: .medium)
-            favorite.contentTintColor = favorites.contains(metric.identifier) ? .systemYellow : .white.withAlphaComponent(0.55)
+            favorite.contentTintColor = favorites.contains(metric.identifier)
+                ? (AppTheme.current.isNativeMonochrome ? .labelColor : .systemYellow)
+                : (AppTheme.current.isNativeMonochrome ? .secondaryLabelColor : .white.withAlphaComponent(0.55))
             favorite.toolTip = AppLanguage.current.text(english: "Pin in \(selectedPinArea.title(for: .current))", german: "In \(selectedPinArea.title(for: .current)) anpinnen")
             return favorite
         }
         if id == "order" {
             let up = NSButton(title: "↑", target: self, action: #selector(moveMetricUp(_:)))
             let down = NSButton(title: "↓", target: self, action: #selector(moveMetricDown(_:)))
-            [up, down].forEach { $0.tag = row; $0.isBordered = false; $0.contentTintColor = .white }
+            [up, down].forEach {
+                $0.tag = row
+                $0.isBordered = false
+                $0.contentTintColor = AppTheme.current.isNativeMonochrome ? .controlTextColor : .white
+            }
             up.setAccessibilityLabel(AppLanguage.current.text(english: "Move \(metric.localizedDisplayName) up", german: "\(metric.localizedDisplayName) nach oben verschieben"))
             down.setAccessibilityLabel(AppLanguage.current.text(english: "Move \(metric.localizedDisplayName) down", german: "\(metric.localizedDisplayName) nach unten verschieben"))
             let controls = NSStackView(views: [up, down])
@@ -2333,7 +2389,11 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
         let label = NSTextField(labelWithString: text)
         let category = HealthDataCategory.category(for: metric.identifier)
         label.font = .systemFont(ofSize: 12, weight: id == "dataType" ? .semibold : (id == "category" ? .medium : .regular))
-        label.textColor = id == "category" ? category.sourcesColor : .white.withAlphaComponent(id == "dataType" ? 0.92 : 0.68)
+        if AppTheme.current.isNativeMonochrome {
+            label.textColor = id == "dataType" ? .labelColor : .secondaryLabelColor
+        } else {
+            label.textColor = id == "category" ? category.sourcesColor : .white.withAlphaComponent(id == "dataType" ? 0.92 : 0.68)
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         let container = NSView()
         container.addSubview(label)
@@ -2393,7 +2453,8 @@ private final class MetricSelectionPanel: GlassCardView, NSTableViewDataSource, 
 
 private extension HealthDataCategory {
     var sourcesColor: NSColor {
-        switch self {
+        if AppTheme.current.isNativeMonochrome { return AppTheme.current.monochromeAccent(for: String(describing: self)) }
+        return switch self {
         case .activity: .systemGreen
         case .body: .systemOrange
         case .cycleTracking: .systemPink
@@ -2413,16 +2474,29 @@ private extension HealthDataCategory {
 }
 
 private enum AppTheme: String, CaseIterable {
-    case clearGlass, midnightGlass, aurora, warmPaper
+    case clearGlass, midnightGlass, aurora, warmPaper, blackAndWhite
     static var current: AppTheme { AppTheme(rawValue: BuildEnvironment.defaults.string(forKey: "HealthAtlas.theme") ?? "") ?? .midnightGlass }
-    var displayName: String { rawValue.replacingOccurrences(of: "Glass", with: " Glass").capitalized }
-    var accent: NSColor { self == .warmPaper ? .systemOrange : (self == .aurora ? .systemTeal : .systemCyan) }
+    var isNativeMonochrome: Bool { self == .blackAndWhite }
+    var displayName: String {
+        switch self {
+        case .blackAndWhite: AppLanguage.current.text(english: "Black & White", german: "Schwarz & Weiß")
+        default: rawValue.replacingOccurrences(of: "Glass", with: " Glass").capitalized
+        }
+    }
+    var accent: NSColor { isNativeMonochrome ? .labelColor : (self == .warmPaper ? .systemOrange : (self == .aurora ? .systemTeal : .systemCyan)) }
+    var controlTint: NSColor { isNativeMonochrome ? .controlTextColor : .white }
+    func monochromeAccent(for key: String) -> NSColor {
+        let levels: [CGFloat] = [1, 0.78, 0.60, 0.44]
+        let index = abs(key.unicodeScalars.reduce(0) { $0 + Int($1.value) }) % levels.count
+        return NSColor.labelColor.withAlphaComponent(levels[index])
+    }
     var sidebarColor: NSColor {
         switch self {
         case .clearGlass: NSColor(calibratedRed: 0.08, green: 0.28, blue: 0.57, alpha: 0.78)
         case .midnightGlass: NSColor(calibratedRed: 0.035, green: 0.10, blue: 0.28, alpha: 0.90)
         case .aurora: NSColor(calibratedRed: 0.03, green: 0.25, blue: 0.34, alpha: 0.88)
         case .warmPaper: NSColor(calibratedRed: 0.20, green: 0.11, blue: 0.17, alpha: 0.88)
+        case .blackAndWhite: .windowBackgroundColor
         }
     }
     var colors: [NSColor] {
@@ -2431,6 +2505,7 @@ private enum AppTheme: String, CaseIterable {
         case .midnightGlass: [NSColor(calibratedRed: 0.04, green: 0.18, blue: 0.45, alpha: 1), NSColor(calibratedRed: 0.10, green: 0.06, blue: 0.34, alpha: 1), NSColor(calibratedRed: 0.015, green: 0.025, blue: 0.12, alpha: 1)]
         case .aurora: [NSColor(calibratedRed: 0.02, green: 0.42, blue: 0.45, alpha: 1), NSColor(calibratedRed: 0.12, green: 0.16, blue: 0.60, alpha: 1), NSColor(calibratedRed: 0.04, green: 0.05, blue: 0.20, alpha: 1)]
         case .warmPaper: [NSColor(calibratedRed: 0.45, green: 0.23, blue: 0.27, alpha: 1), NSColor(calibratedRed: 0.22, green: 0.10, blue: 0.16, alpha: 1), NSColor(calibratedRed: 0.06, green: 0.04, blue: 0.10, alpha: 1)]
+        case .blackAndWhite: [.windowBackgroundColor]
         }
     }
     var previewColor: NSColor { colors[0].withAlphaComponent(0.72) }
@@ -2500,6 +2575,11 @@ private final class GradientBackdropView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
+        if theme.isNativeMonochrome {
+            NSColor.windowBackgroundColor.setFill()
+            bounds.fill()
+            return
+        }
         guard theme != .clearGlass else { return }
         NSGradient(colors: theme.colors)?.draw(in: bounds, angle: -35)
         let x = bounds.width * (0.34 + 0.025 * sin(phase))
@@ -2731,21 +2811,22 @@ private class RoundedEffectView: NSVisualEffectView {
 
 private class GlassCardView: RoundedEffectView {
     static let cornerRadius: CGFloat = 18
+    private let cardAccent: NSColor
 
     init(accent: NSColor = .systemCyan) {
+        cardAccent = accent
         super.init(cornerRadius: Self.cornerRadius)
-        material = .hudWindow
+        material = AppTheme.current.isNativeMonochrome ? .contentBackground : .hudWindow
         blendingMode = .withinWindow
         state = .active
-        layer?.backgroundColor = NSColor(calibratedWhite: 0.04, alpha: 0.46).cgColor
-        layer?.borderWidth = 1
-        layer?.borderColor = accent.withAlphaComponent(0.38).cgColor
+        configureSurface(accent: accent)
         shadow = NSShadow()
-        shadow?.shadowColor = accent.withAlphaComponent(0.18)
-        shadow?.shadowBlurRadius = 15
+        shadow?.shadowColor = AppTheme.current.isNativeMonochrome ? NSColor.black.withAlphaComponent(0.10) : accent.withAlphaComponent(0.18)
+        shadow?.shadowBlurRadius = AppTheme.current.isNativeMonochrome ? 8 : 15
     }
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        configureSurface()
         guard window != nil, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
         alphaValue = 0
         layer?.setAffineTransform(CGAffineTransform(scaleX: 0.96, y: 0.96))
@@ -2755,6 +2836,28 @@ private class GlassCardView: RoundedEffectView {
             animator().alphaValue = 1
             layer?.setAffineTransform(.identity)
         }
+    }
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        configureSurface()
+    }
+
+    private func configureSurface(accent: NSColor? = nil) {
+        let accent = accent ?? cardAccent
+        layer?.borderWidth = 1
+        guard AppTheme.current.isNativeMonochrome else {
+            layer?.backgroundColor = NSColor(calibratedWhite: 0.04, alpha: 0.46).cgColor
+            layer?.borderColor = accent.withAlphaComponent(0.38).cgColor
+            return
+        }
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        // A resolved neutral surface makes cards legible against the window in
+        // both Aqua variants; dynamic AppKit colours assigned before a window
+        // exists otherwise resolve to the wrong appearance.
+        let surface = NSColor(calibratedWhite: isDark ? 0.135 : 0.955, alpha: 1)
+        let border = NSColor(calibratedWhite: isDark ? 0.31 : 0.78, alpha: 1)
+        layer?.backgroundColor = surface.cgColor
+        layer?.borderColor = border.cgColor
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }
@@ -2821,7 +2924,7 @@ private final class EmptyGlassIllustrationView: NSView {
             let radius = CGFloat(21 + index * 9) + sin(phase + CGFloat(index)) * 2
             let ring = NSBezierPath(ovalIn: NSRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
             ring.lineWidth = 1.1
-            NSColor.systemCyan.withAlphaComponent(0.30 - CGFloat(index) * 0.07).setStroke()
+            (AppTheme.current.isNativeMonochrome ? AppTheme.current.monochromeAccent(for: "empty-\(index)") : NSColor.systemCyan).withAlphaComponent(0.30 - CGFloat(index) * 0.07).setStroke()
             ring.stroke()
         }
         let image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
@@ -2862,7 +2965,11 @@ private final class LocalPeriodStoryView: GlassCardView {
 private final class StorySymbolsView: NSView {
     private var phase: CGFloat = 0; private var timer: Timer?
     private let icons = ["heart.fill", "figure.walk", "moon.fill"]
-    private let colors: [NSColor] = [.systemRed, .systemOrange, .systemPurple]
+    private var colors: [NSColor] {
+        AppTheme.current.isNativeMonochrome
+            ? ["story-0", "story-1", "story-2"].map(AppTheme.current.monochromeAccent(for:))
+            : [.systemRed, .systemOrange, .systemPurple]
+    }
     override var isOpaque: Bool { false }
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -3062,7 +3169,7 @@ private final class AnimatedImportHeroView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         let icon = NSImageView(image: NSImage(systemSymbolName: "heart.text.square.fill", accessibilityDescription: nil) ?? NSImage())
-        icon.contentTintColor = .systemPink
+        icon.contentTintColor = AppTheme.current.isNativeMonochrome ? .labelColor : .systemPink
         icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 44, weight: .semibold)
         icon.translatesAutoresizingMaskIntoConstraints = false
         addSubview(icon)
@@ -3139,6 +3246,10 @@ private final class MetricCardBackgroundView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        // NSImageView resolves a dynamic NSColor when it is assigned. Assign
+        // after attaching to the window so Black & White does not retain a
+        // light-Aqua black symbol after macOS switches to Dark Aqua.
+        icon.contentTintColor = accent
         CardAnimationScheduler.shared.register(self)
     }
 
@@ -3184,12 +3295,16 @@ private final class MetricCardBackgroundView: NSView {
             yRadius: GlassCardView.cornerRadius
         )
         cardShape.addClip()
-        NSGradient(colors: [
-            accent.withAlphaComponent(0.34),
-            accent.withAlphaComponent(0.14),
-            NSColor(calibratedWhite: 0.03, alpha: 0.10)
-        ])?.draw(in: bounds, angle: -24)
-        guard AppTheme.current != .clearGlass else { return }
+        // Keep the ambient colour wash exclusive to the custom dark themes.
+        // The animated metric waveform stays available in every theme; its
+        // accent is readable on the neutral Black & White card surfaces too.
+        if !AppTheme.current.isNativeMonochrome {
+            NSGradient(colors: [
+                accent.withAlphaComponent(0.34),
+                accent.withAlphaComponent(0.14),
+                NSColor(calibratedWhite: 0.03, alpha: 0.10)
+            ])?.draw(in: bounds, angle: -24)
+        }
         let waveform = NSBezierPath()
         waveform.lineWidth = 2
         let baseline = bounds.height * 0.34
@@ -3361,7 +3476,10 @@ private final class CalendarHeatmapView: NSView {
         let span = max((shownValues.max() ?? 0) - minimum, 0.000_001)
         for cell in cells {
             let intensity = cell.value.map { 0.16 + 0.72 * CGFloat(($0 - minimum) / span) } ?? 0.05
-            tintColor.withAlphaComponent(intensity).setFill()
+            let fill = cell.value == nil && AppTheme.current.isNativeMonochrome
+                ? NSColor.separatorColor.withAlphaComponent(0.42)
+                : tintColor.withAlphaComponent(intensity)
+            fill.setFill()
             NSBezierPath(roundedRect: cell.rect, xRadius: 3, yRadius: 3).fill()
         }
     }
@@ -3544,7 +3662,7 @@ private final class HealthRingsCanvasView: NSView {
     override var isOpaque: Bool { false }
     override func draw(_ dirtyRect: NSRect) {
         let title = language.text(english: "Latest local values", german: "Letzte lokale Werte")
-        title.draw(at: NSPoint(x: 18, y: bounds.height - 28), withAttributes: [.font: NSFont.systemFont(ofSize: 13, weight: .bold), .foregroundColor: NSColor.white])
+        title.draw(at: NSPoint(x: 18, y: bounds.height - 28), withAttributes: [.font: NSFont.systemFont(ofSize: 13, weight: .bold), .foregroundColor: AppTheme.current.isNativeMonochrome ? NSColor.labelColor : NSColor.white])
         let center = NSPoint(x: 82, y: 92)
         let colors: [NSColor] = [.systemCyan, .systemPink, .systemPurple]
         for (index, metric) in metrics.enumerated() {
@@ -3552,7 +3670,7 @@ private final class HealthRingsCanvasView: NSView {
             guard let latest = values.last, let maxValue = values.max(), maxValue > 0 else { continue }
             let radius = CGFloat(46 - index * 11)
             let background = NSBezierPath(); background.appendArc(withCenter: center, radius: radius, startAngle: 90, endAngle: 450, clockwise: false); background.lineWidth = 7
-            NSColor.white.withAlphaComponent(0.11).setStroke(); background.stroke()
+            (AppTheme.current.isNativeMonochrome ? NSColor.separatorColor : NSColor.white.withAlphaComponent(0.11)).setStroke(); background.stroke()
             let progress = max(0.05, min(1, latest / maxValue))
             let path = NSBezierPath(); path.appendArc(withCenter: center, radius: radius, startAngle: 90, endAngle: 90 + 360 * CGFloat(progress), clockwise: false); path.lineWidth = 7
             colors[index].withAlphaComponent(0.92).setStroke(); path.stroke()
@@ -3561,7 +3679,7 @@ private final class HealthRingsCanvasView: NSView {
             "\(index + 1). \(metric.localizedDisplayName): \(metric.latestValueText)"
         }
         labels.enumerated().forEach { index, text in
-            text.draw(at: NSPoint(x: 146, y: 130 - CGFloat(index * 31)), withAttributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.83)])
+            text.draw(at: NSPoint(x: 146, y: 130 - CGFloat(index * 31)), withAttributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium), .foregroundColor: AppTheme.current.isNativeMonochrome ? NSColor.secondaryLabelColor : NSColor.white.withAlphaComponent(0.83)])
         }
     }
 }
@@ -3569,7 +3687,7 @@ private final class HealthRingsCanvasView: NSView {
 private final class CombinedHealthTimelineView: GlassCardView {
     init(metrics: [HealthDataTypeSummary], language: AppLanguage, onSelect: @escaping (String) -> Void) {
         super.init(accent: .systemBlue)
-        toolTip = language.text(english: "Selected local data types over their last 30 local days. Click a coloured name to open that metric in focus view.", german: "Ausgewählte lokale Datentypen über ihre letzten 30 lokalen Tage. Klicke auf einen farbigen Namen, um genau diesen Datentyp in der Fokusansicht zu öffnen.")
+        toolTip = language.text(english: "Selected local data types over their last 30 local days. Click a metric name to open it in focus view.", german: "Ausgewählte lokale Datentypen über ihre letzten 30 lokalen Tage. Klicke auf einen Metriknamen, um ihn in der Fokusansicht zu öffnen.")
         let canvas = CombinedHealthTimelineCanvasView(metrics: metrics, language: language, onSelect: onSelect)
         canvas.translatesAutoresizingMaskIntoConstraints = false
         addSubview(canvas)
@@ -3595,14 +3713,15 @@ private final class CombinedHealthTimelineCanvasView: NSView {
     override var isOpaque: Bool { false }
     override func draw(_ dirtyRect: NSRect) {
         let title = language.text(english: "Shared health timeline", german: "Gemeinsamer Gesundheitsverlauf")
-        title.draw(at: NSPoint(x: 18, y: bounds.height - 28), withAttributes: [.font: NSFont.systemFont(ofSize: 13, weight: .bold), .foregroundColor: NSColor.white])
+        title.draw(at: NSPoint(x: 18, y: bounds.height - 28), withAttributes: [.font: NSFont.systemFont(ofSize: 13, weight: .bold), .foregroundColor: AppTheme.current.isNativeMonochrome ? NSColor.labelColor : NSColor.white])
         let area = NSRect(x: 18, y: 24, width: max(1, bounds.width - 36), height: max(1, bounds.height - 62))
         let colors: [NSColor] = [.systemCyan, .systemPink, .systemPurple, .systemOrange]
         for (index, metric) in metrics.enumerated() {
             let values = metric.dailyValues.suffix(30).map(metric.displayValue(for:))
             guard values.count > 1, let minimum = values.min(), let maximum = values.max() else { continue }
             let span = Swift.max(maximum - minimum, 0.000_001)
-            let line = NSBezierPath(); line.lineWidth = 2; line.lineJoinStyle = .round
+            let line = NSBezierPath(); line.lineWidth = AppTheme.current.isNativeMonochrome ? (index.isMultiple(of: 2) ? 2.4 : 1.6) : 2; line.lineJoinStyle = .round
+            if AppTheme.current.isNativeMonochrome, !index.isMultiple(of: 2) { line.setLineDash([5, 3], count: 2, phase: 0) }
             for (position, value) in values.enumerated() {
                 let x = area.minX + area.width * CGFloat(position) / CGFloat(values.count - 1)
                 let y = area.maxY - area.height * CGFloat((value - minimum) / span)
@@ -3709,6 +3828,7 @@ private final class MetricFocusBackdropView: NSView {
     override var isOpaque: Bool { false }
 
     override func draw(_ dirtyRect: NSRect) {
+        guard !AppTheme.current.isNativeMonochrome else { return }
         let topGlow = NSPoint(x: bounds.midX, y: bounds.maxY * 0.76)
         NSGradient(starting: accent.withAlphaComponent(0.14), ending: accent.withAlphaComponent(0))?.draw(fromCenter: topGlow, radius: 0, toCenter: topGlow, radius: max(bounds.width, bounds.height) * 0.46, options: [])
         let sideGlow = NSPoint(x: bounds.width * 0.08, y: bounds.height * 0.26)
@@ -3734,9 +3854,11 @@ private final class MetricFocusViewController: NSViewController {
         backdrop.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(backdrop)
         let eyebrow = NSTextField(labelWithString: language.text(english: "LOCAL FOCUS", german: "LOKALER FOKUS")); eyebrow.font = .systemFont(ofSize: 11, weight: .bold); eyebrow.textColor = accent
-        let title = NSTextField(labelWithString: metric.localizedDisplayName); title.font = .systemFont(ofSize: 30, weight: .bold); title.textColor = .white
-        let latest = NSTextField(labelWithString: metric.latestValueText); latest.font = .systemFont(ofSize: 46, weight: .bold); latest.textColor = .white
-        let note = NSTextField(labelWithString: language.text(english: "Local focus view · descriptive values only", german: "Lokale Fokusansicht · nur beschreibende Werte")); note.font = .systemFont(ofSize: 12, weight: .medium); note.textColor = NSColor.white.withAlphaComponent(0.72)
+        let primaryText = AppTheme.current.isNativeMonochrome ? NSColor.labelColor : .white
+        let secondaryText = AppTheme.current.isNativeMonochrome ? NSColor.secondaryLabelColor : NSColor.white.withAlphaComponent(0.72)
+        let title = NSTextField(labelWithString: metric.localizedDisplayName); title.font = .systemFont(ofSize: 30, weight: .bold); title.textColor = primaryText
+        let latest = NSTextField(labelWithString: metric.latestValueText); latest.font = .systemFont(ofSize: 46, weight: .bold); latest.textColor = primaryText
+        let note = NSTextField(labelWithString: language.text(english: "Local focus view · descriptive values only", german: "Lokale Fokusansicht · nur beschreibende Werte")); note.font = .systemFont(ofSize: 12, weight: .medium); note.textColor = secondaryText
         let orbit = HeroMetricOrbitView(accent: accent, title: metric.localizedDisplayName)
         orbit.translatesAutoresizingMaskIntoConstraints = false
         let graph = TrendGraphView(points: metric.dailyValues.suffix(90).map { HealthTrendPoint(date: $0.date, value: metric.displayValue(for: $0)) }, tintColor: accent, chartStyle: metric.preferredChartStyle, showsPoints: true, selectedDate: nil, valueFormatter: metric.formattedValue) { _ in }
@@ -3749,8 +3871,8 @@ private final class MetricFocusViewController: NSViewController {
         let headerLabels = NSStackView(views: [eyebrow, title, latest, note]); headerLabels.orientation = .vertical; headerLabels.alignment = .centerX; headerLabels.spacing = 7
         let header = NSStackView(views: [headerLabels, orbit]); header.orientation = .horizontal; header.spacing = 24; header.alignment = .centerY
         let calendarCard = GlassCardView(accent: accent)
-        let calendarTitle = NSTextField(labelWithString: language.text(english: "Local recording calendar", german: "Lokaler Erfassungskalender")); calendarTitle.font = .systemFont(ofSize: 12, weight: .bold); calendarTitle.textColor = .white
-        let calendarNote = NSTextField(labelWithString: language.text(english: "One square per local day", german: "Ein Feld pro lokalem Tag")); calendarNote.font = .systemFont(ofSize: 10, weight: .medium); calendarNote.textColor = NSColor.white.withAlphaComponent(0.62)
+        let calendarTitle = NSTextField(labelWithString: language.text(english: "Local recording calendar", german: "Lokaler Erfassungskalender")); calendarTitle.font = .systemFont(ofSize: 12, weight: .bold); calendarTitle.textColor = primaryText
+        let calendarNote = NSTextField(labelWithString: language.text(english: "One square per local day", german: "Ein Feld pro lokalem Tag")); calendarNote.font = .systemFont(ofSize: 10, weight: .medium); calendarNote.textColor = secondaryText
         let calendarStack = NSStackView(views: [calendarTitle, calendarNote, heatmap]); calendarStack.orientation = .vertical; calendarStack.spacing = 7; calendarStack.edgeInsets = NSEdgeInsets(top: 15, left: 18, bottom: 15, right: 18); calendarStack.translatesAutoresizingMaskIntoConstraints = false
         calendarCard.addSubview(calendarStack)
         NSLayoutConstraint.activate([calendarStack.leadingAnchor.constraint(equalTo: calendarCard.leadingAnchor), calendarStack.trailingAnchor.constraint(equalTo: calendarCard.trailingAnchor), calendarStack.topAnchor.constraint(equalTo: calendarCard.topAnchor), calendarStack.bottomAnchor.constraint(equalTo: calendarCard.bottomAnchor)])
@@ -3772,8 +3894,8 @@ private final class MetricFocusViewController: NSViewController {
 
     private func focusGraphCard(_ graph: NSView) -> NSView {
         let card = GlassCardView(accent: accent)
-        let title = NSTextField(labelWithString: language.text(english: "Local course", german: "Lokaler Verlauf")); title.font = .systemFont(ofSize: 13, weight: .bold); title.textColor = .white
-        let detail = NSTextField(labelWithString: language.text(english: "Latest 90 recorded local days", german: "Letzte 90 erfasste lokale Tage")); detail.font = .systemFont(ofSize: 10, weight: .medium); detail.textColor = NSColor.white.withAlphaComponent(0.62)
+        let title = NSTextField(labelWithString: language.text(english: "Local course", german: "Lokaler Verlauf")); title.font = .systemFont(ofSize: 13, weight: .bold); title.textColor = AppTheme.current.isNativeMonochrome ? .labelColor : .white
+        let detail = NSTextField(labelWithString: language.text(english: "Latest 90 recorded local days", german: "Letzte 90 erfasste lokale Tage")); detail.font = .systemFont(ofSize: 10, weight: .medium); detail.textColor = AppTheme.current.isNativeMonochrome ? .secondaryLabelColor : NSColor.white.withAlphaComponent(0.62)
         let header = NSStackView(views: [title, detail]); header.orientation = .vertical; header.spacing = 3
         let stack = NSStackView(views: [header, graph]); stack.orientation = .vertical; stack.spacing = 10; stack.edgeInsets = NSEdgeInsets(top: 16, left: 20, bottom: 17, right: 20); stack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(stack)
@@ -3797,6 +3919,7 @@ private final class MetricFocusWindowController: NSWindowController, NSWindowDel
             defer: false
         )
         window.title = content.title ?? "HealthAtlas"
+        window.appearance = AppTheme.current.isNativeMonochrome ? nil : NSAppearance(named: .darkAqua)
         window.isOpaque = false
         window.backgroundColor = .clear
         window.collectionBehavior.insert(.fullScreenPrimary)
@@ -3865,16 +3988,16 @@ private final class LocalHealthReportView: NSView {
         NSBezierPath(ovalIn: NSRect(x: 330, y: -130, width: 360, height: 360)).fill()
         let title = language.text(english: "HealthAtlas local report", german: "HealthAtlas Lokaler Bericht")
         let subtitle = language.text(english: "Created locally • no upload • descriptive values only", german: "Lokal erstellt • kein Upload • nur beschreibende Werte")
-        title.draw(at: NSPoint(x: 42, y: 46), withAttributes: [.font: NSFont.systemFont(ofSize: 28, weight: .bold), .foregroundColor: NSColor.white])
-        subtitle.draw(at: NSPoint(x: 42, y: 86), withAttributes: [.font: NSFont.systemFont(ofSize: 12, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.72)])
+        title.draw(at: NSPoint(x: 42, y: 46), withAttributes: [.font: NSFont.systemFont(ofSize: 28, weight: .bold), .foregroundColor: palette.primaryText])
+        subtitle.draw(at: NSPoint(x: 42, y: 86), withAttributes: [.font: NSFont.systemFont(ofSize: 12, weight: .medium), .foregroundColor: palette.secondaryText])
         let date = Date().formatted(date: .long, time: .shortened)
         date.draw(at: NSPoint(x: 42, y: 116), withAttributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium), .foregroundColor: palette.accent])
         let configurationText = "\(configuration.periodTitle(language: language)) · \(configuration.themeName)"
-        configurationText.draw(at: NSPoint(x: 42, y: 136), withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.66)])
+        configurationText.draw(at: NSPoint(x: 42, y: 136), withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium), .foregroundColor: palette.secondaryText])
         let heading = language.text(english: "Selected data types", german: "Ausgewählte Datentypen")
-        heading.draw(at: NSPoint(x: 42, y: 164), withAttributes: [.font: NSFont.systemFont(ofSize: 16, weight: .bold), .foregroundColor: NSColor.white])
-        let lineAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 13, weight: .medium), .foregroundColor: NSColor.white]
-        let detailAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 11, weight: .regular), .foregroundColor: NSColor.white.withAlphaComponent(0.68)]
+        heading.draw(at: NSPoint(x: 42, y: 164), withAttributes: [.font: NSFont.systemFont(ofSize: 16, weight: .bold), .foregroundColor: palette.primaryText])
+        let lineAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 13, weight: .medium), .foregroundColor: palette.primaryText]
+        let detailAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 11, weight: .regular), .foregroundColor: palette.secondaryText]
         for (index, metric) in metrics.enumerated() {
             let y = 204 + CGFloat(index) * 44
             palette.accent.withAlphaComponent(0.16).setFill()
@@ -3887,18 +4010,19 @@ private final class LocalHealthReportView: NSView {
             latestDate.draw(at: NSPoint(x: 52, y: y + 18), withAttributes: detailAttributes)
         }
         let footer = language.text(english: "HealthAtlas does not diagnose, evaluate or transmit health data.", german: "HealthAtlas diagnostiziert, bewertet oder überträgt keine Gesundheitsdaten.")
-        footer.draw(at: NSPoint(x: 42, y: bounds.height - 42), withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.58)])
+        footer.draw(at: NSPoint(x: 42, y: bounds.height - 42), withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium), .foregroundColor: palette.secondaryText])
     }
 
-    private var reportPalette: (background: NSColor, accent: NSColor) {
+    private var reportPalette: (background: NSColor, accent: NSColor, primaryText: NSColor, secondaryText: NSColor) {
         guard let theme = AppTheme.allCases.first(where: { $0.displayName == configuration.themeName }) else {
-            return (NSColor(calibratedRed: 0.025, green: 0.06, blue: 0.16, alpha: 1), NSColor.systemCyan)
+            return (NSColor(calibratedRed: 0.025, green: 0.06, blue: 0.16, alpha: 1), NSColor.systemCyan, .white, NSColor.white.withAlphaComponent(0.68))
         }
         return switch theme {
-        case .clearGlass: (NSColor(calibratedRed: 0.10, green: 0.18, blue: 0.34, alpha: 1), NSColor.systemCyan)
-        case .midnightGlass: (NSColor(calibratedRed: 0.025, green: 0.06, blue: 0.16, alpha: 1), NSColor.systemCyan)
-        case .aurora: (NSColor(calibratedRed: 0.02, green: 0.15, blue: 0.19, alpha: 1), NSColor.systemTeal)
-        case .warmPaper: (NSColor(calibratedRed: 0.19, green: 0.08, blue: 0.12, alpha: 1), NSColor.systemOrange)
+        case .clearGlass: (NSColor(calibratedRed: 0.10, green: 0.18, blue: 0.34, alpha: 1), NSColor.systemCyan, .white, NSColor.white.withAlphaComponent(0.68))
+        case .midnightGlass: (NSColor(calibratedRed: 0.025, green: 0.06, blue: 0.16, alpha: 1), NSColor.systemCyan, .white, NSColor.white.withAlphaComponent(0.68))
+        case .aurora: (NSColor(calibratedRed: 0.02, green: 0.15, blue: 0.19, alpha: 1), NSColor.systemTeal, .white, NSColor.white.withAlphaComponent(0.68))
+        case .warmPaper: (NSColor(calibratedRed: 0.19, green: 0.08, blue: 0.12, alpha: 1), NSColor.systemOrange, .white, NSColor.white.withAlphaComponent(0.68))
+        case .blackAndWhite: (.windowBackgroundColor, .labelColor, .labelColor, .secondaryLabelColor)
         }
     }
 }
@@ -3960,12 +4084,16 @@ private final class TrendGraphView: NSView {
         if progress == 1, selectedDate == nil, hoveredTarget == nil { timer?.invalidate(); timer = nil }
     }
     override func draw(_ dirtyRect: NSRect) {
+        let isNativeMonochrome = AppTheme.current.isNativeMonochrome
+        let chartTint = tintColor
+        let primaryText = isNativeMonochrome ? NSColor.labelColor : NSColor.white
+        let secondaryText = isNativeMonochrome ? NSColor.secondaryLabelColor : NSColor.white.withAlphaComponent(0.68)
         let bottomInset: CGFloat = showsDateLabels ? 32 : 12
         let inset = NSRect(x: 8, y: 12, width: max(0, bounds.width - 16), height: max(0, bounds.height - 12 - bottomInset))
         guard points.count > 1,
               let minimum = points.map(\.value).min(), let maximum = points.map(\.value).max() else {
             let label = AppLanguage.current.text(english: "No values in this period", german: "Keine Werte in diesem Zeitraum")
-            let attributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 13, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.65)]
+            let attributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 13, weight: .medium), .foregroundColor: secondaryText]
             label.draw(at: NSPoint(x: inset.midX - 60, y: inset.midY), withAttributes: attributes)
             return
         }
@@ -3980,25 +4108,25 @@ private final class TrendGraphView: NSView {
             index == 0 ? line.move(to: location) : line.line(to: location)
             locations.append(location)
             hitTargets.append((location, trendPoint))
-            if showsPoints && chartStyle != .bar { tintColor.setFill(); NSBezierPath(ovalIn: NSRect(x: location.x - 5, y: location.y - 5, width: 10, height: 10)).fill() }
+            if showsPoints && chartStyle != .bar { chartTint.setFill(); NSBezierPath(ovalIn: NSRect(x: location.x - 5, y: location.y - 5, width: 10, height: 10)).fill() }
         }
         switch chartStyle {
         case .line:
-            tintColor.setStroke(); line.stroke()
+            chartTint.setStroke(); line.stroke()
         case .area:
             let fill = line.copy() as! NSBezierPath
             if let first = locations.first, let last = locations.last {
                 fill.line(to: NSPoint(x: last.x, y: inset.maxY))
                 fill.line(to: NSPoint(x: first.x, y: inset.maxY))
                 fill.close()
-                tintColor.withAlphaComponent(0.22).setFill(); fill.fill()
+                chartTint.withAlphaComponent(0.22).setFill(); fill.fill()
             }
-            tintColor.setStroke(); line.stroke()
+            chartTint.setStroke(); line.stroke()
         case .bar:
             let width = max(4, min(26, inset.width / CGFloat(max(visibleCount, 1)) * 0.62))
             for location in locations {
                 let rect = NSRect(x: location.x - width / 2, y: location.y, width: width, height: max(2, inset.maxY - location.y))
-                tintColor.withAlphaComponent(0.68).setFill()
+                chartTint.withAlphaComponent(0.68).setFill()
                 NSBezierPath(roundedRect: rect, xRadius: min(4, width / 2), yRadius: min(4, width / 2)).fill()
             }
         }
@@ -4010,7 +4138,7 @@ private final class TrendGraphView: NSView {
             let labels = [(first, inset.minX), (middle, inset.midX), (last, inset.maxX)]
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 10, weight: .medium),
-                .foregroundColor: NSColor.white.withAlphaComponent(0.68)
+                .foregroundColor: secondaryText
             ]
             for (date, x) in labels {
                 let label = formatter.string(from: date)
@@ -4021,9 +4149,9 @@ private final class TrendGraphView: NSView {
         if let selectedDate,
            let selected = hitTargets.first(where: { Calendar.current.isDate($0.point.date, inSameDayAs: selectedDate) }) {
             let pulse = 14 + sin(selectedPulsePhase) * 2.4
-            tintColor.withAlphaComponent(0.20 + (sin(selectedPulsePhase) + 1) * 0.03).setFill()
+            chartTint.withAlphaComponent(0.20 + (sin(selectedPulsePhase) + 1) * 0.03).setFill()
             NSBezierPath(ovalIn: NSRect(x: selected.location.x - pulse, y: selected.location.y - pulse, width: pulse * 2, height: pulse * 2)).fill()
-            NSColor.white.setFill()
+            primaryText.setFill()
             NSBezierPath(ovalIn: NSRect(x: selected.location.x - 5, y: selected.location.y - 5, width: 10, height: 10)).fill()
         }
         if let hoveredTarget {
@@ -4033,10 +4161,11 @@ private final class TrendGraphView: NSView {
             let originX = min(max(inset.minX, hoveredTarget.location.x - width / 2), inset.maxX - width)
             let originY = max(inset.minY, hoveredTarget.location.y - 68)
             let bubble = NSRect(x: originX, y: originY, width: width, height: 56)
-            NSColor.black.withAlphaComponent(0.76).setFill()
+            (isNativeMonochrome ? NSColor.controlBackgroundColor : NSColor.black.withAlphaComponent(0.76)).setFill()
             NSBezierPath(roundedRect: bubble, xRadius: 10, yRadius: 10).fill()
-            date.draw(at: NSPoint(x: bubble.minX + 10, y: bubble.minY + 34), withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.68)])
-            value.draw(at: NSPoint(x: bubble.minX + 10, y: bubble.minY + 13), withAttributes: [.font: NSFont.systemFont(ofSize: 14, weight: .bold), .foregroundColor: NSColor.white])
+            if isNativeMonochrome { NSColor.separatorColor.setStroke(); NSBezierPath(roundedRect: bubble, xRadius: 10, yRadius: 10).stroke() }
+            date.draw(at: NSPoint(x: bubble.minX + 10, y: bubble.minY + 34), withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium), .foregroundColor: secondaryText])
+            value.draw(at: NSPoint(x: bubble.minX + 10, y: bubble.minY + 13), withAttributes: [.font: NSFont.systemFont(ofSize: 14, weight: .bold), .foregroundColor: primaryText])
             let allValues = points.map(\.value)
             if let index = points.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: hoveredTarget.point.date) }) {
                 let localValues = Array(allValues[max(0, index - 2)...min(allValues.count - 1, index + 2)])
@@ -4047,10 +4176,10 @@ private final class TrendGraphView: NSView {
                         let y = bubble.minY + 14 + (number - low) / max(high - low, 0.000_001) * 26
                         sparkIndex == 0 ? spark.move(to: NSPoint(x: x, y: y)) : spark.line(to: NSPoint(x: x, y: y))
                     }
-                    tintColor.setStroke(); spark.stroke()
+                    chartTint.setStroke(); spark.stroke()
                 }
             }
-            NSColor.white.withAlphaComponent(0.88).setFill()
+            primaryText.withAlphaComponent(0.88).setFill()
             NSBezierPath(ovalIn: NSRect(x: hoveredTarget.location.x - 4, y: hoveredTarget.location.y - 4, width: 8, height: 8)).fill()
         }
     }

@@ -14,7 +14,7 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 - Den aktuellen Zeitraum mit dem unmittelbar vorherigen vergleichen und einen Wert in einer Vollbild-Fokusansicht öffnen.
 - Lokale Momentaufnahmen, Abdeckung und Erfassungsmuster ohne Diagnose oder Gesundheitsbewertung lesen.
 - Einen lokalen PDF-Bericht mit eigener Auswahl für Zeitraum, Datentypen und Theme exportieren.
-- Deutsch oder Englisch, eines von vier Glass-Themes und die manuelle oder geplante Prüfung der öffentlichen GitHub-Release-Liste nutzen.
+- Deutsch oder Englisch, eines von vier Glass-Themes oder das nativ wirkende Theme Schwarz & Weiß und die manuelle oder geplante Prüfung der öffentlichen GitHub-Release-Liste nutzen.
 - Die beiden öffentlichen Handbücher getrennt öffnen oder ChatGPT, Gemini beziehungsweise Claude das passende Handbuch anhand einer allgemeinen kopierten Frage erklären lassen. Lokale Gesundheitsdaten sind nicht enthalten.
 
 Neuigkeiten und alle Details stehen in der [vollständigen Funktionsübersicht](FEATURES.de.md).

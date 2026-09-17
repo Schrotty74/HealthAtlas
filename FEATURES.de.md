@@ -49,7 +49,7 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich.
 
 - Deutsche oder englische Oberfläche verwenden.
 - Die native Menüleiste für Import, lokalen PDF-Bericht, Design-Studio und Fenstersteuerung verwenden; die Sidebar lässt sich im Menü „Ansicht“ ein- oder ausblenden.
-- Clear Glass, Midnight Glass, Aurora oder Warmpaper wählen. Die App startet im 16:9-Format und bleibt frei skalierbar.
+- Clear Glass, Midnight Glass, Aurora, Warmpaper oder Schwarz & Weiß wählen. Schwarz & Weiß verwendet semantische macOS-Farben und Materialien, folgt der Systemdarstellung und hält Karten und Diagramme mit neutralen Flächen, farbigen Kennzahlen-Akzenten und Linienstilen lesbar. Die App startet im 16:9-Format und bleibt frei skalierbar.
 - Im Design-Studio die installierte Veröffentlichung sehen und die öffentliche GitHub-Release-Liste bei jedem Start, täglich, wöchentlich oder monatlich automatisch oder manuell prüfen. Eine neuere passende Veröffentlichung wird erst nach Klick auf ihren Link geöffnet.
 - Geführte Leerzustände führen zu Quellen oder lokalem Import, wenn Daten oder eine Auswahl fehlen.
 - Die Oberfläche nutzt native Glasflächen und dezente Animationen und berücksichtigt die macOS-Einstellung „Bewegung reduzieren“.

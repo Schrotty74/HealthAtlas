@@ -287,7 +287,7 @@ def cover(title, subtitle, language, edition, styles):
 
 def manual_de(styles):
     s = []
-    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.4.0", styles)
+    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.5.0", styles)
     s += section("Willkommen", "HealthAtlas liest einen von dir ausgewählten Apple-Health-Export lokal auf deinem Mac. Anschließend entscheidest du selbst, welche erkannten Datentypen im Dashboard erscheinen. Die App erstellt keine Diagnose und gibt keine Behandlungsempfehlungen.", styles,
         bullets_list=[
             "Die App startet bei jedem normalen Start ohne importierte Gesundheitsdaten.",
@@ -407,8 +407,8 @@ def manual_de(styles):
     s += section("Design-Studio", "Im Design-Studio sind Erscheinungsbild, Hilfe zum Handbuch und App-Aktualisierungen in drei Bereiche gegliedert. Änderungen werden sofort übernommen und für die jeweilige App-Variante lokal gespeichert.", styles,
         bullets_list=[
             "<b>Sprache:</b> Deutsch oder English. Navigation, Beschriftungen und bekannte Datentypnamen wechseln mit der Auswahl.",
-            "<b>Themes:</b> Clear Glass verbindet eine Milchglasfläche mit ruhigem Cyan-, Blau-, Violett- und Rosaglow; Midnight Glass ist dunkelblau, Aurora türkis und Warmpaper warm rötlich-violett. Das aktive Theme ist umrandet.",
-            "Karten und Seiten wechseln sanft. Clear Glass ergänzt das Design um sehr dezente Bewegung, die bei " + '"Bewegung reduzieren"' + " und während des Imports stark reduziert bzw. pausiert wird.",
+            "<b>Themes:</b> Clear Glass verbindet eine Milchglasfläche mit ruhigem Cyan-, Blau-, Violett- und Rosaglow; Midnight Glass ist dunkelblau, Aurora türkis und Warmpaper warm rötlich-violett. Schwarz &amp; Weiß nutzt neutrale macOS-Materialien, folgt der hellen oder dunklen Systemdarstellung und behält farbige Akzente für Kennzahlen. Das aktive Theme ist umrandet.",
+            "Karten und Seiten wechseln sanft. Clear Glass und Schwarz &amp; Weiß ergänzen das Design um sehr dezente Bewegung, die bei " + '"Bewegung reduzieren"' + " und während des Imports stark reduziert bzw. pausiert wird.",
             "HealthAtlas öffnet neu im 16:9-Format und bleibt danach frei skalierbar. Die Darstellung passt sich der gewählten Fenstergröße an.",
             "Unter <b>Hilfe zum Handbuch</b> öffnen <b>Handbuch Deutsch</b> und <b>Manual English</b> die beiden öffentlichen Handbücher getrennt.",
             "ChatGPT, Gemini und Claude kopieren erst nach einem Klick nur eine allgemeine Frage mit passendem öffentlichen Handbuch-Link in die Zwischenablage und öffnen dann den gewählten Dienst. Lokale oder importierte Gesundheitsdaten werden nicht übertragen; erst mit Cmd+V entscheidest du, ob du die Frage einfügst.",
@@ -421,6 +421,11 @@ def manual_de(styles):
             "Die drei Dienste erhalten nur eine allgemeine Handbuchfrage, keine lokalen Werte.",
             "Automatisch prüfen bleibt optional; die App fragt nur die öffentliche Release-Liste ab.",
         ], screenshot_note_title="Handbuchhilfe und Updates")
+    s += image_block("theme-black-and-white-menu.png", "Die Theme-Auswahl enthält Schwarz &amp; Weiß zusätzlich zu den vier vorhandenen Themes.", styles,
+        notes=[
+            "Schwarz &amp; Weiß folgt unmittelbar der hellen oder dunklen macOS-Darstellung.",
+            "Neutrale Flächen bleiben lesbar; farbige Kennzahlen-Akzente erhalten die Unterscheidbarkeit in Karten und Diagrammen.",
+        ], note_title="Schwarz &amp; Weiß")
     s += [Spacer(1, 6 * mm)]
     s += section("Datenschutz und Grenzen", "HealthAtlas ist als lokale Visualisierung konzipiert. Es gibt weder Konto, Analyse, Werbung, Tracking noch versteckten Upload. Die App sendet importierte Gesundheitswerte nicht an HealthAtlas, GitHub, Discord oder einen anderen Dienst.", styles,
         bullets_list=[
@@ -462,7 +467,7 @@ def manual_de(styles):
         ["Quellen", "Stern / Pfeile", "Pinnt einen Typ für den gewählten Bereich oder ordnet ihn lokal."],
         ["Einblicke", "Datentyp-Menü", "Wechselt die beschreibende Momentaufnahme."],
         ["Design-Studio", "Sprache", "Wechselt Deutsch und English."],
-        ["Design-Studio", "Theme-Karten", "Wählt Clear Glass, Midnight Glass, Aurora oder Warmpaper."],
+        ["Design-Studio", "Theme-Karten", "Wählt Clear Glass, Midnight Glass, Aurora, Warmpaper oder Schwarz & Weiß."],
         ["Design-Studio", "Hilfe zum Handbuch", "Öffnet die beiden öffentlichen Handbücher oder bereitet eine allgemeine Frage für einen gewählten KI-Dienst vor; lokale Werte bleiben in HealthAtlas."],
         ["Design-Studio", "App-Aktualisierungen", "Zeigt Version und Build; prüft die öffentliche Release-Liste optional im gewählten Intervall."],
         ["Sidebar unten", "GitHub / Discord", "Öffnet externe Projekt- bzw. Community-Links im Browser."],
@@ -483,7 +488,7 @@ def manual_de(styles):
 
 def manual_en(styles):
     s = []
-    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.4.0", styles)
+    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.5.0", styles)
     s += section("Welcome", "HealthAtlas reads an Apple Health export that you choose locally on your Mac. You then decide exactly which recognised data types appear in the dashboard. The app does not diagnose conditions or recommend treatment.", styles,
         bullets_list=[
             "Every normal launch starts without imported health data.",
@@ -600,8 +605,8 @@ def manual_en(styles):
     s += section("Design Studio", "Design Studio groups Appearance, Manual help and App updates into three sections. Changes take effect immediately and are stored locally for the current app variant.", styles,
         bullets_list=[
             "<b>Language:</b> Deutsch or English. Navigation, labels and known data-type names change with the selection.",
-            "<b>Themes:</b> Clear Glass combines a frosted layer with a calm cyan, blue, violet and pink glow; Midnight Glass is dark blue, Aurora teal and Warmpaper warm red-violet. The selected theme has an outline.",
-            "Cards and pages use gentle transitions. Clear Glass adds very subtle motion, substantially reduced or paused with macOS Reduce Motion and while importing.",
+            "<b>Themes:</b> Clear Glass combines a frosted layer with a calm cyan, blue, violet and pink glow; Midnight Glass is dark blue, Aurora teal and Warmpaper warm red-violet. Black &amp; White uses neutral macOS materials, follows the light or dark system appearance, and retains coloured metric accents. The selected theme has an outline.",
+            "Cards and pages use gentle transitions. Clear Glass and Black &amp; White add very subtle motion, substantially reduced or paused with macOS Reduce Motion and while importing.",
             "HealthAtlas opens in 16:9 and remains freely resizable afterwards. The layout adapts to the selected window size.",
             "Under <b>Manual help</b>, <b>German manual</b> and <b>English manual</b> open the two public manuals separately.",
             "ChatGPT, Gemini and Claude copy only a general question with the matching public manual link to the clipboard after your click, then open the selected service. No local or imported health data is sent; only Cmd+V lets you decide whether to paste it.",
@@ -614,6 +619,11 @@ def manual_en(styles):
             "The three services receive only a general manual question, never local values.",
             "Automatic checks remain optional and query only the public release list.",
         ], screenshot_note_title="Manual help and updates")
+    s += image_block("theme-black-and-white-menu.png", "The theme menu includes Black &amp; White alongside the four existing themes.", styles,
+        notes=[
+            "Black &amp; White immediately follows the light or dark macOS appearance.",
+            "Neutral surfaces stay readable while coloured metric accents preserve distinction in cards and charts.",
+        ], note_title="Black &amp; White")
     s += [Spacer(1, 6 * mm)]
     s += section("Privacy and limits", "HealthAtlas is designed as a local visualisation. It has no account, analytics, advertising, tracking or hidden upload. The app does not send imported health values to HealthAtlas, GitHub, Discord or another service.", styles,
         bullets_list=[
@@ -648,7 +658,7 @@ def manual_en(styles):
         ["Sources", "Category / search", "Filters the visible data types."],
         ["Sources", "Show &amp; pin", "Shows or hides all types and selects the Pin destination."],
         ["Sources", "Star / arrows", "Pins a type for the selected area or orders it locally."], ["Insights", "Data type menu", "Changes the descriptive snapshot."],
-        ["Design Studio", "Language", "Switches Deutsch and English."], ["Design Studio", "Theme cards", "Selects Clear Glass, Midnight Glass, Aurora or Warmpaper."],
+        ["Design Studio", "Language", "Switches Deutsch and English."], ["Design Studio", "Theme cards", "Selects Clear Glass, Midnight Glass, Aurora, Warmpaper or Black & White."],
         ["Design Studio", "Manual help", "Opens the public manuals or prepares a general question for a chosen AI service; local values stay in HealthAtlas."],
         ["Design Studio", "App updates", "Shows version and build; optionally checks the public release list on the selected schedule."],
         ["Lower sidebar", "GitHub / Discord", "Opens the external project or community link in the browser."],

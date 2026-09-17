@@ -49,7 +49,7 @@ This page describes the current HealthAtlas functions in detail.
 
 - Use the German or English interface.
 - Use the native menu bar for import, the local PDF report, Design Studio and window controls; use the View menu to show or hide the sidebar.
-- Choose Clear Glass, Midnight Glass, Aurora or Warmpaper. The app starts at 16:9 and remains freely resizable.
+- Choose Clear Glass, Midnight Glass, Aurora, Warmpaper or Black & White. Black & White uses macOS semantic colors and materials, follows the system appearance, and keeps cards and charts readable with neutral surfaces, colored metric accents and line styles. The app starts at 16:9 and remains freely resizable.
 - In Design Studio, see the installed release and automatically check the public GitHub release list at every launch, daily, weekly or monthly, or check manually. A newer matching release is opened only after you choose its link.
 - In Design Studio, open the German or English public manual separately, or use ChatGPT, Gemini or Claude to explain the matching manual from a general copied prompt. No imported or local health data is included.
 - Guided empty states lead to Sources or local import when data or a selection is missing.

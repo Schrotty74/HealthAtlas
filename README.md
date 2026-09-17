@@ -16,7 +16,7 @@ It starts empty, imports only a file you choose, and turns selected health data 
 - Compare the current period with the immediately preceding period and open a metric in a full-screen focus view.
 - Read local snapshots, coverage and recording patterns without diagnoses or health ratings.
 - Export a local PDF report with its own period, data-type and theme choices.
-- Use German or English, choose from four glass themes, and check the public GitHub release list manually or on a selected schedule.
+- Use German or English, choose from four glass themes or the native-looking Black & White theme, and check the public GitHub release list manually or on a selected schedule.
 - Open either public manual separately, or let ChatGPT, Gemini or Claude explain the matching manual from a general copied prompt. No local health data is included.
 
 See [what’s new and the complete feature overview](FEATURES.md).

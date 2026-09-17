@@ -129,7 +129,18 @@ require_release_artifacts() {
 }
 
 last_beta_tag() {
-    git tag --list 'v*-beta*' --sort=-version:refname | head -n 1
+    local tag
+    tag="$(GH_PROMPT_DISABLED=1 gh release list --limit 100 --json tagName,isPrerelease --jq '
+        [ .[]
+          | select(.isPrerelease and (.tagName | test("^v[1-9][0-9]*\\.[0-9]+\\.[0-9]+-beta$")))
+          | .tagName
+        ]
+        | sort_by(sub("^v"; "") | split("-")[0] | split(".") | map(tonumber))
+        | last // empty
+    ')"
+    [[ -n "$tag" ]] || return
+    git fetch --quiet origin "refs/tags/${tag}:refs/tags/${tag}"
+    echo "$tag"
 }
 
 beta_release_tag() {

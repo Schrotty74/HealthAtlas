@@ -4,7 +4,7 @@ Stand: 13. September 2026 · Bezug: öffentliche Beta `v1.4.0-beta`
 
 ## Bestätigte offene Arbeit
 
-Derzeit sind keine bestätigten offenen Aufgaben eingetragen.
+- Keine bestätigte offene Arbeit.
 
 ## Pflege
 
