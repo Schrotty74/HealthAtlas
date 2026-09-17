@@ -211,6 +211,35 @@ struct HealthAtlasTests {
         #expect(zipSummary.recordCount == 1)
     }
 
+    @Test func streamingImportAcceptsNonSelfClosingRecordsWithChildContent() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <HealthData>
+          <Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="42" startDate="2026-09-17 06:00:00 +0200" endDate="2026-09-17 06:15:00 +0200">
+            <MetadataEntry key="synthetic" value="safe" />
+          </Record>
+        </HealthData>
+        """
+        try Data(xml.utf8).write(to: xmlURL)
+
+        guard case let .imported(xmlSummary) = LocalImportValidator.validate(url: xmlURL) else {
+            Issue.record("Expected a non-self-closing Apple Health record to import from XML.")
+            return
+        }
+        #expect(xmlSummary.recordCount == 1)
+
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        guard case let .imported(zipSummary) = LocalImportValidator.validate(url: archiveURL) else {
+            Issue.record("Expected the same non-self-closing record to import from ZIP.")
+            return
+        }
+        #expect(zipSummary.recordCount == 1)
+    }
+
     @Test func importSizeLimitsSupportLargeLocalExports() {
         #expect(LocalImportValidator.supportsXMLByteCount(126 * 1024 * 1024))
         #expect(LocalImportValidator.supportsXMLByteCount(LocalImportValidator.maximumBytes))

@@ -1187,7 +1187,7 @@ private final class AppleHealthFirstPassDelegate: NSObject, XMLParserDelegate, A
             let isAsleep = (attributeDict["value"] ?? "").localizedCaseInsensitiveContains("asleep")
             if rule == .cumulativeInterval || (rule == .sleepInterval && isAsleep) {
                 guard planner.append(attributes: attributeDict) else { return true }
-                return appendToSpool(rawTag: rawTag, attributes: attributeDict)
+                return appendToSpool(attributes: attributeDict)
             }
         }
 
@@ -1218,13 +1218,10 @@ private final class AppleHealthFirstPassDelegate: NSObject, XMLParserDelegate, A
         didFinish = true
     }
 
-    private func appendToSpool(rawTag: Data?, attributes: [String: String]) -> Bool {
-        if let rawTag {
-            spoolBuffer.append(rawTag)
-            spoolBuffer.append(10)
-            if spoolBuffer.count < 1_048_576 { return true }
-            do { try flushSpoolBuffer(); return true } catch { return false }
-        }
+    private func appendToSpool(attributes: [String: String]) -> Bool {
+        // The source export may use paired Record elements with child content.
+        // The aggregation pass needs only the parsed Record attributes, so write
+        // a complete standalone element instead of copying an opening raw tag.
         let attributesText = attributes.sorted { $0.key < $1.key }.map { key, value in
             " \(key)=\"\(xmlEscaped(value))\""
         }.joined()
