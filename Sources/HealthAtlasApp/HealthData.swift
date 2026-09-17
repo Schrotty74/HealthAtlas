@@ -569,6 +569,9 @@ private enum AppleHealthTagStream {
     }
 
     private static func tagEnd(in data: Data, after start: Int) -> Int? {
+        if start + 1 < data.endIndex, data[start + 1] == 33 {
+            return declarationEnd(in: data, after: start)
+        }
         var quote: UInt8?
         var index = start + 1
         while index < data.endIndex {
@@ -581,6 +584,55 @@ private enum AppleHealthTagStream {
                 return index
             }
             index += 1
+        }
+        return nil
+    }
+
+    private static func declarationEnd(in data: Data, after start: Int) -> Int? {
+        let first = start + 1
+        if hasPrefix("!--", in: data, at: first) {
+            return terminator("-->", in: data, after: first + 3)
+        }
+        if hasPrefix("![CDATA[", in: data, at: first) {
+            return terminator("]]>", in: data, after: first + 8)
+        }
+
+        var quote: UInt8?
+        var internalSubsetDepth = 0
+        var index = first + 1
+        while index < data.endIndex {
+            let byte = data[index]
+            if let activeQuote = quote {
+                if byte == activeQuote { quote = nil }
+            } else if byte == 34 || byte == 39 {
+                quote = byte
+            } else if byte == 91 { // [
+                internalSubsetDepth += 1
+            } else if byte == 93, internalSubsetDepth > 0 { // ]
+                internalSubsetDepth -= 1
+            } else if byte == 62, internalSubsetDepth == 0 { // >
+                return index
+            }
+            index += 1
+        }
+        return nil
+    }
+
+    private static func hasPrefix(_ value: String, in data: Data, at index: Int) -> Bool {
+        let bytes = Array(value.utf8)
+        guard index + bytes.count <= data.endIndex else { return false }
+        return data[index..<(index + bytes.count)].elementsEqual(bytes)
+    }
+
+    private static func terminator(_ value: String, in data: Data, after index: Int) -> Int? {
+        let bytes = Array(value.utf8)
+        guard !bytes.isEmpty else { return nil }
+        var cursor = index
+        while cursor + bytes.count <= data.endIndex {
+            if data[cursor..<(cursor + bytes.count)].elementsEqual(bytes) {
+                return cursor + bytes.count - 1
+            }
+            cursor += 1
         }
         return nil
     }

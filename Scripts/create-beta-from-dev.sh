@@ -143,6 +143,16 @@ last_beta_tag() {
     echo "$tag"
 }
 
+sync_release_tag() {
+    local tag="$1" expected_commit="$2" actual_commit
+    git fetch --quiet origin "refs/tags/${tag}:refs/tags/${tag}"
+    actual_commit="$(git rev-list -n 1 "refs/tags/${tag}")"
+    [[ "$actual_commit" == "$expected_commit" ]] || {
+        echo "Abbruch: Der veröffentlichte Tag $tag verweist nicht auf den erwarteten Beta-Commit." >&2
+        exit 1
+    }
+}
+
 beta_release_tag() {
     echo "v$1-beta"
 }
@@ -243,6 +253,7 @@ if gh release view "$release_tag" >/dev/null 2>&1; then
 else
     create_github_release "$version" "$beta_commit" "$release_notes_file" "$release_label" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi
+sync_release_tag "$release_tag" "$beta_commit"
 
 echo "$release_label wurde als Beta-Vorabversion aus Dev erstellt."
 echo "Version: $version"

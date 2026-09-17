@@ -176,6 +176,41 @@ struct HealthAtlasTests {
         #expect(summary.dataTypes.first?.identifier == "HKQuantityTypeIdentifierStepCount")
     }
 
+    @Test func streamingImportAcceptsAppleHealthInternalDTDFromXMLAndZIPArchive() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE HealthData [
+          <!ELEMENT HealthData (ExportDate,Record*)>
+          <!ELEMENT ExportDate EMPTY>
+          <!ATTLIST ExportDate value CDATA #REQUIRED>
+          <!ELEMENT Record EMPTY>
+          <!ATTLIST Record type CDATA #REQUIRED unit CDATA #IMPLIED value CDATA #IMPLIED startDate CDATA #IMPLIED>
+        ]>
+        <HealthData locale="en_US">
+          <ExportDate value="2026-09-17 07:00:00 +0200" />
+          <Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="42" startDate="2026-09-17 06:00:00 +0200" />
+        </HealthData>
+        """
+        try Data(xml.utf8).write(to: xmlURL)
+
+        guard case let .imported(xmlSummary) = LocalImportValidator.validate(url: xmlURL) else {
+            Issue.record("Expected an Apple Health XML file with an internal DTD to import.")
+            return
+        }
+        #expect(xmlSummary.recordCount == 1)
+
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        guard case let .imported(zipSummary) = LocalImportValidator.validate(url: archiveURL) else {
+            Issue.record("Expected the same Apple Health XML to import from ZIP.")
+            return
+        }
+        #expect(zipSummary.recordCount == 1)
+    }
+
     @Test func importSizeLimitsSupportLargeLocalExports() {
         #expect(LocalImportValidator.supportsXMLByteCount(126 * 1024 * 1024))
         #expect(LocalImportValidator.supportsXMLByteCount(LocalImportValidator.maximumBytes))
@@ -270,13 +305,26 @@ struct HealthAtlasTests {
         guard let path = ProcessInfo.processInfo.environment["HEALTHATLAS_EXTERNAL_IMPORT_TEST_PATH"] else { return }
         let started = ContinuousClock.now
         let url = URL(fileURLWithPath: path)
-        let result = AppleHealthImporter.importXML(at: url, fileName: url.lastPathComponent)
+        let result = LocalImportValidator.validate(url: url)
         let elapsed = started.duration(to: .now)
-        guard result != nil else {
+        guard case .imported = result else {
             Issue.record("Expected the external performance fixture to import.")
             return
         }
         print("External performance import completed in \(elapsed).")
+    }
+
+    @Test func optionalExternalArchiveImport() {
+        guard let path = ProcessInfo.processInfo.environment["HEALTHATLAS_EXTERNAL_ARCHIVE_TEST_PATH"] else { return }
+        let started = ContinuousClock.now
+        let url = URL(fileURLWithPath: path)
+        let result = LocalImportValidator.validate(url: url)
+        let elapsed = started.duration(to: .now)
+        guard case .imported = result else {
+            Issue.record("Expected the external archive fixture to import.")
+            return
+        }
+        print("External archive import completed in \(elapsed).")
     }
 
     @Test func importValidationRejectsInvalidAndEmptyInputs() throws {
@@ -339,7 +387,15 @@ struct HealthAtlasTests {
     }
 
     private func writeSyntheticXML(to url: URL, byteCount: Int) throws {
-        let opening = Data("<?xml version=\"1.0\" encoding=\"UTF-8\"?><HealthData><Record type=\"HKQuantityTypeIdentifierStepCount\" unit=\"count\" value=\"42\" startDate=\"2026-07-10 09:00:00 +0200\"/>".utf8)
+        let opening = Data("""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE HealthData [
+          <!ELEMENT HealthData (Record*)>
+          <!ELEMENT Record EMPTY>
+          <!ATTLIST Record type CDATA #REQUIRED unit CDATA #IMPLIED value CDATA #IMPLIED startDate CDATA #IMPLIED>
+        ]>
+        <HealthData><Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="42" startDate="2026-07-10 09:00:00 +0200"/>
+        """.utf8)
         let closing = Data("</HealthData>".utf8)
         precondition(byteCount > opening.count + closing.count)
         FileManager.default.createFile(atPath: url.path, contents: nil)
