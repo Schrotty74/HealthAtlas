@@ -80,6 +80,11 @@ Apple Health ZIP archives containing `Export.xml` and direct `Export.xml` files
 are read locally. The clinical companion file is intentionally not imported.
 There is no direct HealthKit or cloud-service connection.
 
+If an import fails, the error message can copy a technical diagnostic for
+GitHub issue #13. It contains the app and macOS versions, input type, file
+size, import stage, error code, available XML line and column, and elapsed
+time. It never includes a file name, path, XML content, or health data.
+
 HealthAtlas reads the original XML sequentially once and supports files up to
 5 GiB. Only cumulative interval records and asleep intervals needed for source
 overlap handling are written to a bounded local temporary spool. Exact records

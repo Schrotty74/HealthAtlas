@@ -287,7 +287,7 @@ def cover(title, subtitle, language, edition, styles):
 
 def manual_de(styles):
     s = []
-    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.5.0", styles)
+    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.5.4", styles)
     s += section("Willkommen", "HealthAtlas liest einen von dir ausgewählten Apple-Health-Export lokal auf deinem Mac. Anschließend entscheidest du selbst, welche erkannten Datentypen im Dashboard erscheinen. Die App erstellt keine Diagnose und gibt keine Behandlungsempfehlungen.", styles,
         bullets_list=[
             "Die App startet bei jedem normalen Start ohne importierte Gesundheitsdaten.",
@@ -328,6 +328,7 @@ def manual_de(styles):
             "Die klinische Zusatzdatei eines Apple-Health-Exports wird bewusst nicht importiert.",
             "Es gibt keine direkte HealthKit-Verbindung und keinen Cloud-Import.",
             "Bei einem nicht passenden ZIP, einer nicht lesbaren XML oder einer zu großen Datei zeigt HealthAtlas eine Erklärung an und importiert nichts.",
+            "Bei einem Importfehler bietet die Fehlermeldung <b>Diagnose kopieren</b> für GitHub-Issue #13. Die Diagnose enthält nur App- und macOS-Version, Eingabeart, Dateigröße, Importstufe, Fehlercode, verfügbare XML-Zeile und -Spalte sowie Laufzeit. Dateiname, Pfad, XML-Inhalt und Gesundheitsdaten bleiben ausgeschlossen.",
         ], callout_data=("Export auf dem iPhone", "In Apple Health: Übersicht öffnen, oben rechts Bild oder Initialen wählen, dann " + '"Alle Gesundheitsdaten exportieren"' + ". Apple kann die Bezeichnung der Oberfläche ändern. Quelle: Apple Support, " + '<font color="#42C5EE">support.apple.com/de-de/guide/iphone/iph5ede58c3d/26/ios/26</font>', TEAL), bullet_style_name="CompactBodyHA")
     s += section("Navigation und Status", "Die linke Milchglas-Sidebar ist in jedem Theme standardmäßig sichtbar. Vor dem ersten lokalen Import heißt ihr erster Eintrag " + '"Import"' + "; nach erfolgreichem Import wird daraus " + '"Übersicht"' + ". Am unteren Rand bleibt " + '"Privat - Nur lokal"' + " als ständige Datenschutzerinnerung sichtbar.", styles,
         bullets_list=[
@@ -442,6 +443,7 @@ def manual_de(styles):
             "Die Warnung mit " + '"Öffnen"' + " bestätigen und bei Bedarf authentifizieren. " + '"Dennoch öffnen"' + " erscheint nur für begrenzte Zeit nach dem blockierten Startversuch.",
             "Dadurch wird nur für diesen Build eine Ausnahme angelegt; Gatekeeper nicht systemweit deaktivieren. Nur Builds aus dem offiziellen HealthAtlas-GitHub-Release öffnen.",
             "Bei Importfehlern prüfen: ZIP enthält Export.xml, Datei ist nicht leer, innerhalb der HealthAtlas-Grenze von 5 GiB und lokal erreichbar.",
+            "Bleibt ein Importfehler bestehen, <b>Diagnose kopieren</b> wählen und den Text in GitHub-Issue #13 einfügen. Die Kopie enthält keine Gesundheitsdaten oder Angaben zum Speicherort der Datei.",
             "Wenn keine Werte erscheinen: zuerst unter Quellen mindestens einen Datentyp aktivieren; für Verläufe sind mindestens zwei Tageswerte im gewählten Zeitraum nötig.",
         ], callout_data=("Build-Varianten", "Dev, Beta und Final verwenden getrennte lokale Einstellungen. Ein Theme oder eine Auswahl in Dev ändert nicht die Einstellungen einer Beta oder Final-App.", GOLD))
     # Let the control reference use the remaining space after privacy notes.
@@ -488,7 +490,7 @@ def manual_de(styles):
 
 def manual_en(styles):
     s = []
-    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.5.0", styles)
+    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.5.4", styles)
     s += section("Welcome", "HealthAtlas reads an Apple Health export that you choose locally on your Mac. You then decide exactly which recognised data types appear in the dashboard. The app does not diagnose conditions or recommend treatment.", styles,
         bullets_list=[
             "Every normal launch starts without imported health data.",
@@ -528,6 +530,7 @@ def manual_en(styles):
             "The clinical companion file in an Apple Health export is intentionally not imported.",
             "There is no direct HealthKit connection and no cloud import.",
             "For a wrong ZIP, unreadable XML or an oversized file, HealthAtlas explains the issue and imports nothing.",
+            "For an import error, the message offers <b>Copy Diagnostics</b> for GitHub issue #13. The diagnostic contains only the app and macOS versions, input type, file size, import stage, error code, available XML line and column, and elapsed time. It excludes the file name, path, XML content, and health data.",
         ], callout_data=("Export on iPhone", "In Apple Health, open Summary, tap your picture or initials, then select " + '"Export All Health Data"' + ". Apple can change exact interface labels. Source: Apple Support, " + '<font color="#42C5EE">support.apple.com/en-in/guide/iphone/iph5ede58c3d/ios</font>', TEAL), bullet_style_name="CompactBodyHA")
     s += section("Navigation and status", "The frosted sidebar is visible by default in every theme. Before the first local import, its first entry is called " + '"Import"' + "; after a successful import it becomes " + '"Overview"' + ". It shows " + '"Private - Local only"' + " at the bottom as a permanent privacy reminder.", styles,
         bullets_list=[
@@ -640,6 +643,7 @@ def manual_en(styles):
             "Confirm the warning with " + '"Open"' + " and authenticate if macOS asks. " + '"Open Anyway"' + " is shown only for a limited time after the blocked launch attempt.",
             "This creates an exception only for that build; do not disable Gatekeeper system-wide. Open only a build from the official HealthAtlas GitHub release.",
             "For import errors, confirm that the ZIP contains Export.xml, the file is not empty, is within the 5 GiB HealthAtlas limit and is stored locally.",
+            "If the error remains, choose <b>Copy Diagnostics</b> and paste the text into GitHub issue #13. The copied text contains no health data or file-location details.",
             "If no values appear, enable at least one type in Sources. Trends need at least two daily values in the chosen period.",
         ], callout_data=("Build variants", "Dev, Beta and Final use separate local preferences. A theme or selection in Dev does not alter the settings of a Beta or Final app.", GOLD))
     # Let the control reference use the remaining space after privacy notes.

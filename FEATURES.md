@@ -20,6 +20,7 @@ This page describes the current HealthAtlas functions in detail.
 - Review every recognised local data type in **Sources**, grouped by category. Category and search stay visible; **Show & pin** contains show all, show none, and the Pin destination.
 - Pin types separately for Overview, Trends and Insights, and set their local order.
 - Replace an import, delete all local data after confirmation, and see the import time for the current session.
+- Failed imports offer a copyable technical diagnostic for GitHub issue #13. It excludes file names, paths, XML content, and health data.
 - The data-quality card describes local coverage, missing dates and sparsely recorded types without rating health values.
 
 ## Overview

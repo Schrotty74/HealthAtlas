@@ -20,6 +20,7 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich.
 - Unter **Quellen** jeden erkannten lokalen Datentyp nach Kategorie gruppiert prüfen. Kategorie und Suche bleiben sichtbar; **Anzeigen & anpinnen** enthält Alle anzeigen, Keine anzeigen und das Ziel für Pin.
 - Datentypen getrennt für Übersicht, Verläufe und Einblicke anpinnen und lokal anordnen.
 - Einen Import ersetzen, alle lokalen Daten nach Bestätigung löschen und den Importzeitpunkt der aktuellen Sitzung sehen.
+- Bei fehlgeschlagenen Importen steht eine kopierbare technische Diagnose für GitHub-Issue #13 bereit. Sie enthält keine Dateinamen, Pfade, XML-Inhalte oder Gesundheitsdaten.
 - Die Datenqualitäts-Karte beschreibt lokale Abdeckung, fehlende Tage und selten erfasste Typen, ohne Gesundheitswerte zu bewerten.
 
 ## Übersicht
