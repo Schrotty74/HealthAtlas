@@ -235,7 +235,9 @@ struct HealthAtlasTests {
         let directory = try makeTemporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let xmlURL = directory.appendingPathComponent("Export.xml")
-        try writeManySourceRecords(to: xmlURL, count: 5_000)
+        // Keep the stream active long enough for the asynchronous cancellation
+        // to be observed on fast development machines.
+        try writeManySourceRecords(to: xmlURL, count: 100_000)
         let cancellationToken = ImportCancellationToken()
         DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(10)) {
             cancellationToken.cancel()
@@ -352,6 +354,45 @@ struct HealthAtlasTests {
             }
             Issue.record("Expected \(url.lastPathComponent) to be rejected.")
         }
+    }
+
+    @Test func failedImportDiagnosticsContainOnlySafeTechnicalMetadata() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let export = directory.appendingPathComponent("Alex-Private-Health-Export.xml")
+        let archive = directory.appendingPathComponent("Alex-Private-Health-Export.zip")
+        let privateValue = "9876"
+        let privateSource = "Alex Personal Watch"
+        try Data("<HealthData><Record value=\"\(privateValue)\" sourceName=\"\(privateSource)\"".utf8).write(to: export)
+        try Data("not a ZIP archive".utf8).write(to: archive)
+
+        guard case let .rejected(failure) = LocalImportValidator.validate(url: export) else {
+            Issue.record("Expected the malformed XML fixture to be rejected.")
+            return
+        }
+
+        let copied = failure.diagnostics.copiedText
+        #expect(copied.contains("HealthAtlas Import Diagnostics"))
+        #expect(copied.contains("Input: XML file"))
+        #expect(copied.contains("File size:"))
+        #expect(copied.contains("Stage: XML first pass"))
+        #expect(copied.contains("Error: HealthAtlas.Import.XML.firstPass.documentClosedUnexpectedly"))
+        #expect(copied.contains("XML parser location: unavailable"))
+        #expect(copied.contains("Elapsed:"))
+        #expect(!copied.contains(export.path))
+        #expect(!copied.contains(export.lastPathComponent))
+        #expect(!copied.contains(privateValue))
+        #expect(!copied.contains(privateSource))
+
+        guard case let .rejected(archiveFailure) = LocalImportValidator.validate(url: archive) else {
+            Issue.record("Expected the invalid ZIP fixture to be rejected.")
+            return
+        }
+        let archiveCopied = archiveFailure.diagnostics.copiedText
+        #expect(archiveCopied.contains("Input: ZIP archive"))
+        #expect(archiveCopied.contains("Stage: ZIP listing"))
+        #expect(!archiveCopied.contains(archive.path))
+        #expect(!archiveCopied.contains(archive.lastPathComponent))
     }
 
     private func makeTemporaryDirectory() throws -> URL {

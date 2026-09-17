@@ -2061,10 +2061,18 @@ private final class HealthWorkspaceViewController: NSViewController {
             alert.informativeText = "\(file.fileName) · \(file.format)"
         case .cancelled:
             return
-        case .rejected(let reason):
+        case .rejected(let failure):
             alert.alertStyle = .warning
             alert.messageText = AppLanguage.current.text(english: "File not imported", german: "Datei nicht importiert")
-            alert.informativeText = reason
+            alert.informativeText = failure.message
+            alert.addButton(withTitle: AppLanguage.current.text(english: "Copy Diagnostics", german: "Diagnose kopieren"))
+            alert.addButton(withTitle: "OK")
+            alert.beginSheetModal(for: view.window!) { response in
+                guard response == .alertFirstButtonReturn else { return }
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(failure.diagnostics.copiedText, forType: .string)
+            }
+            return
         }
         alert.addButton(withTitle: "OK")
         alert.beginSheetModal(for: view.window!)

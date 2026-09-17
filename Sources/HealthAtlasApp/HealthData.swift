@@ -222,7 +222,76 @@ enum LocalImportResult: Equatable {
     case ready(LocalImportSummary)
     case imported(ImportedHealthSummary)
     case cancelled
-    case rejected(String)
+    case rejected(ImportFailure)
+}
+
+struct ImportFailure: Equatable {
+    let message: String
+    let diagnostics: ImportDiagnostics
+}
+
+struct ImportDiagnostics: Equatable {
+    let inputKind: String
+    let fileSizeBytes: Int?
+    let stage: String
+    let errorCode: String
+    let parserLine: Int?
+    let parserColumn: Int?
+    let elapsedMilliseconds: Int
+
+    var copiedText: String {
+        let fileSize = fileSizeBytes.map { "\($0) bytes" } ?? "unavailable"
+        let parserLocation: String
+        if let parserLine, let parserColumn {
+            parserLocation = "line \(parserLine), column \(parserColumn)"
+        } else {
+            parserLocation = "unavailable"
+        }
+        return [
+            "HealthAtlas Import Diagnostics",
+            "App: \(InstalledAppVersion.marketing) (build \(InstalledAppVersion.build))",
+            "macOS: \(Self.macOSVersion)",
+            "Input: \(inputKind)",
+            "File size: \(fileSize)",
+            "Stage: \(stage)",
+            "Error: \(errorCode)",
+            "XML parser location: \(parserLocation)",
+            "Elapsed: \(String(format: "%.3f", Double(elapsedMilliseconds) / 1_000)) s",
+            "Privacy: no file path, file name, XML content, or health data included."
+        ].joined(separator: "\n")
+    }
+
+    private static var macOSVersion: String {
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+    }
+}
+
+struct ImportDiagnosticContext {
+    let inputKind: String
+    let fileSizeBytes: Int?
+    let startedAt: Date
+
+    func failure(
+        message: String,
+        stage: String,
+        errorCode: String,
+        parserLine: Int? = nil,
+        parserColumn: Int? = nil
+    ) -> ImportFailure {
+        ImportFailure(
+            message: message,
+            diagnostics: ImportDiagnostics(
+                inputKind: inputKind,
+                fileSizeBytes: fileSizeBytes,
+                stage: stage,
+                errorCode: errorCode,
+                parserLine: parserLine,
+                parserColumn: parserColumn,
+                elapsedMilliseconds: max(0, Int(Date().timeIntervalSince(startedAt) * 1_000))
+            )
+        )
+    }
 }
 
 final class ImportCancellationToken: @unchecked Sendable {
@@ -254,34 +323,67 @@ enum LocalImportValidator {
 
     static func validate(url: URL, cancellationToken: ImportCancellationToken? = nil) -> LocalImportResult {
         if cancellationToken?.isCancelled == true { return .cancelled }
+        let startedAt = Date()
         let extensionName = url.pathExtension.lowercased()
+        let inputKind = extensionName == "zip" ? "ZIP archive" : extensionName == "xml" ? "XML file" : "unknown"
+        let fileSize = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+        let diagnostics = ImportDiagnosticContext(inputKind: inputKind, fileSizeBytes: fileSize ?? nil, startedAt: startedAt)
         guard supportedExtensions.contains(extensionName) else {
-            return .rejected(AppLanguage.current.text(english: "Select an Apple Health ZIP archive or Export.xml file.", german: "Wähle ein Apple-Health-ZIP-Archiv oder eine Export.xml-Datei aus."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "Select an Apple Health ZIP archive or Export.xml file.", german: "Wähle ein Apple-Health-ZIP-Archiv oder eine Export.xml-Datei aus."),
+                stage: "file validation",
+                errorCode: "HealthAtlas.Import.Validation.unsupportedExtension"
+            ))
         }
         guard let values = try? url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey]), values.isRegularFile == true else {
-            return .rejected(AppLanguage.current.text(english: "Please select a regular local file.", german: "Bitte wähle eine normale lokale Datei aus."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "Please select a regular local file.", german: "Bitte wähle eine normale lokale Datei aus."),
+                stage: "file validation",
+                errorCode: "HealthAtlas.Import.Validation.notRegularFile"
+            ))
         }
         let byteCount = values.fileSize ?? 0
+        let validatedDiagnostics = ImportDiagnosticContext(inputKind: inputKind, fileSizeBytes: byteCount, startedAt: startedAt)
         guard byteCount > 0 else {
-            return .rejected(AppLanguage.current.text(english: "The selected file is empty.", german: "Die ausgewählte Datei ist leer."))
+            return .rejected(validatedDiagnostics.failure(
+                message: AppLanguage.current.text(english: "The selected file is empty.", german: "Die ausgewählte Datei ist leer."),
+                stage: "file validation",
+                errorCode: "HealthAtlas.Import.Validation.emptyFile"
+            ))
         }
         if extensionName == "zip" {
             guard AppleHealthImporter.supportsArchiveByteCount(byteCount) else {
-                return .rejected(AppLanguage.current.text(english: "HealthAtlas supports local Apple Health ZIP archives up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-ZIP-Archive bis 5 GB. Das ist eine Sicherheitsgrenze der App."))
+                return .rejected(validatedDiagnostics.failure(
+                    message: AppLanguage.current.text(english: "HealthAtlas supports local Apple Health ZIP archives up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-ZIP-Archive bis 5 GB. Das ist eine Sicherheitsgrenze der App."),
+                    stage: "ZIP validation",
+                    errorCode: "HealthAtlas.Import.ZIP.archiveTooLarge"
+                ))
             }
-            return AppleHealthImporter.importArchive(at: url, fileSize: byteCount, cancellationToken: cancellationToken)
+            return AppleHealthImporter.importArchive(at: url, fileSize: byteCount, diagnostics: validatedDiagnostics, cancellationToken: cancellationToken)
         }
         guard supportsXMLByteCount(byteCount) else {
-            return .rejected(AppLanguage.current.text(english: "HealthAtlas supports local Apple Health XML files up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-XML-Dateien bis 5 GB. Das ist eine Sicherheitsgrenze der App."))
+            return .rejected(validatedDiagnostics.failure(
+                message: AppLanguage.current.text(english: "HealthAtlas supports local Apple Health XML files up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-XML-Dateien bis 5 GB. Das ist eine Sicherheitsgrenze der App."),
+                stage: "XML validation",
+                errorCode: "HealthAtlas.Import.XML.fileTooLarge"
+            ))
         }
         guard isReadableTextExport(at: url) else {
-            return .rejected(AppLanguage.current.text(english: "The selected file is not a readable text export.", german: "Die ausgewählte Datei ist kein lesbarer Textexport."))
+            return .rejected(validatedDiagnostics.failure(
+                message: AppLanguage.current.text(english: "The selected file is not a readable text export.", german: "Die ausgewählte Datei ist kein lesbarer Textexport."),
+                stage: "XML validation",
+                errorCode: "HealthAtlas.Import.XML.unreadableText"
+            ))
         }
-        if extensionName == "xml", let summary = AppleHealthImporter.importXML(at: url, fileName: url.lastPathComponent, cancellationToken: cancellationToken) {
-            return .imported(summary)
+        if extensionName == "xml" {
+            return AppleHealthImporter.importXML(at: url, fileName: url.lastPathComponent, diagnostics: validatedDiagnostics, cancellationToken: cancellationToken)
         }
         if cancellationToken?.isCancelled == true { return .cancelled }
-        return .rejected(AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."))
+        return .rejected(validatedDiagnostics.failure(
+            message: AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."),
+            stage: "XML import",
+            errorCode: "HealthAtlas.Import.XML.noReadableHealthData"
+        ))
     }
 
     private static func isReadableTextExport(at url: URL) -> Bool {
@@ -298,48 +400,126 @@ enum AppleHealthImporter {
     private static let maximumZIPListingBytes = 2 * 1024 * 1024
     private static let maximumZIPEntryInfoBytes = 64 * 1024
 
+    private struct XMLImportFailure {
+        let stage: String
+        let errorCode: String
+    }
+
+    private enum XMLImportAttempt {
+        case imported(ImportedHealthSummary)
+        case cancelled
+        case failed(XMLImportFailure)
+    }
+
     static func supportsArchiveByteCount(_ byteCount: Int) -> Bool {
         byteCount > 0 && byteCount <= maximumArchiveBytes
     }
 
     static func importArchive(at url: URL, fileSize: Int, cancellationToken: ImportCancellationToken? = nil) -> LocalImportResult {
+        importArchive(
+            at: url,
+            fileSize: fileSize,
+            diagnostics: ImportDiagnosticContext(inputKind: "ZIP archive", fileSizeBytes: fileSize, startedAt: Date()),
+            cancellationToken: cancellationToken
+        )
+    }
+
+    static func importArchive(
+        at url: URL,
+        fileSize: Int,
+        diagnostics: ImportDiagnosticContext,
+        cancellationToken: ImportCancellationToken? = nil
+    ) -> LocalImportResult {
         if cancellationToken?.isCancelled == true { return .cancelled }
         guard supportsArchiveByteCount(fileSize) else {
-            return .rejected(AppLanguage.current.text(english: "HealthAtlas supports local Apple Health ZIP archives up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-ZIP-Archive bis 5 GB. Das ist eine Sicherheitsgrenze der App."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "HealthAtlas supports local Apple Health ZIP archives up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-ZIP-Archive bis 5 GB. Das ist eine Sicherheitsgrenze der App."),
+                stage: "ZIP validation",
+                errorCode: "HealthAtlas.Import.ZIP.archiveTooLarge"
+            ))
         }
         guard let entries = unzipOutput(arguments: ["-Z1", url.path], maximumBytes: maximumZIPListingBytes),
               let listing = String(data: entries, encoding: .utf8) else {
-            return .rejected(AppLanguage.current.text(english: "The ZIP contents could not be read safely.", german: "Der Inhalt der ZIP-Datei konnte nicht sicher gelesen werden."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "The ZIP contents could not be read safely.", german: "Der Inhalt der ZIP-Datei konnte nicht sicher gelesen werden."),
+                stage: "ZIP listing",
+                errorCode: "HealthAtlas.Import.ZIP.listingFailed"
+            ))
         }
         let exportEntries = listing.split(whereSeparator: \.isNewline).filter { entry in
             entry.split(separator: "/").last?.lowercased() == "export.xml"
         }
         guard exportEntries.count == 1, let exportEntry = exportEntries.first.map(String.init) else {
-            return .rejected(AppLanguage.current.text(english: "This ZIP does not contain the required Export.xml data file.", german: "Dieses ZIP enthält nicht die erforderliche Datendatei Export.xml."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "This ZIP does not contain the required Export.xml data file.", german: "Dieses ZIP enthält nicht die erforderliche Datendatei Export.xml."),
+                stage: "ZIP entry selection",
+                errorCode: "HealthAtlas.Import.ZIP.exportXMLMissingOrAmbiguous"
+            ))
         }
         guard let uncompressedBytes = uncompressedSize(of: exportEntry, in: url) else {
-            return .rejected(AppLanguage.current.text(english: "The Export.xml size in this ZIP could not be verified safely.", german: "Die Größe von Export.xml in dieser ZIP-Datei konnte nicht sicher geprüft werden."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "The Export.xml size in this ZIP could not be verified safely.", german: "Die Größe von Export.xml in dieser ZIP-Datei konnte nicht sicher geprüft werden."),
+                stage: "ZIP entry validation",
+                errorCode: "HealthAtlas.Import.ZIP.exportXMLSizeUnavailable"
+            ))
         }
         guard uncompressedBytes > 0, uncompressedBytes <= maximumXMLBytes else {
-            return .rejected(AppLanguage.current.text(english: "HealthAtlas supports an Export.xml up to 5 GB after decompression. This archive was not imported.", german: "HealthAtlas unterstützt eine Export.xml bis 5 GB nach dem Entpacken. Dieses Archiv wurde nicht importiert."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "HealthAtlas supports an Export.xml up to 5 GB after decompression. This archive was not imported.", german: "HealthAtlas unterstützt eine Export.xml bis 5 GB nach dem Entpacken. Dieses Archiv wurde nicht importiert."),
+                stage: "ZIP entry validation",
+                errorCode: "HealthAtlas.Import.ZIP.exportXMLTooLargeOrEmpty"
+            ))
         }
         guard let temporaryXMLURL = extractExportXML(entry: exportEntry, from: url, cancellationToken: cancellationToken) else {
             if cancellationToken?.isCancelled == true { return .cancelled }
-            return .rejected(AppLanguage.current.text(english: "Apple Health data could not be read safely from this ZIP.", german: "Die Apple-Health-Daten konnten nicht sicher aus diesem ZIP gelesen werden."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "Apple Health data could not be read safely from this ZIP.", german: "Die Apple-Health-Daten konnten nicht sicher aus diesem ZIP gelesen werden."),
+                stage: "ZIP extraction",
+                errorCode: "HealthAtlas.Import.ZIP.exportXMLExtractionFailed"
+            ))
         }
         defer { try? FileManager.default.removeItem(at: temporaryXMLURL) }
-        guard let summary = importXML(at: temporaryXMLURL, fileName: url.lastPathComponent, cancellationToken: cancellationToken) else {
-            if cancellationToken?.isCancelled == true { return .cancelled }
-            return .rejected(AppLanguage.current.text(english: "The ZIP does not contain readable Apple Health data.", german: "Das ZIP enthält keine lesbaren Apple-Health-Daten."))
+        return importXML(at: temporaryXMLURL, fileName: url.lastPathComponent, diagnostics: diagnostics, cancellationToken: cancellationToken)
+    }
+
+    static func importXML(
+        at url: URL,
+        fileName: String,
+        diagnostics: ImportDiagnosticContext,
+        cancellationToken: ImportCancellationToken? = nil
+    ) -> LocalImportResult {
+        if cancellationToken?.isCancelled == true { return .cancelled }
+        guard let byteCount = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+              byteCount > 0,
+              byteCount <= maximumXMLBytes else {
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."),
+                stage: "XML validation",
+                errorCode: "HealthAtlas.Import.XML.fileSizeUnavailableOrInvalid"
+            ))
         }
-        return .imported(summary)
+        switch importXMLFromFile(at: url, fileName: fileName, cancellationToken: cancellationToken) {
+        case .imported(let summary):
+            return .imported(summary)
+        case .cancelled:
+            return .cancelled
+        case .failed(let failure):
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."),
+                stage: failure.stage,
+                errorCode: failure.errorCode
+            ))
+        }
     }
 
     static func importXML(at url: URL, fileName: String, cancellationToken: ImportCancellationToken? = nil) -> ImportedHealthSummary? {
         if cancellationToken?.isCancelled == true { return nil }
         guard let byteCount = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
               byteCount > 0, byteCount <= maximumXMLBytes else { return nil }
-        return importXMLFromFile(at: url, fileName: fileName, cancellationToken: cancellationToken)
+        guard case let .imported(summary) = importXMLFromFile(at: url, fileName: fileName, cancellationToken: cancellationToken) else {
+            return nil
+        }
+        return summary
     }
 
     static func importXML(data: Data, fileName: String, cancellationToken: ImportCancellationToken? = nil) -> ImportedHealthSummary? {
@@ -387,27 +567,44 @@ enum AppleHealthImporter {
         return ImportedHealthSummary(fileName: fileName, recordCount: recordCount, dataTypes: dataTypes)
     }
 
-    private static func importXMLFromFile(at url: URL, fileName: String, cancellationToken: ImportCancellationToken?) -> ImportedHealthSummary? {
+    private static func importXMLFromFile(at url: URL, fileName: String, cancellationToken: ImportCancellationToken?) -> XMLImportAttempt {
+        if cancellationToken?.isCancelled == true { return .cancelled }
         let spoolURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("HealthAtlas-Relevant-Records-\(UUID().uuidString)")
             .appendingPathExtension("xml")
         defer { try? FileManager.default.removeItem(at: spoolURL) }
         guard FileManager.default.createFile(atPath: spoolURL.path, contents: nil),
-              let spool = try? FileHandle(forWritingTo: spoolURL) else { return nil }
+              let spool = try? FileHandle(forWritingTo: spoolURL) else {
+            return .failed(XMLImportFailure(stage: "XML setup", errorCode: "HealthAtlas.Import.XML.relevantRecordStoreUnavailable"))
+        }
 
         let firstPass = AppleHealthFirstPassDelegate(spool: spool, cancellationToken: cancellationToken)
         defer { firstPass.closeIfNeeded() }
-        guard AppleHealthTagStream.parse(at: url, consumer: firstPass),
-              cancellationToken?.isCancelled != true,
-              firstPass.finish() else { return nil }
+        switch AppleHealthTagStream.parse(at: url, consumer: firstPass) {
+        case .failed(let code):
+            if cancellationToken?.isCancelled == true { return .cancelled }
+            return .failed(XMLImportFailure(stage: "XML first pass", errorCode: "HealthAtlas.Import.XML.firstPass.\(code)"))
+        case .parsed:
+            break
+        }
+        if cancellationToken?.isCancelled == true { return .cancelled }
+        guard firstPass.finish() else {
+            return .failed(XMLImportFailure(stage: "XML first pass", errorCode: "HealthAtlas.Import.XML.firstPass.finalizationFailed"))
+        }
 
         let relevantDelegate = AppleHealthXMLDelegate(
             plan: firstPass.plan,
             cancellationToken: cancellationToken,
             recordsAreAlreadyDeduplicated: true
         )
-        guard AppleHealthTagStream.parse(at: spoolURL, consumer: relevantDelegate),
-              cancellationToken?.isCancelled != true else { return nil }
+        switch AppleHealthTagStream.parse(at: spoolURL, consumer: relevantDelegate) {
+        case .failed(let code):
+            if cancellationToken?.isCancelled == true { return .cancelled }
+            return .failed(XMLImportFailure(stage: "XML relevant-record pass", errorCode: "HealthAtlas.Import.XML.relevantRecordPass.\(code)"))
+        case .parsed:
+            break
+        }
+        if cancellationToken?.isCancelled == true { return .cancelled }
 
         var accumulators = firstPass.directAccumulators
         for (identifier, relevantAccumulator) in relevantDelegate.accumulators {
@@ -420,8 +617,10 @@ enum AppleHealthImporter {
             lhs.recordCount == rhs.recordCount ? lhs.displayName < rhs.displayName : lhs.recordCount > rhs.recordCount
         }
         let recordCount = firstPass.recordCount + relevantDelegate.recordCount
-        guard recordCount > 0 else { return nil }
-        return ImportedHealthSummary(fileName: fileName, recordCount: recordCount, dataTypes: dataTypes)
+        guard recordCount > 0 else {
+            return .failed(XMLImportFailure(stage: "XML result validation", errorCode: "HealthAtlas.Import.XML.noRecognisedRecords"))
+        }
+        return .imported(ImportedHealthSummary(fileName: fileName, recordCount: recordCount, dataTypes: dataTypes))
     }
 
     private static func uncompressedSize(of entry: String, in archive: URL) -> Int? {
@@ -513,14 +712,19 @@ enum AppleHealthImporter {
 }
 
 private enum AppleHealthTagStream {
+    enum ParseResult {
+        case parsed
+        case failed(String)
+    }
+
     private enum Tag {
         case opening(name: String, attributes: [String: String], isSelfClosing: Bool)
         case closing(name: String)
         case ignored
     }
 
-    static func parse(at url: URL, consumer: AppleHealthElementConsumer) -> Bool {
-        guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+    static func parse(at url: URL, consumer: AppleHealthElementConsumer) -> ParseResult {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return .failed("fileOpenFailed") }
         defer { try? handle.close() }
 
         var buffer = Data()
@@ -533,39 +737,42 @@ private enum AppleHealthTagStream {
             var cursor = buffer.startIndex
             while true {
                 guard let start = buffer[cursor...].firstIndex(of: 60) else {
-                    guard sawHealthData, !closedHealthData || buffer[cursor...].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return false }
+                    guard sawHealthData, !closedHealthData || buffer[cursor...].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return .failed("nonWhitespaceOutsideDocument") }
                     cursor = buffer.endIndex
                     break
                 }
-                guard sawHealthData || buffer[cursor..<start].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return false }
+                guard sawHealthData || buffer[cursor..<start].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return .failed("nonWhitespaceBeforeDocument") }
                 guard let end = tagEnd(in: buffer, after: start) else { break }
                 let tagData = buffer[(start + 1)..<end]
-                guard let tag = parseTag(Data(tagData)) else { return false }
+                guard let tag = parseTag(Data(tagData)) else { return .failed("invalidTagSyntax") }
                 switch tag {
                 case .ignored:
                     break
                 case .closing(let name):
-                    guard elementStack.last == name else { return false }
+                    guard elementStack.last == name else { return .failed("unexpectedClosingTag") }
                     elementStack.removeLast()
                     if name == "HealthData" { closedHealthData = true }
                 case .opening(let name, let attributes, let isSelfClosing):
                     if name == "HealthData" {
-                        guard !sawHealthData, elementStack.isEmpty else { return false }
+                        guard !sawHealthData, elementStack.isEmpty else { return .failed("duplicateHealthDataRoot") }
                         sawHealthData = true
                     } else {
-                        guard sawHealthData, !closedHealthData, !elementStack.isEmpty else { return false }
+                        guard sawHealthData, !closedHealthData, !elementStack.isEmpty else { return .failed("invalidElementOrder") }
                     }
                     if !isSelfClosing { elementStack.append(name) }
-                    if !consumer.consume(elementName: name, attributes: attributes, rawTag: Data(buffer[start...end])) { return false }
+                    if !consumer.consume(elementName: name, attributes: attributes, rawTag: Data(buffer[start...end])) { return .failed("consumerRejectedElement") }
                 }
                 cursor = end + 1
             }
             if cursor > buffer.startIndex {
                 buffer = Data(buffer[cursor...])
             }
-            guard buffer.count <= 2 * 1024 * 1024 else { return false }
+            guard buffer.count <= 2 * 1024 * 1024 else { return .failed("incompleteTagExceededSafetyLimit") }
         }
-        return sawHealthData && closedHealthData && elementStack.isEmpty && buffer.allSatisfy { $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }
+        guard sawHealthData else { return .failed("healthDataRootMissing") }
+        guard closedHealthData, elementStack.isEmpty else { return .failed("documentClosedUnexpectedly") }
+        guard buffer.allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return .failed("trailingContent") }
+        return .parsed
     }
 
     private static func tagEnd(in data: Data, after start: Int) -> Int? {
