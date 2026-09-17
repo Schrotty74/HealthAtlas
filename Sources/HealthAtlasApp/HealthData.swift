@@ -403,6 +403,15 @@ enum AppleHealthImporter {
     private struct XMLImportFailure {
         let stage: String
         let errorCode: String
+        let parserLine: Int?
+        let parserColumn: Int?
+
+        init(stage: String, errorCode: String, parserLine: Int? = nil, parserColumn: Int? = nil) {
+            self.stage = stage
+            self.errorCode = errorCode
+            self.parserLine = parserLine
+            self.parserColumn = parserColumn
+        }
     }
 
     private enum XMLImportAttempt {
@@ -507,7 +516,9 @@ enum AppleHealthImporter {
             return .rejected(diagnostics.failure(
                 message: AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."),
                 stage: failure.stage,
-                errorCode: failure.errorCode
+                errorCode: failure.errorCode,
+                parserLine: failure.parserLine,
+                parserColumn: failure.parserColumn
             ))
         }
     }
@@ -581,9 +592,14 @@ enum AppleHealthImporter {
         let firstPass = AppleHealthFirstPassDelegate(spool: spool, cancellationToken: cancellationToken)
         defer { firstPass.closeIfNeeded() }
         switch AppleHealthTagStream.parse(at: url, consumer: firstPass) {
-        case .failed(let code):
+        case .failed(let failure):
             if cancellationToken?.isCancelled == true { return .cancelled }
-            return .failed(XMLImportFailure(stage: "XML first pass", errorCode: "HealthAtlas.Import.XML.firstPass.\(code)"))
+            return .failed(XMLImportFailure(
+                stage: "XML first pass",
+                errorCode: "HealthAtlas.Import.XML.firstPass.\(failure.code)",
+                parserLine: failure.line,
+                parserColumn: failure.column
+            ))
         case .parsed:
             break
         }
@@ -598,9 +614,14 @@ enum AppleHealthImporter {
             recordsAreAlreadyDeduplicated: true
         )
         switch AppleHealthTagStream.parse(at: spoolURL, consumer: relevantDelegate) {
-        case .failed(let code):
+        case .failed(let failure):
             if cancellationToken?.isCancelled == true { return .cancelled }
-            return .failed(XMLImportFailure(stage: "XML relevant-record pass", errorCode: "HealthAtlas.Import.XML.relevantRecordPass.\(code)"))
+            return .failed(XMLImportFailure(
+                stage: "XML relevant-record pass",
+                errorCode: "HealthAtlas.Import.XML.relevantRecordPass.\(failure.code)",
+                parserLine: failure.line,
+                parserColumn: failure.column
+            ))
         case .parsed:
             break
         }
@@ -712,9 +733,37 @@ enum AppleHealthImporter {
 }
 
 private enum AppleHealthTagStream {
+    struct ParseFailure {
+        let code: String
+        let line: Int
+        let column: Int
+    }
+
+    private struct SourceLocation {
+        var line = 1
+        var column = 1
+
+        func advanced(over bytes: Data.SubSequence) -> Self {
+            var copy = self
+            copy.advance(over: bytes)
+            return copy
+        }
+
+        mutating func advance(over bytes: Data.SubSequence) {
+            for byte in bytes {
+                if byte == 10 {
+                    line += 1
+                    column = 1
+                } else {
+                    column += 1
+                }
+            }
+        }
+    }
+
     enum ParseResult {
         case parsed
-        case failed(String)
+        case failed(ParseFailure)
     }
 
     private enum Tag {
@@ -724,54 +773,83 @@ private enum AppleHealthTagStream {
     }
 
     static func parse(at url: URL, consumer: AppleHealthElementConsumer) -> ParseResult {
-        guard let handle = try? FileHandle(forReadingFrom: url) else { return .failed("fileOpenFailed") }
+        guard let handle = try? FileHandle(forReadingFrom: url) else {
+            return .failed(ParseFailure(code: "fileOpenFailed", line: 1, column: 1))
+        }
         defer { try? handle.close() }
 
         var buffer = Data()
         var elementStack: [String] = []
         var sawHealthData = false
         var closedHealthData = false
+        var sourceLocation = SourceLocation()
+        var mayContainLeadingBOM = true
+
+        func failure(_ code: String, at location: SourceLocation) -> ParseResult {
+            .failed(ParseFailure(code: code, line: location.line, column: location.column))
+        }
 
         while let chunk = try? handle.read(upToCount: 128 * 1024), !chunk.isEmpty {
             buffer.append(chunk)
+            if mayContainLeadingBOM {
+                let utf8BOM: [UInt8] = [0xEF, 0xBB, 0xBF]
+                if buffer.count < utf8BOM.count, buffer.elementsEqual(utf8BOM.prefix(buffer.count)) {
+                    continue
+                }
+                if buffer.starts(with: utf8BOM) {
+                    let bom = buffer.prefix(utf8BOM.count)
+                    sourceLocation.advance(over: bom)
+                    buffer.removeFirst(utf8BOM.count)
+                }
+                mayContainLeadingBOM = false
+            }
             var cursor = buffer.startIndex
             while true {
                 guard let start = buffer[cursor...].firstIndex(of: 60) else {
-                    guard sawHealthData, !closedHealthData || buffer[cursor...].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return .failed("nonWhitespaceOutsideDocument") }
+                    guard sawHealthData, !closedHealthData || buffer[cursor...].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else {
+                        return failure("nonWhitespaceOutsideDocument", at: sourceLocation.advanced(over: buffer[buffer.startIndex..<cursor]))
+                    }
                     cursor = buffer.endIndex
                     break
                 }
-                guard sawHealthData || buffer[cursor..<start].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return .failed("nonWhitespaceBeforeDocument") }
+                let tagLocation = sourceLocation.advanced(over: buffer[buffer.startIndex..<start])
+                guard sawHealthData || buffer[cursor..<start].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else {
+                    return failure("nonWhitespaceBeforeDocument", at: tagLocation)
+                }
                 guard let end = tagEnd(in: buffer, after: start) else { break }
                 let tagData = buffer[(start + 1)..<end]
-                guard let tag = parseTag(Data(tagData)) else { return .failed("invalidTagSyntax") }
+                guard let tag = parseTag(Data(tagData)) else { return failure("invalidTagSyntax", at: tagLocation) }
                 switch tag {
                 case .ignored:
                     break
                 case .closing(let name):
-                    guard elementStack.last == name else { return .failed("unexpectedClosingTag") }
+                    guard elementStack.last == name else { return failure("unexpectedClosingTag", at: tagLocation) }
                     elementStack.removeLast()
                     if name == "HealthData" { closedHealthData = true }
                 case .opening(let name, let attributes, let isSelfClosing):
                     if name == "HealthData" {
-                        guard !sawHealthData, elementStack.isEmpty else { return .failed("duplicateHealthDataRoot") }
+                        guard !sawHealthData, elementStack.isEmpty else { return failure("duplicateHealthDataRoot", at: tagLocation) }
                         sawHealthData = true
+                        if isSelfClosing { closedHealthData = true }
                     } else {
-                        guard sawHealthData, !closedHealthData, !elementStack.isEmpty else { return .failed("invalidElementOrder") }
+                        guard sawHealthData, !closedHealthData, !elementStack.isEmpty else { return failure("invalidElementOrder", at: tagLocation) }
                     }
                     if !isSelfClosing { elementStack.append(name) }
-                    if !consumer.consume(elementName: name, attributes: attributes, rawTag: Data(buffer[start...end])) { return .failed("consumerRejectedElement") }
+                    if !consumer.consume(elementName: name, attributes: attributes, rawTag: Data(buffer[start...end])) {
+                        return failure("consumerRejectedElement", at: tagLocation)
+                    }
                 }
                 cursor = end + 1
             }
             if cursor > buffer.startIndex {
+                sourceLocation.advance(over: buffer[buffer.startIndex..<cursor])
                 buffer = Data(buffer[cursor...])
             }
-            guard buffer.count <= 2 * 1024 * 1024 else { return .failed("incompleteTagExceededSafetyLimit") }
+            guard buffer.count <= 2 * 1024 * 1024 else { return failure("incompleteTagExceededSafetyLimit", at: sourceLocation) }
         }
-        guard sawHealthData else { return .failed("healthDataRootMissing") }
-        guard closedHealthData, elementStack.isEmpty else { return .failed("documentClosedUnexpectedly") }
-        guard buffer.allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return .failed("trailingContent") }
+        guard sawHealthData else { return failure("healthDataRootMissing", at: sourceLocation) }
+        guard closedHealthData, elementStack.isEmpty else { return failure("documentClosedUnexpectedly", at: sourceLocation) }
+        guard buffer.allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return failure("trailingContent", at: sourceLocation) }
         return .parsed
     }
 
@@ -851,8 +929,10 @@ private enum AppleHealthTagStream {
         guard let first = bytes.first else { return nil }
         if first == 63 || first == 33 { return .ignored } // processing instruction or declaration/comment
         if first == 47 {
-            let nameBytes = bytes.dropFirst().prefix { !isWhitespace($0) }
+            let closingBytes = bytes.dropFirst()
+            let nameBytes = closingBytes.prefix { !isWhitespace($0) }
             guard let name = String(bytes: nameBytes, encoding: .utf8), !name.isEmpty else { return nil }
+            guard closingBytes.dropFirst(nameBytes.count).allSatisfy(isWhitespace) else { return nil }
             return .closing(name: name)
         }
 

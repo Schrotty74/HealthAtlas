@@ -240,6 +240,70 @@ struct HealthAtlasTests {
         #expect(zipSummary.recordCount == 1)
     }
 
+    @Test func streamingImportAcceptsValidAppleHealthXMLVariationsFromXMLAndZIP() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!-- Safe synthetic variation coverage. -->
+        <!DOCTYPE HealthData [
+          <!ELEMENT HealthData ANY>
+          <!ELEMENT Record ANY>
+        ]>
+        <HealthData locale="en_US">
+          <FutureContainer version="1">
+            <FutureElement><![CDATA[ignored synthetic extension]]></FutureElement>
+          </FutureContainer>
+          <Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="42" startDate="2026-09-17 06:00:00 +0200" endDate="2026-09-17 06:15:00 +0200" sourceName="Synthetic &amp; Safe">
+            <MetadataEntry key="synthetic" value="safe" />
+            <FutureRecordChild enabled="true" />
+          </Record>
+        </HealthData>
+        <?safe-test complete?>
+        """
+        let utf8BOM = Data([0xEF, 0xBB, 0xBF])
+        try (utf8BOM + Data(xml.utf8)).write(to: xmlURL)
+
+        guard case let .imported(xmlSummary) = LocalImportValidator.validate(url: xmlURL) else {
+            Issue.record("Expected a valid Apple Health XML variation to import from XML.")
+            return
+        }
+        #expect(xmlSummary.recordCount == 1)
+
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        guard case let .imported(zipSummary) = LocalImportValidator.validate(url: archiveURL) else {
+            Issue.record("Expected the same valid Apple Health XML variation to import from ZIP.")
+            return
+        }
+        #expect(zipSummary.recordCount == 1)
+    }
+
+    @Test func streamingImportRejectsMalformedClosingTagsWithSafeParserLocation() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let export = directory.appendingPathComponent("Synthetic-Private-Export.xml")
+        try Data("""
+        <HealthData>
+          <Record type="HKQuantityTypeIdentifierStepCount"></Record unexpected>
+        </HealthData>
+        """.utf8).write(to: export)
+
+        guard case let .rejected(failure) = LocalImportValidator.validate(url: export) else {
+            Issue.record("Expected malformed XML to be rejected.")
+            return
+        }
+
+        #expect(failure.diagnostics.errorCode == "HealthAtlas.Import.XML.firstPass.invalidTagSyntax")
+        #expect(failure.diagnostics.parserLine == 2)
+        #expect(failure.diagnostics.parserColumn != nil)
+        let copied = failure.diagnostics.copiedText
+        #expect(copied.contains("XML parser location: line 2, column "))
+        #expect(!copied.contains(export.path))
+        #expect(!copied.contains(export.lastPathComponent))
+    }
+
     @Test func importSizeLimitsSupportLargeLocalExports() {
         #expect(LocalImportValidator.supportsXMLByteCount(126 * 1024 * 1024))
         #expect(LocalImportValidator.supportsXMLByteCount(LocalImportValidator.maximumBytes))
@@ -406,7 +470,7 @@ struct HealthAtlasTests {
         #expect(copied.contains("File size:"))
         #expect(copied.contains("Stage: XML first pass"))
         #expect(copied.contains("Error: HealthAtlas.Import.XML.firstPass.documentClosedUnexpectedly"))
-        #expect(copied.contains("XML parser location: unavailable"))
+        #expect(copied.contains("XML parser location: line "))
         #expect(copied.contains("Elapsed:"))
         #expect(!copied.contains(export.path))
         #expect(!copied.contains(export.lastPathComponent))
