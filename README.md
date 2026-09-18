@@ -131,6 +131,10 @@ the changelog are written to `Backup/releases/beta/<version>/`.
 
 Bugfix 1.0.1 is the current stable release. It corrects card background clipping at rounded corners. HealthAtlas remains a local visualisation tool and does not provide medical integration, diagnoses or treatment recommendations.
 
+## Repo activity
+
+![Repobeats analytics image](https://repobeats.axiom.co/api/embed/5794869c28ec7fa1c826d7670ee193444623e93a.svg "Repobeats analytics image")
+
 ## License
 
 HealthAtlas is licensed under the [GNU General Public License v3.0](LICENSE).
