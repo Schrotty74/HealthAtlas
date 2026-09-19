@@ -103,6 +103,29 @@ worktree_tree() {
     git write-tree
 }
 
+sync_beta_project_context() {
+    local version="$1" release_label="$2" context_file="PROJECT_CONTEXT.md"
+    local expected_line="| \`beta\` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion \`${release_label} ${version}\` |"
+    local beta_context_pattern='^\| `beta` \| öffentliche Vorabversion auf GitHub \| enthält die veröffentlichte Vorabversion `(Beta|Bugfix) [^`]+` \|$'
+
+    [[ -f "$context_file" ]] || {
+        echo "Abbruch: $context_file fehlt." >&2
+        exit 1
+    }
+    grep -Eq "$beta_context_pattern" "$context_file" || {
+        echo "Abbruch: Die Beta-Zeile in $context_file hat ein unerwartetes Format." >&2
+        exit 1
+    }
+    grep -Fqx "$expected_line" "$context_file" && return
+
+    sed -i '' -E "s#${beta_context_pattern}#${expected_line}#" "$context_file"
+    grep -Fqx "$expected_line" "$context_file" || {
+        echo "Abbruch: Die Beta-Zeile in $context_file konnte nicht aktualisiert werden." >&2
+        exit 1
+    }
+    echo "PROJECT_CONTEXT.md: Beta-Referenz auf $release_label $version aktualisiert."
+}
+
 create_beta_commit() {
     local version="$1" release_label="$2" tree="$3" parent parent_tree
     parent="$(git rev-parse refs/heads/beta)"
@@ -221,6 +244,7 @@ else
     exit 1
 fi
 release_tag="$(beta_release_tag "$version")"
+sync_beta_project_context "$version" "$release_label"
 dev_commit="$(git rev-parse --short HEAD)"
 previous_beta_tag="$(last_beta_tag)"
 previous_release_note_ref="${previous_beta_tag:-$(git rev-list --max-parents=0 HEAD)}"
