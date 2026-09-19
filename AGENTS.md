@@ -12,6 +12,7 @@ Vor jeder Projektarbeit zuerst `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` lesen.
 - Bestehende Architektur, Datenformate, Einstellungen und Benutzerabläufe erhalten, sofern eine Änderung nicht ausdrücklich verlangt oder technisch notwendig ist.
 - Keine unnötigen Refactorings, neuen Abhängigkeiten oder Funktionsentfernungen ohne klaren Auftrag.
 - Keine Projektzustände, Testergebnisse, Builds, Scans, Prüfungen oder offenen Punkte erfinden. Einen Erfolg nur behaupten, wenn die betreffende Prüfung tatsächlich ausgeführt wurde.
+- Aussagen über den aktuellen Projekt-, Branch-, Skript- oder Release-Stand nur nach einer tatsächlichen Prüfung im selben Turn treffen; ohne diese Prüfung ausdrücklich „nicht verifiziert“ schreiben.
 - Fragen nicht automatisch als Änderungsauftrag behandeln. Dateien, Builds, Tests oder Veröffentlichungsaktionen nur ausführen, wenn der Auftrag dies verlangt oder sie für die ausdrücklich beauftragte Änderung notwendig sind.
 - Erklärungen verständlich formulieren und keine besonderen technischen Vorkenntnisse voraussetzen. Keine persönlichen Aussagen über Fähigkeiten, Kenntnisse, Gewohnheiten oder Arbeitsweise des Entwicklers dokumentieren.
 - Bei Git-Projekten dokumentierte Branch-Grenzen beachten. Branches nicht ohne ausdrücklichen Auftrag wechseln oder zusammenführen.
