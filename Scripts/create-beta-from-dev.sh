@@ -237,7 +237,7 @@ Scripts/privacy-check.sh
 version="$(release_version)"
 if [[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.0$ ]]; then
     release_label="Beta"
-elif [[ "$version" =~ ^[1-9][0-9]+\.[0-9]+\.[0-9]*[1-9][0-9]*$ ]]; then
+elif [[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]*[1-9][0-9]*$ ]]; then
     release_label="Bugfix"
 else
     echo "Abbruch: Beta muss X.Y.0 und ein Beta-Bugfix X.Y.Z mit Z größer 0 sein." >&2
