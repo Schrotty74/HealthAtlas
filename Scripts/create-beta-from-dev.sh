@@ -103,12 +103,35 @@ worktree_tree() {
     git write-tree
 }
 
+sync_beta_project_context() {
+    local version="$1" release_label="$2" context_file="PROJECT_CONTEXT.md"
+    local expected_line="| \`beta\` | öffentliche Vorabversion auf GitHub | enthält die veröffentlichte Vorabversion \`${release_label} ${version}\` |"
+    local beta_context_pattern='^\| `beta` \| öffentliche Vorabversion auf GitHub \| enthält die veröffentlichte Vorabversion `(Beta|Bugfix) [^`]+` \|$'
+
+    [[ -f "$context_file" ]] || {
+        echo "Abbruch: $context_file fehlt." >&2
+        exit 1
+    }
+    grep -Eq "$beta_context_pattern" "$context_file" || {
+        echo "Abbruch: Die Beta-Zeile in $context_file hat ein unerwartetes Format." >&2
+        exit 1
+    }
+    grep -Fqx "$expected_line" "$context_file" && return
+
+    sed -i '' -E "s#${beta_context_pattern}#${expected_line}#" "$context_file"
+    grep -Fqx "$expected_line" "$context_file" || {
+        echo "Abbruch: Die Beta-Zeile in $context_file konnte nicht aktualisiert werden." >&2
+        exit 1
+    }
+    echo "PROJECT_CONTEXT.md: Beta-Referenz auf $release_label $version aktualisiert."
+}
+
 create_beta_commit() {
-    local version="$1" tree="$2" parent parent_tree
+    local version="$1" release_label="$2" tree="$3" parent parent_tree
     parent="$(git rev-parse refs/heads/beta)"
     parent_tree="$(git rev-parse "$parent^{tree}")"
     [[ "$tree" == "$parent_tree" ]] && { echo "$parent"; return; }
-    printf 'Create beta %s from dev\n' "$version" | git commit-tree "$tree" -p "$parent"
+    printf 'Create %s %s from dev\n' "$release_label" "$version" | git commit-tree "$tree" -p "$parent"
 }
 
 backup_directory_for_version() {
@@ -119,11 +142,8 @@ backup_directory_for_version() {
 }
 
 artifact_base_name() {
-    if [[ "$1" == *beta* ]]; then
-        echo "HealthAtlas-$1-macos"
-    else
-        echo "HealthAtlas-Beta-$1-macos"
-    fi
+    local version="$1"
+    echo "HealthAtlas-Beta-${version}-macos"
 }
 
 require_release_artifacts() {
@@ -132,7 +152,28 @@ require_release_artifacts() {
 }
 
 last_beta_tag() {
-    git tag --list 'v*-beta*' --sort=-version:refname | head -n 1
+    local tag
+    tag="$(GH_PROMPT_DISABLED=1 gh release list --limit 100 --json tagName,isPrerelease --jq '
+        [ .[]
+          | select(.isPrerelease and (.tagName | test("^v[1-9][0-9]*\\.[0-9]+\\.[0-9]+-beta$")))
+          | .tagName
+        ]
+        | sort_by(sub("^v"; "") | split("-")[0] | split(".") | map(tonumber))
+        | last // empty
+    ')"
+    [[ -n "$tag" ]] || return
+    git fetch --quiet origin "refs/tags/${tag}:refs/tags/${tag}"
+    echo "$tag"
+}
+
+sync_release_tag() {
+    local tag="$1" expected_commit="$2" actual_commit
+    git fetch --quiet origin "refs/tags/${tag}:refs/tags/${tag}"
+    actual_commit="$(git rev-list -n 1 "refs/tags/${tag}")"
+    [[ "$actual_commit" == "$expected_commit" ]] || {
+        echo "Abbruch: Der veröffentlichte Tag $tag verweist nicht auf den erwarteten Beta-Commit." >&2
+        exit 1
+    }
 }
 
 beta_release_tag() {
@@ -164,9 +205,11 @@ categorized_release_changes() {
 }
 
 write_release_notes() {
-    local notes_file="$1" previous_beta_tag="$2" changes="$3"
+    local notes_file="$1" previous_beta_tag="$2" changes="$3" release_label="$4"
+    local release_label_lower
+    release_label_lower="$(printf '%s' "$release_label" | tr '[:upper:]' '[:lower:]')"
     cat > "$notes_file" <<EOF
-This beta contains the latest HealthAtlas fixes and improvements since ${previous_beta_tag:-the first beta}.
+This $release_label_lower pre-release includes the HealthAtlas changes since ${previous_beta_tag:-the first beta}.
 
 $changes
 ## Privacy
@@ -175,13 +218,13 @@ HealthAtlas starts without personal data. The included demo is synthetic; import
 
 ## Gatekeeper
 
-This build is ad-hoc signed. In Finder, Control-click the app, choose Open, then confirm Open.
+This build is ad-hoc signed. Open the app normally once; if macOS blocks it, go to System Settings > Privacy & Security, scroll to Security, choose Open Anyway for that build, then confirm Open and authenticate if asked. Open Anyway is available only for a limited time after the blocked launch and creates an exception only for that build; do not disable Gatekeeper system-wide. Use this only for the official GitHub release.
 EOF
 }
 
 create_github_release() {
-    local version="$1" target_commit="$2" notes_file="$3"; shift 3
-    GH_PROMPT_DISABLED=1 gh release create "$(beta_release_tag "$version")" "$@" --target "$target_commit" --title "Beta $version" --notes-file "$notes_file" --prerelease
+    local version="$1" target_commit="$2" notes_file="$3" release_label="$4"; shift 4
+    GH_PROMPT_DISABLED=1 gh release create "$(beta_release_tag "$version")" "$@" --target "$target_commit" --title "$release_label $version" --notes-file "$notes_file" --prerelease
 }
 
 require_dev_branch
@@ -192,8 +235,16 @@ bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
 
 version="$(release_version)"
-[[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.0$ ]] || { echo "Abbruch: Beta-Version muss X.Y.0 sein." >&2; exit 1; }
+if [[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.0$ ]]; then
+    release_label="Beta"
+elif [[ "$version" =~ ^[1-9][0-9]+\.[0-9]+\.[0-9]*[1-9][0-9]*$ ]]; then
+    release_label="Bugfix"
+else
+    echo "Abbruch: Beta muss X.Y.0 und ein Beta-Bugfix X.Y.Z mit Z größer 0 sein." >&2
+    exit 1
+fi
 release_tag="$(beta_release_tag "$version")"
+sync_beta_project_context "$version" "$release_label"
 dev_commit="$(git rev-parse --short HEAD)"
 previous_beta_tag="$(last_beta_tag)"
 previous_release_note_ref="${previous_beta_tag:-$(git rev-list --max-parents=0 HEAD)}"
@@ -203,7 +254,7 @@ zip_file="$backup_directory/$artifact_base.zip"
 dmg_file="$backup_directory/$artifact_base.dmg"
 zip_checksum_file="$zip_file.sha256"
 dmg_checksum_file="$dmg_file.sha256"
-release_notes_file="$backup_directory/HealthAtlas-Beta-$version-release-notes.md"
+release_notes_file="$backup_directory/HealthAtlas-$release_label-$version-release-notes.md"
 
 HEALTHATLAS_VERSION="$version" HEALTHATLAS_ALLOW_RELEASE_PACKAGE=YES Scripts/build-release-package.sh beta
 require_release_artifacts "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
@@ -211,7 +262,7 @@ Scripts/privacy-check.sh
 
 tree="$(worktree_tree)"
 beta_before="$(git rev-parse refs/heads/beta)"
-beta_commit="$(create_beta_commit "$version" "$tree")"
+beta_commit="$(create_beta_commit "$version" "$release_label" "$tree")"
 release_changes="$(categorized_release_changes "$previous_release_note_ref" "$beta_commit")" || {
     echo "Abbruch: Seit ${previous_beta_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Keine Beta ohne tatsächliche Änderungen erstellen." >&2
     exit 1
@@ -219,15 +270,16 @@ release_changes="$(categorized_release_changes "$previous_release_note_ref" "$be
 git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
-write_release_notes "$release_notes_file" "$previous_beta_tag" "$release_changes"
+write_release_notes "$release_notes_file" "$previous_beta_tag" "$release_changes" "$release_label"
 if gh release view "$release_tag" >/dev/null 2>&1; then
     gh release upload "$release_tag" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file" --clobber
-    gh release edit "$release_tag" --prerelease --title "Beta $version" --notes-file "$release_notes_file"
+    gh release edit "$release_tag" --prerelease --title "$release_label $version" --notes-file "$release_notes_file"
 else
-    create_github_release "$version" "$beta_commit" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
+    create_github_release "$version" "$beta_commit" "$release_notes_file" "$release_label" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi
+sync_release_tag "$release_tag" "$beta_commit"
 
-echo "Beta wurde aus Dev erstellt."
+echo "$release_label wurde als Beta-Vorabversion aus Dev erstellt."
 echo "Version: $version"
 echo "Ausgabeordner: $backup_directory"
 echo "Release Notes: $release_notes_file"
