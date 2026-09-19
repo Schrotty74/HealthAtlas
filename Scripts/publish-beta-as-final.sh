@@ -5,8 +5,13 @@ set -euo pipefail
 root_directory="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root_directory"
 requested_version=""
+direct_from_dev=false
 
 require_final_publication_authorization() {
+    if [[ "${1:-}" == "--from-dev" ]]; then
+        direct_from_dev=true
+        shift
+    fi
     if (( $# == 2 )) && [[ "$1" == "--publish-final" ]] && [[ "$2" == "--confirm-publish-final" ]]; then
         return
     fi
@@ -15,7 +20,7 @@ require_final_publication_authorization() {
         return
     fi
     echo "Abbruch: Eine öffentliche Final-Veröffentlichung benötigt beide ausdrücklichen Freigabe-Flags." >&2
-    echo "Verwendung: Scripts/publish-beta-as-final.sh [X.Y.Z] --publish-final --confirm-publish-final" >&2
+    echo "Verwendung: Scripts/publish-beta-as-final.sh [--from-dev] [X.Y.Z] --publish-final --confirm-publish-final" >&2
     exit 1
 }
 
@@ -95,10 +100,10 @@ final_tree_from_beta() {
     } | LC_ALL=C sort -k 2 | git mktree
 }
 
-bugfix_tree_from_dev() {
+final_tree_from_dev() {
     local main_ref="$1" temporary_index tree
     if [[ -n "$(git diff --name-only --diff-filter=D "$main_ref" dev)" ]]; then
-        echo "Abbruch: Der direkte Dev-Bugfix würde Dateien aus main entfernen." >&2
+        echo "Abbruch: Der direkte Dev-Finalweg würde Dateien aus main entfernen." >&2
         echo "Bitte die Entfernung zuerst bewusst auf main vorbereiten." >&2
         exit 1
     fi
@@ -190,9 +195,14 @@ Scripts/privacy-check.sh
 version="$(release_version)"
 if [[ "$version" =~ ^[1-9][0-9]*\.0\.0$ ]]; then
     release_label="Final"
-    source_branch="beta"
-    ensure_branch_exists beta main
-    sync_branch_with_origin beta
+    if [[ "$direct_from_dev" == true ]]; then
+        source_branch="dev"
+        git show-ref --verify --quiet refs/heads/dev || { echo "Abbruch: Lokaler dev-Branch fehlt." >&2; exit 1; }
+    else
+        source_branch="beta"
+        ensure_branch_exists beta main
+        sync_branch_with_origin beta
+    fi
 elif [[ "$version" =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]*[1-9][0-9]*$ ]]; then
     release_label="Bugfix"
     source_branch="dev"
@@ -214,8 +224,8 @@ release_notes_file="$backup_directory/HealthAtlas-$version-release-notes.md"
 git switch "$source_branch"
 source_commit="$(git rev-parse --short HEAD)"
 main_before="$(git rev-parse refs/heads/main)"
-if [[ "$release_label" == "Bugfix" ]]; then
-    final_tree="$(bugfix_tree_from_dev "$main_before")"
+if [[ "$source_branch" == "dev" ]]; then
+    final_tree="$(final_tree_from_dev "$main_before")"
     release_change_base="$main_before"
 else
     final_tree="$(final_tree_from_beta)"
