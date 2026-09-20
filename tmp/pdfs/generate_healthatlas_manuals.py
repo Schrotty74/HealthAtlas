@@ -287,7 +287,7 @@ def cover(title, subtitle, language, edition, styles):
 
 def manual_de(styles):
     s = []
-    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.5.4", styles)
+    s += cover("HealthAtlas", "Ausführliches Benutzerhandbuch\nLokale Apple-Health-Visualisierung für macOS", "Deutsch", "Ausgabe: Beta 1.6.0", styles)
     s += section("Willkommen", "HealthAtlas liest einen von dir ausgewählten Apple-Health-Export lokal auf deinem Mac. Anschließend entscheidest du selbst, welche erkannten Datentypen im Dashboard erscheinen. Die App erstellt keine Diagnose und gibt keine Behandlungsempfehlungen.", styles,
         bullets_list=[
             "Die App startet bei jedem normalen Start ohne importierte Gesundheitsdaten.",
@@ -319,6 +319,7 @@ def manual_de(styles):
     s += section("Apple-Health-Export importieren", "HealthAtlas akzeptiert genau zwei lokale Dateiformate: eine direkte <b>Export.xml</b> oder ein Apple-Health-<b>ZIP</b>-Archiv, das darin eine Datei namens Export.xml enthält. Das ZIP muss vorher nicht entpackt werden; HealthAtlas liest die Export.xml lokal aus dem Archiv.", styles,
         bullets_list=[
             "Direkte Export.xml-Dateien und ZIP-Archive dürfen jeweils bis zu 5 GiB groß sein. Die enthaltene Export.xml darf nach dem Entpacken ebenfalls höchstens 5 GiB groß sein. Das sind Sicherheitsgrenzen von HealthAtlas, keine Grenze von Apple Health oder macOS.",
+            "Während des Imports zeigt HealthAtlas den Anteil der tatsächlich gelesenen XML-Bytes. Bei ZIP-Archiven verwendet die Anzeige die geprüfte unkomprimierte Größe von Export.xml. In einer Phase ohne zuverlässig bekannte Gesamtgröße bleibt die Aktivitätsanzeige sichtbar. HealthAtlas schätzt keine verbleibende Zeit.",
             "HealthAtlas liest die ursprüngliche XML sequenziell einmal. Nur relevante Intervallwerte werden für die Quellenregel in einer temporären lokalen Zwischenablage weiterverarbeitet. Vollständig gleiche exportierte Records werden nur einmal gezählt.",
             "<b>Referenzmessung:</b> Auf einem Mac Studio M4 Max mit 36 GB RAM benötigte der Import einer synthetischen 500-MB-Datei ungefähr 41 Sekunden und einer 1-GB-Datei ungefähr 1 Minute 25 Sekunden.",
             "<b>Orientierungswerte:</b> Bei ähnlichem Dateiinhalt ergibt die annähernd lineare Hochrechnung etwa 2:50 Minuten für 2 GB, 4:15 Minuten für 3 GB, 5:40 Minuten für 4 GB und 7:05 Minuten für 5 GB. Auf anderen Macs kann der Import abhängig von Prozessor, SSD, Dateninhalt und Systemauslastung länger dauern.",
@@ -490,7 +491,7 @@ def manual_de(styles):
 
 def manual_en(styles):
     s = []
-    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.5.4", styles)
+    s += cover("HealthAtlas", "Detailed User Manual\nLocal Apple Health visualisation for macOS", "English", "Edition: Beta 1.6.0", styles)
     s += section("Welcome", "HealthAtlas reads an Apple Health export that you choose locally on your Mac. You then decide exactly which recognised data types appear in the dashboard. The app does not diagnose conditions or recommend treatment.", styles,
         bullets_list=[
             "Every normal launch starts without imported health data.",
@@ -522,6 +523,7 @@ def manual_en(styles):
     s += section("Importing an Apple Health export", "HealthAtlas accepts exactly two local formats: a direct <b>Export.xml</b> file or an Apple Health <b>ZIP</b> archive containing Export.xml. You do not need to unpack the ZIP first; HealthAtlas reads Export.xml locally from the archive.", styles,
         bullets_list=[
             "Direct Export.xml files and ZIP archives can each be up to 5 GiB. The contained Export.xml can also be up to 5 GiB after decompression. These are HealthAtlas safety limits, not Apple Health or macOS limits.", "Only one file can be selected at a time.",
+            "During import, HealthAtlas shows the portion of XML bytes actually read. For ZIP archives, it uses the verified uncompressed size of Export.xml. The activity indicator remains visible during a phase without a reliably known total size. HealthAtlas does not estimate remaining time.",
             "HealthAtlas reads the original XML sequentially once. Only relevant interval values are processed further in a temporary local spool for the source rule. Fully identical exported records are counted only once.",
             "<b>Reference measurement:</b> On a Mac Studio M4 Max with 36 GB of RAM, importing a synthetic 500 MB file took about 41 seconds and a 1 GB file took about 1 minute 25 seconds.",
             "<b>Estimated guidance:</b> With similar file contents, near-linear scaling gives about 2:50 minutes for 2 GB, 4:15 minutes for 3 GB, 5:40 minutes for 4 GB and 7:05 minutes for 5 GB. Importing may take longer on other Macs depending on processor, SSD, file contents and current system load.",

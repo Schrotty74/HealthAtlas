@@ -1958,7 +1958,12 @@ private final class HealthWorkspaceViewController: NSViewController {
         onActivityChanged?(true)
         showImportProgress()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let result = LocalImportValidator.validate(url: url, cancellationToken: cancellationToken)
+            let result = LocalImportValidator.validate(url: url, cancellationToken: cancellationToken) { progress in
+                DispatchQueue.main.async { [weak self] in
+                    guard self?.activeImportCancellationToken === cancellationToken else { return }
+                    self?.importProgressOverlay?.showProgress(progress)
+                }
+            }
             DispatchQueue.main.async {
                 self?.finishImport(with: result)
             }
@@ -1977,7 +1982,7 @@ private final class HealthWorkspaceViewController: NSViewController {
             overlay.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             overlay.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             overlay.widthAnchor.constraint(equalToConstant: 410),
-            overlay.heightAnchor.constraint(equalToConstant: 238)
+            overlay.heightAnchor.constraint(equalToConstant: 278)
         ])
         importProgressOverlay = overlay
         guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
@@ -2123,6 +2128,10 @@ private final class ImportProgressOverlayView: RoundedEffectView {
     private let language: AppLanguage
     private let onCancel: () -> Void
     private let cancelButton = NSButton()
+    private let spinner = NSProgressIndicator()
+    private let progressBar = NSProgressIndicator()
+    private let percentage = NSTextField(labelWithString: "0 %")
+    private var showsDeterminateProgress = false
 
     init(language: AppLanguage, onCancel: @escaping () -> Void) {
         self.language = language
@@ -2134,10 +2143,19 @@ private final class ImportProgressOverlayView: RoundedEffectView {
         layer?.borderWidth = 1
         layer?.borderColor = NSColor.white.withAlphaComponent(0.22).cgColor
 
-        let spinner = NSProgressIndicator()
         spinner.style = .spinning
         spinner.controlSize = .regular
         spinner.startAnimation(nil)
+        progressBar.isIndeterminate = false
+        progressBar.minValue = 0
+        progressBar.maxValue = 100
+        progressBar.doubleValue = 0
+        progressBar.controlSize = .regular
+        progressBar.isHidden = true
+        percentage.font = .monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
+        percentage.textColor = NSColor.white.withAlphaComponent(0.82)
+        percentage.alignment = .center
+        percentage.isHidden = true
         let title = NSTextField(labelWithString: language.text(english: "Reading Apple Health locally…", german: "Apple Health wird lokal gelesen …"))
         title.font = .systemFont(ofSize: 16, weight: .bold)
         title.textColor = .white
@@ -2162,7 +2180,7 @@ private final class ImportProgressOverlayView: RoundedEffectView {
         cancelButton.target = self
         cancelButton.action = #selector(cancelImport)
         cancelButton.translatesAutoresizingMaskIntoConstraints = false
-        let stack = NSStackView(views: [spinner, title, detail, warning, cancelButton])
+        let stack = NSStackView(views: [spinner, progressBar, percentage, title, detail, warning, cancelButton])
         stack.orientation = .vertical
         stack.alignment = .centerX
         stack.spacing = 8
@@ -2173,13 +2191,29 @@ private final class ImportProgressOverlayView: RoundedEffectView {
             stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -26),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor),
             spinner.widthAnchor.constraint(equalToConstant: 26),
-            spinner.heightAnchor.constraint(equalToConstant: 26)
+            spinner.heightAnchor.constraint(equalToConstant: 26),
+            progressBar.widthAnchor.constraint(equalToConstant: 260)
         ])
     }
 
     func showCancelling() {
         cancelButton.isEnabled = false
         cancelButton.title = language.text(english: "Cancelling…", german: "Abbruch läuft …")
+    }
+
+    func showProgress(_ fraction: Double) {
+        let bounded = min(1, max(0, fraction))
+        if !showsDeterminateProgress {
+            showsDeterminateProgress = true
+            spinner.stopAnimation(nil)
+            spinner.isHidden = true
+            progressBar.isHidden = false
+            percentage.isHidden = false
+        }
+        let percent = Int((bounded * 100).rounded(.down))
+        guard Int(progressBar.doubleValue) != percent else { return }
+        progressBar.doubleValue = Double(percent)
+        percentage.stringValue = "\(percent) %"
     }
 
     @objc private func cancelImport() {

@@ -176,6 +176,65 @@ struct HealthAtlasTests {
         #expect(summary.dataTypes.first?.identifier == "HKQuantityTypeIdentifierStepCount")
     }
 
+    @Test func streamingXMLImportReportsMonotoneByteProgressAndCompletesAt100Percent() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        try writeManySourceRecords(to: xmlURL, count: 5_000)
+        var progress: [Double] = []
+
+        guard case .imported = LocalImportValidator.validate(url: xmlURL, progress: { progress.append($0) }) else {
+            Issue.record("Expected the synthetic XML export to import.")
+            return
+        }
+
+        #expect(progress.first == 0)
+        #expect(progress.last == 1)
+        #expect(progress.allSatisfy { (0...1).contains($0) })
+        #expect(zip(progress, progress.dropFirst()).allSatisfy { $0 <= $1 })
+        #expect(progress.count <= 22)
+    }
+
+    @Test func streamingZIPImportUsesExportXMLProgressAndCompletesAt100Percent() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        try writeManySourceRecords(to: xmlURL, count: 5_000)
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        var progress: [Double] = []
+
+        guard case .imported = LocalImportValidator.validate(url: archiveURL, progress: { progress.append($0) }) else {
+            Issue.record("Expected the synthetic ZIP export to import.")
+            return
+        }
+
+        #expect(progress.first == 0)
+        #expect(progress.last == 1)
+        #expect(progress.allSatisfy { (0...1).contains($0) })
+        #expect(zip(progress, progress.dropFirst()).allSatisfy { $0 <= $1 })
+        #expect(progress.count <= 22)
+    }
+
+    @Test func cancelledStreamingImportNeverReports100Percent() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        try writeManySourceRecords(to: xmlURL, count: 5_000)
+        let cancellationToken = ImportCancellationToken()
+        var progress: [Double] = []
+
+        let result = LocalImportValidator.validate(url: xmlURL, cancellationToken: cancellationToken) { fraction in
+            progress.append(fraction)
+            if fraction > 0 { cancellationToken.cancel() }
+        }
+
+        #expect(result == .cancelled)
+        #expect(progress.first == 0)
+        #expect(progress.last != 1)
+        #expect(progress.allSatisfy { $0 < 1 })
+    }
+
     @Test func streamingImportAcceptsAppleHealthInternalDTDFromXMLAndZIPArchive() throws {
         let directory = try makeTemporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

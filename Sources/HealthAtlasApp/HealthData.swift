@@ -311,6 +311,68 @@ final class ImportCancellationToken: @unchecked Sendable {
     }
 }
 
+/// Reports bounded, monotone byte progress without making the streaming parser
+/// schedule a UI update for every read chunk. A completed import is the only
+/// operation allowed to publish 100 percent.
+final class ImportProgressReporter: @unchecked Sendable {
+    private let totalBytes: Int
+    private let update: (Double) -> Void
+    private let minimumDelta: Int
+    private let lock = NSLock()
+    private var lastProcessedBytes = 0
+    private var lastPublishedBytes = -1
+    private var finished = false
+
+    init?(totalBytes: Int, update: @escaping (Double) -> Void) {
+        guard totalBytes > 0 else { return nil }
+        self.totalBytes = totalBytes
+        self.update = update
+        // A small import should not spend its time animating the interface.
+        // Twenty byte-based steps remain perceptible without competing with
+        // parsing and aggregation work.
+        minimumDelta = max(1, totalBytes / 20)
+    }
+
+    func start() {
+        publish(processedBytes: 0, force: true)
+    }
+
+    func report(processedBytes: Int) {
+        publish(processedBytes: processedBytes, force: false)
+    }
+
+    func finish() {
+        lock.lock()
+        guard !finished else {
+            lock.unlock()
+            return
+        }
+        finished = true
+        lastProcessedBytes = totalBytes
+        lastPublishedBytes = totalBytes
+        lock.unlock()
+        update(1)
+    }
+
+    private func publish(processedBytes: Int, force: Bool) {
+        let value: Double
+        lock.lock()
+        let bounded = min(totalBytes, max(lastProcessedBytes, max(0, processedBytes)))
+        guard force || bounded - lastPublishedBytes >= minimumDelta else {
+            lastProcessedBytes = bounded
+            lock.unlock()
+            return
+        }
+        lastProcessedBytes = bounded
+        lastPublishedBytes = bounded
+        // Parsing can consume the source before aggregation has succeeded.
+        // Reserve 100 percent for a confirmed complete import.
+        value = min(0.99, Double(bounded) / Double(totalBytes))
+        lock.unlock()
+        update(value)
+    }
+}
+
 enum LocalImportValidator {
     private static let supportedExtensions: Set<String> = ["xml", "zip"]
     /// HealthAtlas supports local XML exports up to 5 GiB. The limit keeps
@@ -321,7 +383,11 @@ enum LocalImportValidator {
         byteCount > 0 && byteCount <= maximumBytes
     }
 
-    static func validate(url: URL, cancellationToken: ImportCancellationToken? = nil) -> LocalImportResult {
+    static func validate(
+        url: URL,
+        cancellationToken: ImportCancellationToken? = nil,
+        progress: ((Double) -> Void)? = nil
+    ) -> LocalImportResult {
         if cancellationToken?.isCancelled == true { return .cancelled }
         let startedAt = Date()
         let extensionName = url.pathExtension.lowercased()
@@ -359,7 +425,7 @@ enum LocalImportValidator {
                     errorCode: "HealthAtlas.Import.ZIP.archiveTooLarge"
                 ))
             }
-            return AppleHealthImporter.importArchive(at: url, fileSize: byteCount, diagnostics: validatedDiagnostics, cancellationToken: cancellationToken)
+            return AppleHealthImporter.importArchive(at: url, fileSize: byteCount, diagnostics: validatedDiagnostics, cancellationToken: cancellationToken, progress: progress)
         }
         guard supportsXMLByteCount(byteCount) else {
             return .rejected(validatedDiagnostics.failure(
@@ -376,7 +442,7 @@ enum LocalImportValidator {
             ))
         }
         if extensionName == "xml" {
-            return AppleHealthImporter.importXML(at: url, fileName: url.lastPathComponent, diagnostics: validatedDiagnostics, cancellationToken: cancellationToken)
+            return AppleHealthImporter.importXML(at: url, fileName: url.lastPathComponent, diagnostics: validatedDiagnostics, cancellationToken: cancellationToken, progress: progress)
         }
         if cancellationToken?.isCancelled == true { return .cancelled }
         return .rejected(validatedDiagnostics.failure(
@@ -437,7 +503,8 @@ enum AppleHealthImporter {
         at url: URL,
         fileSize: Int,
         diagnostics: ImportDiagnosticContext,
-        cancellationToken: ImportCancellationToken? = nil
+        cancellationToken: ImportCancellationToken? = nil,
+        progress: ((Double) -> Void)? = nil
     ) -> LocalImportResult {
         if cancellationToken?.isCancelled == true { return .cancelled }
         guard supportsArchiveByteCount(fileSize) else {
@@ -488,14 +555,23 @@ enum AppleHealthImporter {
             ))
         }
         defer { try? FileManager.default.removeItem(at: temporaryXMLURL) }
-        return importXML(at: temporaryXMLURL, fileName: url.lastPathComponent, diagnostics: diagnostics, cancellationToken: cancellationToken)
+        return importXML(
+            at: temporaryXMLURL,
+            fileName: url.lastPathComponent,
+            diagnostics: diagnostics,
+            cancellationToken: cancellationToken,
+            totalBytesForProgress: uncompressedBytes,
+            progress: progress
+        )
     }
 
     static func importXML(
         at url: URL,
         fileName: String,
         diagnostics: ImportDiagnosticContext,
-        cancellationToken: ImportCancellationToken? = nil
+        cancellationToken: ImportCancellationToken? = nil,
+        totalBytesForProgress: Int? = nil,
+        progress: ((Double) -> Void)? = nil
     ) -> LocalImportResult {
         if cancellationToken?.isCancelled == true { return .cancelled }
         guard let byteCount = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
@@ -507,8 +583,11 @@ enum AppleHealthImporter {
                 errorCode: "HealthAtlas.Import.XML.fileSizeUnavailableOrInvalid"
             ))
         }
-        switch importXMLFromFile(at: url, fileName: fileName, cancellationToken: cancellationToken) {
+        let progressReporter = progress.flatMap { ImportProgressReporter(totalBytes: totalBytesForProgress ?? byteCount, update: $0) }
+        progressReporter?.start()
+        switch importXMLFromFile(at: url, fileName: fileName, cancellationToken: cancellationToken, progressReporter: progressReporter) {
         case .imported(let summary):
+            progressReporter?.finish()
             return .imported(summary)
         case .cancelled:
             return .cancelled
@@ -578,7 +657,12 @@ enum AppleHealthImporter {
         return ImportedHealthSummary(fileName: fileName, recordCount: recordCount, dataTypes: dataTypes)
     }
 
-    private static func importXMLFromFile(at url: URL, fileName: String, cancellationToken: ImportCancellationToken?) -> XMLImportAttempt {
+    private static func importXMLFromFile(
+        at url: URL,
+        fileName: String,
+        cancellationToken: ImportCancellationToken?,
+        progressReporter: ImportProgressReporter? = nil
+    ) -> XMLImportAttempt {
         if cancellationToken?.isCancelled == true { return .cancelled }
         let spoolURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("HealthAtlas-Relevant-Records-\(UUID().uuidString)")
@@ -591,7 +675,7 @@ enum AppleHealthImporter {
 
         let firstPass = AppleHealthFirstPassDelegate(spool: spool, cancellationToken: cancellationToken)
         defer { firstPass.closeIfNeeded() }
-        switch AppleHealthTagStream.parse(at: url, consumer: firstPass) {
+        switch AppleHealthTagStream.parse(at: url, consumer: firstPass, progressReporter: progressReporter) {
         case .failed(let failure):
             if cancellationToken?.isCancelled == true { return .cancelled }
             return .failed(XMLImportFailure(
@@ -772,7 +856,11 @@ private enum AppleHealthTagStream {
         case ignored
     }
 
-    static func parse(at url: URL, consumer: AppleHealthElementConsumer) -> ParseResult {
+    static func parse(
+        at url: URL,
+        consumer: AppleHealthElementConsumer,
+        progressReporter: ImportProgressReporter? = nil
+    ) -> ParseResult {
         guard let handle = try? FileHandle(forReadingFrom: url) else {
             return .failed(ParseFailure(code: "fileOpenFailed", line: 1, column: 1))
         }
@@ -789,7 +877,10 @@ private enum AppleHealthTagStream {
             .failed(ParseFailure(code: code, line: location.line, column: location.column))
         }
 
+        var processedBytes = 0
         while let chunk = try? handle.read(upToCount: 128 * 1024), !chunk.isEmpty {
+            processedBytes += chunk.count
+            progressReporter?.report(processedBytes: processedBytes)
             buffer.append(chunk)
             if mayContainLeadingBOM {
                 let utf8BOM: [UInt8] = [0xEF, 0xBB, 0xBF]
@@ -804,15 +895,17 @@ private enum AppleHealthTagStream {
                 mayContainLeadingBOM = false
             }
             var cursor = buffer.startIndex
+            var cursorLocation = sourceLocation
             while true {
                 guard let start = buffer[cursor...].firstIndex(of: 60) else {
                     guard sawHealthData, !closedHealthData || buffer[cursor...].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else {
-                        return failure("nonWhitespaceOutsideDocument", at: sourceLocation.advanced(over: buffer[buffer.startIndex..<cursor]))
+                        return failure("nonWhitespaceOutsideDocument", at: cursorLocation)
                     }
+                    cursorLocation.advance(over: buffer[cursor...])
                     cursor = buffer.endIndex
                     break
                 }
-                let tagLocation = sourceLocation.advanced(over: buffer[buffer.startIndex..<start])
+                let tagLocation = cursorLocation.advanced(over: buffer[cursor..<start])
                 guard sawHealthData || buffer[cursor..<start].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else {
                     return failure("nonWhitespaceBeforeDocument", at: tagLocation)
                 }
@@ -839,10 +932,11 @@ private enum AppleHealthTagStream {
                         return failure("consumerRejectedElement", at: tagLocation)
                     }
                 }
+                cursorLocation.advance(over: buffer[cursor...end])
                 cursor = end + 1
             }
             if cursor > buffer.startIndex {
-                sourceLocation.advance(over: buffer[buffer.startIndex..<cursor])
+                sourceLocation = cursorLocation
                 buffer = Data(buffer[cursor...])
             }
             guard buffer.count <= 2 * 1024 * 1024 else { return failure("incompleteTagExceededSafetyLimit", at: sourceLocation) }
