@@ -245,6 +245,8 @@ else
     create_github_release "$version" "$release_label" "$(git rev-parse HEAD)" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi
 
+git switch dev
+
 echo "$release_label wurde aus $source_branch veröffentlicht."
 echo "Ausgabeordner: $backup_directory"
 echo "GitHub Release: $release_tag"

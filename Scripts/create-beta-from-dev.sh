@@ -134,6 +134,20 @@ create_beta_commit() {
     printf 'Create %s %s from dev\n' "$release_label" "$version" | git commit-tree "$tree" -p "$parent"
 }
 
+commit_dev_snapshot() {
+    local version="$1" release_label="$2" beta_commit="$3" dev_tree beta_tree
+
+    git diff --cached --quiet && return
+    git commit -m "Prepare ${release_label} ${version} locally"
+    dev_tree="$(git rev-parse HEAD^{tree})"
+    beta_tree="$(git rev-parse "$beta_commit^{tree}")"
+    [[ "$dev_tree" == "$beta_tree" ]] || {
+        echo "Abbruch: Der lokale dev-Commit entspricht nicht dem veröffentlichten Beta-Stand." >&2
+        exit 1
+    }
+    echo "dev wurde lokal auf $release_label $version committed."
+}
+
 backup_directory_for_version() {
     case "$1" in
         *local*|*test*) echo "$root_directory/Backup/local-test/$1" ;;
@@ -282,6 +296,7 @@ else
     create_github_release "$version" "$beta_commit" "$release_notes_file" "$release_label" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi
 sync_release_tag "$release_tag" "$beta_commit"
+commit_dev_snapshot "$version" "$release_label" "$beta_commit"
 
 echo "$release_label wurde als Beta-Vorabversion aus Dev erstellt."
 echo "Version: $version"
