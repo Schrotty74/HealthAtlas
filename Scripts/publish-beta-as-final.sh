@@ -84,12 +84,26 @@ ensure_branch_exists() {
     git show-ref --verify --quiet "refs/heads/$branch" || git branch "$branch" "$start_point"
 }
 
+require_local_dev_branch() {
+    git show-ref --verify --quiet refs/heads/dev && return
+    echo "Abbruch: Der lokale dev-Branch fehlt." >&2
+    echo "Bitte zuerst Scripts/bootstrap-local-dev.sh ausführen. Es erstellt dev lokal aus origin/beta ohne Remote-Tracking." >&2
+    exit 1
+}
+
 require_gh() {
     command -v gh >/dev/null 2>&1 || { echo "Abbruch: GitHub CLI 'gh' wurde nicht gefunden." >&2; exit 1; }
 }
 
 final_tree_from_beta() {
-    git rev-parse beta^{tree}
+    local temporary_index tree
+    temporary_index="$(mktemp "${TMPDIR:-/tmp}/healthatlas-final-index.XXXXXX")"
+    rm -f "$temporary_index"
+    GIT_INDEX_FILE="$temporary_index" git read-tree beta^{tree}
+    git diff --binary beta -- PROJECT_CONTEXT.md NEXT_STEPS.md | GIT_INDEX_FILE="$temporary_index" git apply --cached
+    tree="$(GIT_INDEX_FILE="$temporary_index" git write-tree)"
+    rm -f "$temporary_index"
+    echo "$tree"
 }
 
 final_tree_from_dev() {
@@ -104,6 +118,7 @@ final_tree_from_dev() {
     rm -f "$temporary_index"
     GIT_INDEX_FILE="$temporary_index" git read-tree "$main_ref^{tree}"
     git diff --binary --diff-filter=AM "$main_ref" dev | GIT_INDEX_FILE="$temporary_index" git apply --cached
+    git diff --binary dev -- PROJECT_CONTEXT.md NEXT_STEPS.md | GIT_INDEX_FILE="$temporary_index" git apply --cached
     tree="$(GIT_INDEX_FILE="$temporary_index" git write-tree)"
     rm -f "$temporary_index"
     echo "$tree"
@@ -177,10 +192,52 @@ create_github_release() {
     GH_PROMPT_DISABLED=1 gh release create "v$version" "$@" --target "$target_commit" --title "$release_label $version" --notes-file "$notes_file"
 }
 
+sync_release_tag() {
+    local tag="$1" expected_commit="$2" actual_commit
+    git fetch --quiet origin "refs/tags/${tag}:refs/tags/${tag}"
+    actual_commit="$(git rev-list -n 1 "refs/tags/${tag}")"
+    [[ "$actual_commit" == "$expected_commit" ]] || {
+        echo "Abbruch: Der veröffentlichte Tag $tag verweist nicht auf den erwarteten Final-Commit." >&2
+        exit 1
+    }
+}
+
+sync_final_release_context() {
+    local version="$1" release_label="$2" context_file="PROJECT_CONTEXT.md" next_steps_file="NEXT_STEPS.md"
+    local final_intro_pattern='Die aktuelle öffentliche Final-Version ist `(Final|Bugfix) [^`]+` mit technischem Tag `v[1-9][0-9]*\.[0-9]+\.[0-9]+`'
+    local main_context_pattern='^\| `main` \| Final-Linie auf GitHub \| enthält die ausdrücklich freigegebene Final-Version `(Final|Bugfix) [^`]+` \|$'
+    local next_steps_pattern='^(Stand: .+ · Bezug: öffentliche Final-Version )`v[1-9][0-9]*\.[0-9]+\.[0-9]+`$'
+    local expected_intro="Die aktuelle öffentliche Final-Version ist \`${release_label} ${version}\` mit technischem Tag \`v${version}\`"
+    local expected_main_line="| \`main\` | Final-Linie auf GitHub | enthält die ausdrücklich freigegebene Final-Version \`${release_label} ${version}\` |"
+
+    [[ -f "$context_file" && -f "$next_steps_file" ]] || {
+        echo "Abbruch: PROJECT_CONTEXT.md oder NEXT_STEPS.md fehlt." >&2
+        exit 1
+    }
+    grep -Eq "$final_intro_pattern" "$context_file" || {
+        echo "Abbruch: Die Final-Referenz in $context_file hat ein unerwartetes Format." >&2
+        exit 1
+    }
+    grep -Eq "$main_context_pattern" "$context_file" || {
+        echo "Abbruch: Die Final-Zeile in $context_file hat ein unerwartetes Format." >&2
+        exit 1
+    }
+    grep -Eq "$next_steps_pattern" "$next_steps_file" || {
+        echo "Abbruch: Die Final-Referenz in $next_steps_file hat ein unerwartetes Format." >&2
+        exit 1
+    }
+
+    sed -i '' -E "s#${final_intro_pattern}#${expected_intro}#" "$context_file"
+    sed -i '' -E "s#${main_context_pattern}#${expected_main_line}#" "$context_file"
+    sed -i '' -E "s#${next_steps_pattern}#\\1\`v${version}\`#" "$next_steps_file"
+    echo "PROJECT_CONTEXT.md und NEXT_STEPS.md: Final-Referenzen auf $release_label $version aktualisiert."
+}
+
 require_clean_worktree
 require_gh
 ensure_branch_exists main beta
 sync_branch_with_origin main
+require_local_dev_branch
 bash Scripts/prepare-build-layout.sh
 Scripts/privacy-check.sh
 
@@ -214,6 +271,7 @@ dmg_checksum_file="$dmg_file.sha256"
 release_notes_file="$backup_directory/HealthAtlas-$version-release-notes.md"
 
 git switch "$source_branch"
+sync_final_release_context "$version" "$release_label"
 source_commit="$(git rev-parse --short HEAD)"
 main_before="$(git rev-parse refs/heads/main)"
 if [[ "$source_branch" == "dev" ]]; then
@@ -244,6 +302,7 @@ if gh release view "$release_tag" >/dev/null 2>&1; then
 else
     create_github_release "$version" "$release_label" "$(git rev-parse HEAD)" "$release_notes_file" "$zip_file" "$dmg_file" "$zip_checksum_file" "$dmg_checksum_file"
 fi
+sync_release_tag "$release_tag" "$(git rev-parse HEAD)"
 
 git switch dev
 
