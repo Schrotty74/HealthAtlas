@@ -87,7 +87,7 @@ ensure_branch_exists() {
 require_local_dev_branch() {
     git show-ref --verify --quiet refs/heads/dev && return
     echo "Abbruch: Der lokale dev-Branch fehlt." >&2
-    echo "Bitte zuerst Scripts/bootstrap-local-dev.sh ausführen. Es erstellt dev lokal aus origin/beta ohne Remote-Tracking." >&2
+    echo "Bitte zuerst Scripts/bootstrap-local-dev.sh ausführen. Es erstellt dev lokal aus der neueren öffentlichen Linie ohne Remote-Tracking." >&2
     exit 1
 }
 
