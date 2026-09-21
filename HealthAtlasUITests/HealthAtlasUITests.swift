@@ -38,5 +38,11 @@ final class HealthAtlasUITests: XCTestCase {
         auroraTheme.click()
 
         XCTAssertEqual(germanHeading.frame.minY, originalY, accuracy: 2)
+
+        let blackAndWhiteTheme = app.buttons["Schwarz & Weiß"]
+        XCTAssertTrue(blackAndWhiteTheme.waitForExistence(timeout: 3))
+        blackAndWhiteTheme.click()
+
+        XCTAssertEqual(germanHeading.frame.minY, originalY, accuracy: 2)
     }
 }

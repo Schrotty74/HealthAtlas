@@ -127,7 +127,7 @@ struct HealthDataTypeSummary: Equatable, Identifiable {
     var valueText: String {
         guard let average else { return recordCount.formatted() }
         let value: Double
-        if identifier == "HKQuantityTypeIdentifierStepCount" || identifier.contains("Energy") || identifier.contains("Distance") || identifier.contains("FlightsClimbed") {
+        if HealthDataAggregationRule.rule(for: identifier).usesTotalValue {
             value = sum
         } else {
             value = average
@@ -149,7 +149,7 @@ struct HealthDataTypeSummary: Equatable, Identifiable {
     }
 
     func displayValue(for dailyValue: HealthDailyValue) -> Double {
-        identifier == "HKQuantityTypeIdentifierStepCount" || identifier.contains("Energy") || identifier.contains("Distance") || identifier.contains("FlightsClimbed")
+        HealthDataAggregationRule.rule(for: identifier).usesTotalValue
             ? dailyValue.sum : dailyValue.average
     }
 
@@ -221,94 +221,1221 @@ struct HealthDailyValue: Equatable {
 enum LocalImportResult: Equatable {
     case ready(LocalImportSummary)
     case imported(ImportedHealthSummary)
-    case rejected(String)
+    case cancelled
+    case rejected(ImportFailure)
+}
+
+struct ImportFailure: Equatable {
+    let message: String
+    let diagnostics: ImportDiagnostics
+}
+
+struct ImportDiagnostics: Equatable {
+    let inputKind: String
+    let fileSizeBytes: Int?
+    let stage: String
+    let errorCode: String
+    let parserLine: Int?
+    let parserColumn: Int?
+    let elapsedMilliseconds: Int
+
+    var copiedText: String {
+        let fileSize = fileSizeBytes.map { "\($0) bytes" } ?? "unavailable"
+        let parserLocation: String
+        if let parserLine, let parserColumn {
+            parserLocation = "line \(parserLine), column \(parserColumn)"
+        } else {
+            parserLocation = "unavailable"
+        }
+        return [
+            "HealthAtlas Import Diagnostics",
+            "App: \(InstalledAppVersion.marketing) (build \(InstalledAppVersion.build))",
+            "macOS: \(Self.macOSVersion)",
+            "Input: \(inputKind)",
+            "File size: \(fileSize)",
+            "Stage: \(stage)",
+            "Error: \(errorCode)",
+            "XML parser location: \(parserLocation)",
+            "Elapsed: \(String(format: "%.3f", Double(elapsedMilliseconds) / 1_000)) s",
+            "Privacy: no file path, file name, XML content, or health data included."
+        ].joined(separator: "\n")
+    }
+
+    private static var macOSVersion: String {
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+    }
+}
+
+struct ImportDiagnosticContext {
+    let inputKind: String
+    let fileSizeBytes: Int?
+    let startedAt: Date
+
+    func failure(
+        message: String,
+        stage: String,
+        errorCode: String,
+        parserLine: Int? = nil,
+        parserColumn: Int? = nil
+    ) -> ImportFailure {
+        ImportFailure(
+            message: message,
+            diagnostics: ImportDiagnostics(
+                inputKind: inputKind,
+                fileSizeBytes: fileSizeBytes,
+                stage: stage,
+                errorCode: errorCode,
+                parserLine: parserLine,
+                parserColumn: parserColumn,
+                elapsedMilliseconds: max(0, Int(Date().timeIntervalSince(startedAt) * 1_000))
+            )
+        )
+    }
+}
+
+final class ImportCancellationToken: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+
+    func cancel() {
+        lock.lock()
+        cancelled = true
+        lock.unlock()
+    }
+
+    var isCancelled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return cancelled
+    }
+}
+
+/// Reports bounded, monotone byte progress without making the streaming parser
+/// schedule a UI update for every read chunk. A completed import is the only
+/// operation allowed to publish 100 percent.
+final class ImportProgressReporter: @unchecked Sendable {
+    private let totalBytes: Int
+    private let update: (Double) -> Void
+    private let minimumDelta: Int
+    private let lock = NSLock()
+    private var lastProcessedBytes = 0
+    private var lastPublishedBytes = -1
+    private var finished = false
+
+    init?(totalBytes: Int, update: @escaping (Double) -> Void) {
+        guard totalBytes > 0 else { return nil }
+        self.totalBytes = totalBytes
+        self.update = update
+        // A small import should not spend its time animating the interface.
+        // Twenty byte-based steps remain perceptible without competing with
+        // parsing and aggregation work.
+        minimumDelta = max(1, totalBytes / 20)
+    }
+
+    func start() {
+        publish(processedBytes: 0, force: true)
+    }
+
+    func report(processedBytes: Int) {
+        publish(processedBytes: processedBytes, force: false)
+    }
+
+    func finish() {
+        lock.lock()
+        guard !finished else {
+            lock.unlock()
+            return
+        }
+        finished = true
+        lastProcessedBytes = totalBytes
+        lastPublishedBytes = totalBytes
+        lock.unlock()
+        update(1)
+    }
+
+    private func publish(processedBytes: Int, force: Bool) {
+        let value: Double
+        lock.lock()
+        let bounded = min(totalBytes, max(lastProcessedBytes, max(0, processedBytes)))
+        guard force || bounded - lastPublishedBytes >= minimumDelta else {
+            lastProcessedBytes = bounded
+            lock.unlock()
+            return
+        }
+        lastProcessedBytes = bounded
+        lastPublishedBytes = bounded
+        // Parsing can consume the source before aggregation has succeeded.
+        // Reserve 100 percent for a confirmed complete import.
+        value = min(0.99, Double(bounded) / Double(totalBytes))
+        lock.unlock()
+        update(value)
+    }
 }
 
 enum LocalImportValidator {
     private static let supportedExtensions: Set<String> = ["xml", "zip"]
-    static let maximumBytes = 100 * 1024 * 1024
+    /// HealthAtlas supports local XML exports up to 5 GiB. The limit keeps
+    /// import work bounded without claiming an Apple Health or macOS limit.
+    static let maximumBytes = 5 * 1024 * 1024 * 1024
 
-    static func validate(url: URL) -> LocalImportResult {
+    static func supportsXMLByteCount(_ byteCount: Int) -> Bool {
+        byteCount > 0 && byteCount <= maximumBytes
+    }
+
+    static func validate(
+        url: URL,
+        cancellationToken: ImportCancellationToken? = nil,
+        progress: ((Double) -> Void)? = nil
+    ) -> LocalImportResult {
+        if cancellationToken?.isCancelled == true { return .cancelled }
+        let startedAt = Date()
         let extensionName = url.pathExtension.lowercased()
+        let inputKind = extensionName == "zip" ? "ZIP archive" : extensionName == "xml" ? "XML file" : "unknown"
+        let fileSize = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+        let diagnostics = ImportDiagnosticContext(inputKind: inputKind, fileSizeBytes: fileSize ?? nil, startedAt: startedAt)
         guard supportedExtensions.contains(extensionName) else {
-            return .rejected(AppLanguage.current.text(english: "Select an Apple Health ZIP archive or Export.xml file.", german: "Wähle ein Apple-Health-ZIP-Archiv oder eine Export.xml-Datei aus."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "Select an Apple Health ZIP archive or Export.xml file.", german: "Wähle ein Apple-Health-ZIP-Archiv oder eine Export.xml-Datei aus."),
+                stage: "file validation",
+                errorCode: "HealthAtlas.Import.Validation.unsupportedExtension"
+            ))
         }
         guard let values = try? url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey]), values.isRegularFile == true else {
-            return .rejected(AppLanguage.current.text(english: "Please select a regular local file.", german: "Bitte wähle eine normale lokale Datei aus."))
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "Please select a regular local file.", german: "Bitte wähle eine normale lokale Datei aus."),
+                stage: "file validation",
+                errorCode: "HealthAtlas.Import.Validation.notRegularFile"
+            ))
         }
         let byteCount = values.fileSize ?? 0
-        guard byteCount > 0, byteCount <= maximumBytes else {
-            return .rejected(AppLanguage.current.text(english: "The file must be between 1 byte and 100 MB.", german: "Die Datei muss zwischen 1 Byte und 100 MB groß sein."))
+        let validatedDiagnostics = ImportDiagnosticContext(inputKind: inputKind, fileSizeBytes: byteCount, startedAt: startedAt)
+        guard byteCount > 0 else {
+            return .rejected(validatedDiagnostics.failure(
+                message: AppLanguage.current.text(english: "The selected file is empty.", german: "Die ausgewählte Datei ist leer."),
+                stage: "file validation",
+                errorCode: "HealthAtlas.Import.Validation.emptyFile"
+            ))
         }
         if extensionName == "zip" {
-            return AppleHealthImporter.importArchive(at: url, fileSize: byteCount)
+            guard AppleHealthImporter.supportsArchiveByteCount(byteCount) else {
+                return .rejected(validatedDiagnostics.failure(
+                    message: AppLanguage.current.text(english: "HealthAtlas supports local Apple Health ZIP archives up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-ZIP-Archive bis 5 GB. Das ist eine Sicherheitsgrenze der App."),
+                    stage: "ZIP validation",
+                    errorCode: "HealthAtlas.Import.ZIP.archiveTooLarge"
+                ))
+            }
+            return AppleHealthImporter.importArchive(at: url, fileSize: byteCount, diagnostics: validatedDiagnostics, cancellationToken: cancellationToken, progress: progress)
         }
-        guard let data = try? Data(contentsOf: url, options: [.mappedIfSafe]), !data.prefix(512).contains(0) else {
-            return .rejected(AppLanguage.current.text(english: "The selected file is not a readable text export.", german: "Die ausgewählte Datei ist kein lesbarer Textexport."))
+        guard supportsXMLByteCount(byteCount) else {
+            return .rejected(validatedDiagnostics.failure(
+                message: AppLanguage.current.text(english: "HealthAtlas supports local Apple Health XML files up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-XML-Dateien bis 5 GB. Das ist eine Sicherheitsgrenze der App."),
+                stage: "XML validation",
+                errorCode: "HealthAtlas.Import.XML.fileTooLarge"
+            ))
         }
-        if extensionName == "xml", let summary = AppleHealthImporter.importXML(data: data, fileName: url.lastPathComponent) {
-            return .imported(summary)
+        guard isReadableTextExport(at: url) else {
+            return .rejected(validatedDiagnostics.failure(
+                message: AppLanguage.current.text(english: "The selected file is not a readable text export.", german: "Die ausgewählte Datei ist kein lesbarer Textexport."),
+                stage: "XML validation",
+                errorCode: "HealthAtlas.Import.XML.unreadableText"
+            ))
         }
-        return .ready(LocalImportSummary(fileName: url.lastPathComponent, format: extensionName.uppercased(), byteCount: byteCount))
+        if extensionName == "xml" {
+            return AppleHealthImporter.importXML(at: url, fileName: url.lastPathComponent, diagnostics: validatedDiagnostics, cancellationToken: cancellationToken, progress: progress)
+        }
+        if cancellationToken?.isCancelled == true { return .cancelled }
+        return .rejected(validatedDiagnostics.failure(
+            message: AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."),
+            stage: "XML import",
+            errorCode: "HealthAtlas.Import.XML.noReadableHealthData"
+        ))
+    }
+
+    private static func isReadableTextExport(at url: URL) -> Bool {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? handle.close() }
+        guard let prefix = try? handle.read(upToCount: 512), !prefix.isEmpty else { return false }
+        return !prefix.contains(0)
     }
 }
 
 enum AppleHealthImporter {
-    private static let maximumXMLBytes = 100 * 1024 * 1024
+    static let maximumArchiveBytes = 5 * 1024 * 1024 * 1024
+    private static let maximumXMLBytes = LocalImportValidator.maximumBytes
+    private static let maximumZIPListingBytes = 2 * 1024 * 1024
+    private static let maximumZIPEntryInfoBytes = 64 * 1024
 
-    static func importArchive(at url: URL, fileSize: Int) -> LocalImportResult {
-        guard fileSize <= LocalImportValidator.maximumBytes else {
-            return .rejected(AppLanguage.current.text(english: "The archive is too large to import safely.", german: "Das Archiv ist für einen sicheren Import zu groß."))
+    private struct XMLImportFailure {
+        let stage: String
+        let errorCode: String
+        let parserLine: Int?
+        let parserColumn: Int?
+
+        init(stage: String, errorCode: String, parserLine: Int? = nil, parserColumn: Int? = nil) {
+            self.stage = stage
+            self.errorCode = errorCode
+            self.parserLine = parserLine
+            self.parserColumn = parserColumn
         }
-        guard let entries = unzip(arguments: ["-Z1", url.path]),
-              let exportEntry = String(data: entries, encoding: .utf8)?.split(whereSeparator: \.isNewline).first(where: { entry in
-                  entry.split(separator: "/").last?.lowercased() == "export.xml"
-              }) else {
-            return .rejected(AppLanguage.current.text(english: "This ZIP does not contain the required Export.xml data file.", german: "Dieses ZIP enthält nicht die erforderliche Datendatei Export.xml."))
-        }
-        guard let xml = unzip(arguments: ["-p", url.path, String(exportEntry)]), xml.count <= maximumXMLBytes else {
-            return .rejected(AppLanguage.current.text(english: "Apple Health data could not be read safely from this ZIP.", german: "Die Apple-Health-Daten konnten nicht sicher aus diesem ZIP gelesen werden."))
-        }
-        guard let summary = importXML(data: xml, fileName: url.lastPathComponent) else {
-            return .rejected(AppLanguage.current.text(english: "The ZIP does not contain readable Apple Health data.", german: "Das ZIP enthält keine lesbaren Apple-Health-Daten."))
-        }
-        return .imported(summary)
     }
 
-    static func importXML(data: Data, fileName: String) -> ImportedHealthSummary? {
-        guard data.count <= maximumXMLBytes else { return nil }
-        let parserDelegate = AppleHealthXMLDelegate()
-        let parser = XMLParser(data: data)
-        parser.delegate = parserDelegate
-        guard parser.parse(), parserDelegate.recordCount > 0 else { return nil }
-        return ImportedHealthSummary(
-            fileName: fileName,
-            recordCount: parserDelegate.recordCount,
-            dataTypes: parserDelegate.dataTypes
+    private enum XMLImportAttempt {
+        case imported(ImportedHealthSummary)
+        case cancelled
+        case failed(XMLImportFailure)
+    }
+
+    static func supportsArchiveByteCount(_ byteCount: Int) -> Bool {
+        byteCount > 0 && byteCount <= maximumArchiveBytes
+    }
+
+    static func importArchive(at url: URL, fileSize: Int, cancellationToken: ImportCancellationToken? = nil) -> LocalImportResult {
+        importArchive(
+            at: url,
+            fileSize: fileSize,
+            diagnostics: ImportDiagnosticContext(inputKind: "ZIP archive", fileSizeBytes: fileSize, startedAt: Date()),
+            cancellationToken: cancellationToken
         )
     }
 
-    private static func unzip(arguments: [String]) -> Data? {
+    static func importArchive(
+        at url: URL,
+        fileSize: Int,
+        diagnostics: ImportDiagnosticContext,
+        cancellationToken: ImportCancellationToken? = nil,
+        progress: ((Double) -> Void)? = nil
+    ) -> LocalImportResult {
+        if cancellationToken?.isCancelled == true { return .cancelled }
+        guard supportsArchiveByteCount(fileSize) else {
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "HealthAtlas supports local Apple Health ZIP archives up to 5 GB. This is an app safety limit.", german: "HealthAtlas unterstützt lokale Apple-Health-ZIP-Archive bis 5 GB. Das ist eine Sicherheitsgrenze der App."),
+                stage: "ZIP validation",
+                errorCode: "HealthAtlas.Import.ZIP.archiveTooLarge"
+            ))
+        }
+        guard let entries = unzipOutput(arguments: ["-Z1", url.path], maximumBytes: maximumZIPListingBytes),
+              let listing = String(data: entries, encoding: .utf8) else {
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "The ZIP contents could not be read safely.", german: "Der Inhalt der ZIP-Datei konnte nicht sicher gelesen werden."),
+                stage: "ZIP listing",
+                errorCode: "HealthAtlas.Import.ZIP.listingFailed"
+            ))
+        }
+        let exportEntries = listing.split(whereSeparator: \.isNewline).filter { entry in
+            entry.split(separator: "/").last?.lowercased() == "export.xml"
+        }
+        guard exportEntries.count == 1, let exportEntry = exportEntries.first.map(String.init) else {
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "This ZIP does not contain the required Export.xml data file.", german: "Dieses ZIP enthält nicht die erforderliche Datendatei Export.xml."),
+                stage: "ZIP entry selection",
+                errorCode: "HealthAtlas.Import.ZIP.exportXMLMissingOrAmbiguous"
+            ))
+        }
+        guard let uncompressedBytes = uncompressedSize(of: exportEntry, in: url) else {
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "The Export.xml size in this ZIP could not be verified safely.", german: "Die Größe von Export.xml in dieser ZIP-Datei konnte nicht sicher geprüft werden."),
+                stage: "ZIP entry validation",
+                errorCode: "HealthAtlas.Import.ZIP.exportXMLSizeUnavailable"
+            ))
+        }
+        guard uncompressedBytes > 0, uncompressedBytes <= maximumXMLBytes else {
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "HealthAtlas supports an Export.xml up to 5 GB after decompression. This archive was not imported.", german: "HealthAtlas unterstützt eine Export.xml bis 5 GB nach dem Entpacken. Dieses Archiv wurde nicht importiert."),
+                stage: "ZIP entry validation",
+                errorCode: "HealthAtlas.Import.ZIP.exportXMLTooLargeOrEmpty"
+            ))
+        }
+        guard let temporaryXMLURL = extractExportXML(entry: exportEntry, from: url, cancellationToken: cancellationToken) else {
+            if cancellationToken?.isCancelled == true { return .cancelled }
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "Apple Health data could not be read safely from this ZIP.", german: "Die Apple-Health-Daten konnten nicht sicher aus diesem ZIP gelesen werden."),
+                stage: "ZIP extraction",
+                errorCode: "HealthAtlas.Import.ZIP.exportXMLExtractionFailed"
+            ))
+        }
+        defer { try? FileManager.default.removeItem(at: temporaryXMLURL) }
+        return importXML(
+            at: temporaryXMLURL,
+            fileName: url.lastPathComponent,
+            diagnostics: diagnostics,
+            cancellationToken: cancellationToken,
+            totalBytesForProgress: uncompressedBytes,
+            progress: progress
+        )
+    }
+
+    static func importXML(
+        at url: URL,
+        fileName: String,
+        diagnostics: ImportDiagnosticContext,
+        cancellationToken: ImportCancellationToken? = nil,
+        totalBytesForProgress: Int? = nil,
+        progress: ((Double) -> Void)? = nil
+    ) -> LocalImportResult {
+        if cancellationToken?.isCancelled == true { return .cancelled }
+        guard let byteCount = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+              byteCount > 0,
+              byteCount <= maximumXMLBytes else {
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."),
+                stage: "XML validation",
+                errorCode: "HealthAtlas.Import.XML.fileSizeUnavailableOrInvalid"
+            ))
+        }
+        let progressReporter = progress.flatMap { ImportProgressReporter(totalBytes: totalBytesForProgress ?? byteCount, update: $0) }
+        progressReporter?.start()
+        switch importXMLFromFile(at: url, fileName: fileName, cancellationToken: cancellationToken, progressReporter: progressReporter) {
+        case .imported(let summary):
+            progressReporter?.finish()
+            return .imported(summary)
+        case .cancelled:
+            return .cancelled
+        case .failed(let failure):
+            return .rejected(diagnostics.failure(
+                message: AppLanguage.current.text(english: "The selected file does not contain readable Apple Health data.", german: "Die ausgewählte Datei enthält keine lesbaren Apple-Health-Daten."),
+                stage: failure.stage,
+                errorCode: failure.errorCode,
+                parserLine: failure.parserLine,
+                parserColumn: failure.parserColumn
+            ))
+        }
+    }
+
+    static func importXML(at url: URL, fileName: String, cancellationToken: ImportCancellationToken? = nil) -> ImportedHealthSummary? {
+        if cancellationToken?.isCancelled == true { return nil }
+        guard let byteCount = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+              byteCount > 0, byteCount <= maximumXMLBytes else { return nil }
+        guard case let .imported(summary) = importXMLFromFile(at: url, fileName: fileName, cancellationToken: cancellationToken) else {
+            return nil
+        }
+        return summary
+    }
+
+    static func importXML(data: Data, fileName: String, cancellationToken: ImportCancellationToken? = nil) -> ImportedHealthSummary? {
+        if cancellationToken?.isCancelled == true { return nil }
+        guard data.count <= maximumXMLBytes else { return nil }
+        return importXML(fileName: fileName, cancellationToken: cancellationToken) { XMLParser(data: data) }
+    }
+
+    private static func importXML(fileName: String, cancellationToken: ImportCancellationToken?, makeParser: () -> XMLParser?) -> ImportedHealthSummary? {
+        let spoolURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HealthAtlas-Relevant-Records-\(UUID().uuidString)")
+            .appendingPathExtension("xml")
+        defer { try? FileManager.default.removeItem(at: spoolURL) }
+        guard FileManager.default.createFile(atPath: spoolURL.path, contents: nil),
+              let spool = try? FileHandle(forWritingTo: spoolURL),
+              let firstParser = makeParser() else { return nil }
+
+        let firstPass = AppleHealthFirstPassDelegate(spool: spool, cancellationToken: cancellationToken)
+        defer { firstPass.closeIfNeeded() }
+        firstParser.delegate = firstPass
+        guard firstParser.parse(), cancellationToken?.isCancelled != true, firstPass.finish() else { return nil }
+
+        guard let relevantStream = InputStream(url: spoolURL) else { return nil }
+        let relevantParser = XMLParser(stream: relevantStream)
+        let relevantDelegate = AppleHealthXMLDelegate(
+            plan: firstPass.plan,
+            cancellationToken: cancellationToken,
+            recordsAreAlreadyDeduplicated: true
+        )
+        relevantParser.delegate = relevantDelegate
+        guard relevantParser.parse(), cancellationToken?.isCancelled != true else { return nil }
+
+        var accumulators = firstPass.directAccumulators
+        for (identifier, relevantAccumulator) in relevantDelegate.accumulators {
+            let accumulator = accumulators[identifier] ?? HealthDataTypeAccumulator(identifier: identifier)
+            accumulator.merge(relevantAccumulator)
+            accumulators[identifier] = accumulator
+        }
+        let summaries: [HealthDataTypeSummary] = accumulators.values.map { $0.summary }
+        let dataTypes = summaries.sorted { lhs, rhs in
+            lhs.recordCount == rhs.recordCount ? lhs.displayName < rhs.displayName : lhs.recordCount > rhs.recordCount
+        }
+        let recordCount = firstPass.recordCount + relevantDelegate.recordCount
+        guard recordCount > 0 else { return nil }
+        return ImportedHealthSummary(fileName: fileName, recordCount: recordCount, dataTypes: dataTypes)
+    }
+
+    private static func importXMLFromFile(
+        at url: URL,
+        fileName: String,
+        cancellationToken: ImportCancellationToken?,
+        progressReporter: ImportProgressReporter? = nil
+    ) -> XMLImportAttempt {
+        if cancellationToken?.isCancelled == true { return .cancelled }
+        let spoolURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HealthAtlas-Relevant-Records-\(UUID().uuidString)")
+            .appendingPathExtension("xml")
+        defer { try? FileManager.default.removeItem(at: spoolURL) }
+        guard FileManager.default.createFile(atPath: spoolURL.path, contents: nil),
+              let spool = try? FileHandle(forWritingTo: spoolURL) else {
+            return .failed(XMLImportFailure(stage: "XML setup", errorCode: "HealthAtlas.Import.XML.relevantRecordStoreUnavailable"))
+        }
+
+        let firstPass = AppleHealthFirstPassDelegate(spool: spool, cancellationToken: cancellationToken)
+        defer { firstPass.closeIfNeeded() }
+        switch AppleHealthTagStream.parse(at: url, consumer: firstPass, progressReporter: progressReporter) {
+        case .failed(let failure):
+            if cancellationToken?.isCancelled == true { return .cancelled }
+            return .failed(XMLImportFailure(
+                stage: "XML first pass",
+                errorCode: "HealthAtlas.Import.XML.firstPass.\(failure.code)",
+                parserLine: failure.line,
+                parserColumn: failure.column
+            ))
+        case .parsed:
+            break
+        }
+        if cancellationToken?.isCancelled == true { return .cancelled }
+        guard firstPass.finish() else {
+            return .failed(XMLImportFailure(stage: "XML first pass", errorCode: "HealthAtlas.Import.XML.firstPass.finalizationFailed"))
+        }
+
+        let relevantDelegate = AppleHealthXMLDelegate(
+            plan: firstPass.plan,
+            cancellationToken: cancellationToken,
+            recordsAreAlreadyDeduplicated: true
+        )
+        switch AppleHealthTagStream.parse(at: spoolURL, consumer: relevantDelegate) {
+        case .failed(let failure):
+            if cancellationToken?.isCancelled == true { return .cancelled }
+            return .failed(XMLImportFailure(
+                stage: "XML relevant-record pass",
+                errorCode: "HealthAtlas.Import.XML.relevantRecordPass.\(failure.code)",
+                parserLine: failure.line,
+                parserColumn: failure.column
+            ))
+        case .parsed:
+            break
+        }
+        if cancellationToken?.isCancelled == true { return .cancelled }
+
+        var accumulators = firstPass.directAccumulators
+        for (identifier, relevantAccumulator) in relevantDelegate.accumulators {
+            let accumulator = accumulators[identifier] ?? HealthDataTypeAccumulator(identifier: identifier)
+            accumulator.merge(relevantAccumulator)
+            accumulators[identifier] = accumulator
+        }
+        let summaries: [HealthDataTypeSummary] = accumulators.values.map { $0.summary }
+        let dataTypes = summaries.sorted { lhs, rhs in
+            lhs.recordCount == rhs.recordCount ? lhs.displayName < rhs.displayName : lhs.recordCount > rhs.recordCount
+        }
+        let recordCount = firstPass.recordCount + relevantDelegate.recordCount
+        guard recordCount > 0 else {
+            return .failed(XMLImportFailure(stage: "XML result validation", errorCode: "HealthAtlas.Import.XML.noRecognisedRecords"))
+        }
+        return .imported(ImportedHealthSummary(fileName: fileName, recordCount: recordCount, dataTypes: dataTypes))
+    }
+
+    private static func uncompressedSize(of entry: String, in archive: URL) -> Int? {
+        guard let output = unzipOutput(arguments: ["-l", archive.path, entry], maximumBytes: maximumZIPEntryInfoBytes),
+              let listing = String(data: output, encoding: .utf8) else { return nil }
+        for line in listing.split(whereSeparator: \.isNewline).reversed() where line.hasSuffix(entry) {
+            guard let firstField = line.split(maxSplits: 1, whereSeparator: \.isWhitespace).first,
+                  let byteCount = Int(firstField) else { continue }
+            return byteCount
+        }
+        return nil
+    }
+
+    private static func extractExportXML(entry: String, from archive: URL, cancellationToken: ImportCancellationToken?) -> URL? {
+        let temporaryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HealthAtlas-Import-\(UUID().uuidString)")
+            .appendingPathExtension("xml")
+        guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil),
+              let destination = try? FileHandle(forWritingTo: temporaryURL) else { return nil }
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
-        process.arguments = arguments
+        process.arguments = ["-p", archive.path, entry]
         let output = Pipe()
         process.standardOutput = output
         process.standardError = FileHandle.nullDevice
         do {
             try process.run()
-            let data = output.fileHandleForReading.readDataToEndOfFile()
+            var writtenBytes = 0
+            while let chunk = try output.fileHandleForReading.read(upToCount: 64 * 1024), !chunk.isEmpty {
+                if cancellationToken?.isCancelled == true {
+                    process.terminate()
+                    process.waitUntilExit()
+                    try? destination.close()
+                    try? FileManager.default.removeItem(at: temporaryURL)
+                    return nil
+                }
+                writtenBytes += chunk.count
+                guard writtenBytes <= maximumXMLBytes else {
+                    process.terminate()
+                    process.waitUntilExit()
+                    try? destination.close()
+                    try? FileManager.default.removeItem(at: temporaryURL)
+                    return nil
+                }
+                try destination.write(contentsOf: chunk)
+            }
             process.waitUntilExit()
-            return process.terminationStatus == 0 ? data : nil
+            try destination.close()
+            guard process.terminationStatus == 0, writtenBytes > 0 else {
+                try? FileManager.default.removeItem(at: temporaryURL)
+                return nil
+            }
+            return temporaryURL
+        } catch {
+            process.terminate()
+            process.waitUntilExit()
+            try? destination.close()
+            try? FileManager.default.removeItem(at: temporaryURL)
+            return nil
+        }
+    }
+
+    private static func unzipOutput(arguments: [String], maximumBytes: Int) -> Data? {
+        let temporaryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HealthAtlas-ZIP-Listing-\(UUID().uuidString)")
+        guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil),
+              let output = try? FileHandle(forWritingTo: temporaryURL) else { return nil }
+        defer {
+            try? output.close()
+            try? FileManager.default.removeItem(at: temporaryURL)
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+        process.arguments = arguments
+        process.standardOutput = output
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            process.waitUntilExit()
+            let byteCount = try temporaryURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+            guard process.terminationStatus == 0, byteCount <= maximumBytes else { return nil }
+            return try Data(contentsOf: temporaryURL, options: [.mappedIfSafe])
         } catch {
             return nil
         }
     }
 }
 
-private final class AppleHealthXMLDelegate: NSObject, XMLParserDelegate {
-    var recordCount = 0
-    private var accumulators: [String: HealthDataTypeAccumulator] = [:]
+private enum AppleHealthTagStream {
+    struct ParseFailure {
+        let code: String
+        let line: Int
+        let column: Int
+    }
+
+    private struct SourceLocation {
+        var line = 1
+        var column = 1
+
+        func advanced(over bytes: Data.SubSequence) -> Self {
+            var copy = self
+            copy.advance(over: bytes)
+            return copy
+        }
+
+        mutating func advance(over bytes: Data.SubSequence) {
+            for byte in bytes {
+                if byte == 10 {
+                    line += 1
+                    column = 1
+                } else {
+                    column += 1
+                }
+            }
+        }
+    }
+
+    enum ParseResult {
+        case parsed
+        case failed(ParseFailure)
+    }
+
+    private enum Tag {
+        case opening(name: String, attributes: [String: String], isSelfClosing: Bool)
+        case closing(name: String)
+        case ignored
+    }
+
+    static func parse(
+        at url: URL,
+        consumer: AppleHealthElementConsumer,
+        progressReporter: ImportProgressReporter? = nil
+    ) -> ParseResult {
+        guard let handle = try? FileHandle(forReadingFrom: url) else {
+            return .failed(ParseFailure(code: "fileOpenFailed", line: 1, column: 1))
+        }
+        defer { try? handle.close() }
+
+        var buffer = Data()
+        var elementStack: [String] = []
+        var sawHealthData = false
+        var closedHealthData = false
+        var sourceLocation = SourceLocation()
+        var mayContainLeadingBOM = true
+
+        func failure(_ code: String, at location: SourceLocation) -> ParseResult {
+            .failed(ParseFailure(code: code, line: location.line, column: location.column))
+        }
+
+        var processedBytes = 0
+        while let chunk = try? handle.read(upToCount: 128 * 1024), !chunk.isEmpty {
+            processedBytes += chunk.count
+            progressReporter?.report(processedBytes: processedBytes)
+            buffer.append(chunk)
+            if mayContainLeadingBOM {
+                let utf8BOM: [UInt8] = [0xEF, 0xBB, 0xBF]
+                if buffer.count < utf8BOM.count, buffer.elementsEqual(utf8BOM.prefix(buffer.count)) {
+                    continue
+                }
+                if buffer.starts(with: utf8BOM) {
+                    let bom = buffer.prefix(utf8BOM.count)
+                    sourceLocation.advance(over: bom)
+                    buffer.removeFirst(utf8BOM.count)
+                }
+                mayContainLeadingBOM = false
+            }
+            var cursor = buffer.startIndex
+            var cursorLocation = sourceLocation
+            while true {
+                guard let start = buffer[cursor...].firstIndex(of: 60) else {
+                    guard sawHealthData, !closedHealthData || buffer[cursor...].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else {
+                        return failure("nonWhitespaceOutsideDocument", at: cursorLocation)
+                    }
+                    cursorLocation.advance(over: buffer[cursor...])
+                    cursor = buffer.endIndex
+                    break
+                }
+                let tagLocation = cursorLocation.advanced(over: buffer[cursor..<start])
+                guard sawHealthData || buffer[cursor..<start].allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else {
+                    return failure("nonWhitespaceBeforeDocument", at: tagLocation)
+                }
+                guard let end = tagEnd(in: buffer, after: start) else { break }
+                let tagData = buffer[(start + 1)..<end]
+                guard let tag = parseTag(Data(tagData)) else { return failure("invalidTagSyntax", at: tagLocation) }
+                switch tag {
+                case .ignored:
+                    break
+                case .closing(let name):
+                    guard elementStack.last == name else { return failure("unexpectedClosingTag", at: tagLocation) }
+                    elementStack.removeLast()
+                    if name == "HealthData" { closedHealthData = true }
+                case .opening(let name, let attributes, let isSelfClosing):
+                    if name == "HealthData" {
+                        guard !sawHealthData, elementStack.isEmpty else { return failure("duplicateHealthDataRoot", at: tagLocation) }
+                        sawHealthData = true
+                        if isSelfClosing { closedHealthData = true }
+                    } else {
+                        guard sawHealthData, !closedHealthData, !elementStack.isEmpty else { return failure("invalidElementOrder", at: tagLocation) }
+                    }
+                    if !isSelfClosing { elementStack.append(name) }
+                    if !consumer.consume(elementName: name, attributes: attributes, rawTag: Data(buffer[start...end])) {
+                        return failure("consumerRejectedElement", at: tagLocation)
+                    }
+                }
+                cursorLocation.advance(over: buffer[cursor...end])
+                cursor = end + 1
+            }
+            if cursor > buffer.startIndex {
+                sourceLocation = cursorLocation
+                buffer = Data(buffer[cursor...])
+            }
+            guard buffer.count <= 2 * 1024 * 1024 else { return failure("incompleteTagExceededSafetyLimit", at: sourceLocation) }
+        }
+        guard sawHealthData else { return failure("healthDataRootMissing", at: sourceLocation) }
+        guard closedHealthData, elementStack.isEmpty else { return failure("documentClosedUnexpectedly", at: sourceLocation) }
+        guard buffer.allSatisfy({ $0 == 9 || $0 == 10 || $0 == 13 || $0 == 32 }) else { return failure("trailingContent", at: sourceLocation) }
+        return .parsed
+    }
+
+    private static func tagEnd(in data: Data, after start: Int) -> Int? {
+        if start + 1 < data.endIndex, data[start + 1] == 33 {
+            return declarationEnd(in: data, after: start)
+        }
+        var quote: UInt8?
+        var index = start + 1
+        while index < data.endIndex {
+            let byte = data[index]
+            if let activeQuote = quote {
+                if byte == activeQuote { quote = nil }
+            } else if byte == 34 || byte == 39 { // " or '
+                quote = byte
+            } else if byte == 62 { // >
+                return index
+            }
+            index += 1
+        }
+        return nil
+    }
+
+    private static func declarationEnd(in data: Data, after start: Int) -> Int? {
+        let first = start + 1
+        if hasPrefix("!--", in: data, at: first) {
+            return terminator("-->", in: data, after: first + 3)
+        }
+        if hasPrefix("![CDATA[", in: data, at: first) {
+            return terminator("]]>", in: data, after: first + 8)
+        }
+
+        var quote: UInt8?
+        var internalSubsetDepth = 0
+        var index = first + 1
+        while index < data.endIndex {
+            let byte = data[index]
+            if let activeQuote = quote {
+                if byte == activeQuote { quote = nil }
+            } else if byte == 34 || byte == 39 {
+                quote = byte
+            } else if byte == 91 { // [
+                internalSubsetDepth += 1
+            } else if byte == 93, internalSubsetDepth > 0 { // ]
+                internalSubsetDepth -= 1
+            } else if byte == 62, internalSubsetDepth == 0 { // >
+                return index
+            }
+            index += 1
+        }
+        return nil
+    }
+
+    private static func hasPrefix(_ value: String, in data: Data, at index: Int) -> Bool {
+        let bytes = Array(value.utf8)
+        guard index + bytes.count <= data.endIndex else { return false }
+        return data[index..<(index + bytes.count)].elementsEqual(bytes)
+    }
+
+    private static func terminator(_ value: String, in data: Data, after index: Int) -> Int? {
+        let bytes = Array(value.utf8)
+        guard !bytes.isEmpty else { return nil }
+        var cursor = index
+        while cursor + bytes.count <= data.endIndex {
+            if data[cursor..<(cursor + bytes.count)].elementsEqual(bytes) {
+                return cursor + bytes.count - 1
+            }
+            cursor += 1
+        }
+        return nil
+    }
+
+    private static func parseTag(_ data: Data) -> Tag? {
+        var bytes = Array(data)
+        while bytes.last == 9 || bytes.last == 10 || bytes.last == 13 || bytes.last == 32 { bytes.removeLast() }
+        while bytes.first == 9 || bytes.first == 10 || bytes.first == 13 || bytes.first == 32 { bytes.removeFirst() }
+        guard let first = bytes.first else { return nil }
+        if first == 63 || first == 33 { return .ignored } // processing instruction or declaration/comment
+        if first == 47 {
+            let closingBytes = bytes.dropFirst()
+            let nameBytes = closingBytes.prefix { !isWhitespace($0) }
+            guard let name = String(bytes: nameBytes, encoding: .utf8), !name.isEmpty else { return nil }
+            guard closingBytes.dropFirst(nameBytes.count).allSatisfy(isWhitespace) else { return nil }
+            return .closing(name: name)
+        }
+
+        let isSelfClosing = bytes.last == 47
+        var index = 0
+        let nameStart = index
+        while index < bytes.count, !isWhitespace(bytes[index]), bytes[index] != 47 { index += 1 }
+        guard let name = String(bytes: bytes[nameStart..<index], encoding: .utf8), !name.isEmpty else { return nil }
+        var attributes: [String: String] = [:]
+        while index < bytes.count {
+            while index < bytes.count, isWhitespace(bytes[index]) { index += 1 }
+            if index >= bytes.count || bytes[index] == 47 { break }
+            let keyStart = index
+            while index < bytes.count, !isWhitespace(bytes[index]), bytes[index] != 61 { index += 1 }
+            guard keyStart < index,
+                  let key = String(bytes: bytes[keyStart..<index], encoding: .utf8) else { return nil }
+            while index < bytes.count, isWhitespace(bytes[index]) { index += 1 }
+            guard index < bytes.count, bytes[index] == 61 else { return nil }
+            index += 1
+            while index < bytes.count, isWhitespace(bytes[index]) { index += 1 }
+            guard index < bytes.count, bytes[index] == 34 || bytes[index] == 39 else { return nil }
+            let quote = bytes[index]
+            index += 1
+            let valueStart = index
+            while index < bytes.count, bytes[index] != quote { index += 1 }
+            guard index < bytes.count,
+                  let rawValue = String(bytes: bytes[valueStart..<index], encoding: .utf8) else { return nil }
+            attributes[key] = xmlUnescaped(rawValue)
+            index += 1
+        }
+        return .opening(name: name, attributes: attributes, isSelfClosing: isSelfClosing)
+    }
+
+    private static func isWhitespace(_ byte: UInt8) -> Bool {
+        byte == 9 || byte == 10 || byte == 13 || byte == 32
+    }
+
+    private static func xmlUnescaped(_ value: String) -> String {
+        // Apple Health attributes virtually never need entity decoding. Avoid
+        // allocating five replacement strings for every attribute in a large
+        // export; retain full decoding when an entity is actually present.
+        guard value.contains("&") else { return value }
+        return value
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "&apos;", with: "'")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
+            .replacingOccurrences(of: "&amp;", with: "&")
+    }
+}
+
+private enum HealthDataAggregationRule {
+    case cumulativeInterval
+    case sleepInterval
+    case sample
+
+    static func rule(for identifier: String) -> Self {
+        let value = identifier.lowercased()
+        if identifier == "HKCategoryTypeIdentifierSleepAnalysis" { return .sleepInterval }
+        if value.contains("stepcount") || value.contains("distance") || value.contains("activeenergyburned") || value.contains("basalenergyburned") || value.contains("flightsclimbed") || value.contains("pushcount") || value.contains("swimmingstrokecount") || value.contains("appleexercisetime") || value.contains("applemovetime") || value.contains("applestandtime") {
+            return .cumulativeInterval
+        }
+        return .sample
+    }
+
+    var usesTotalValue: Bool {
+        self == .cumulativeInterval || self == .sleepInterval
+    }
+}
+
+private struct AppleHealthSource: Hashable {
+    let name: String
+    let version: String
+    let device: String
+
+    init(attributes: [String: String]) {
+        name = attributes["sourceName"] ?? ""
+        version = attributes["sourceVersion"] ?? ""
+        device = attributes["device"] ?? ""
+    }
+
+    var stableName: String {
+        let locale = Locale(identifier: "en_US_POSIX")
+        let normalized = [name, version, device].map {
+            $0.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: locale)
+        }
+        // The raw form breaks the rare case-insensitive tie without making the
+        // normal alphabetical order depend on dictionary iteration.
+        return normalized.joined(separator: "\u{1F}") + "\u{1E}" + [name, version, device].joined(separator: "\u{1F}")
+    }
+}
+
+private struct RecordFingerprint: Hashable {
+    let first: UInt64
+    let second: UInt64
+
+    init(elementName: String, attributes: [String: String]) {
+        var first = UInt64(0xcbf29ce484222325)
+        var second = UInt64(0x84222325cbf29ce4)
+        func append(_ string: String) {
+            for byte in string.utf8 {
+                first = (first ^ UInt64(byte)) &* 0x100000001b3
+                second = (second ^ UInt64(byte)) &* 0x100000001b3
+            }
+            first = (first ^ 0x1e) &* 0x100000001b3
+            second = (second ^ 0x1e) &* 0x100000001b3
+        }
+        append(elementName)
+        for (key, value) in attributes.sorted(by: { $0.key < $1.key }) {
+            append(key)
+            append(value)
+        }
+        self.first = first
+        self.second = second
+    }
+}
+
+private struct AppleHealthRecord {
+    let elementName: String
+    let identifier: String
+    let valueText: String
+    let numericValue: Double?
+    let unit: String?
+    let source: AppleHealthSource
+    let startDate: Date?
+    let endDate: Date?
+    let fingerprint: RecordFingerprint
+
+    init(elementName: String, attributes: [String: String]) {
+        self.elementName = elementName
+        identifier = attributes["type"] ?? elementName
+        valueText = attributes["value"] ?? ""
+        numericValue = Double(valueText)
+        unit = attributes["unit"]
+        source = AppleHealthSource(attributes: attributes)
+        startDate = AppleHealthDateParser.date(from: attributes["startDate"])
+        endDate = AppleHealthDateParser.date(from: attributes["endDate"])
+        fingerprint = RecordFingerprint(elementName: elementName, attributes: attributes)
+    }
+
+    var rule: HealthDataAggregationRule { HealthDataAggregationRule.rule(for: identifier) }
+    var isAsleep: Bool { valueText.localizedCaseInsensitiveContains("asleep") }
+}
+
+private struct AggregationSlot: Hashable {
+    let typeIndex: Int
+    let day: Date
+    let bucket: Int
+}
+
+private struct SourceAggregationSlot: Hashable {
+    let slot: AggregationSlot
+    let sourceIndex: Int
+}
+
+private struct IntervalContribution {
+    let slot: AggregationSlot
+    let day: Date
+    let duration: TimeInterval
+    let fraction: Double
+}
+
+private enum IntervalGrid {
+    static let bucketDuration: TimeInterval = 15 * 60
+    private static let maximumBucketsPerRecord = 10_000
+
+    static func contributions(for start: Date, end: Date, typeIndex: Int) -> [IntervalContribution] {
+        let calendar = Calendar.current
+        if end <= start {
+            let day = calendar.startOfDay(for: start)
+            let bucket = Int(start.timeIntervalSince(day) / bucketDuration)
+            return [IntervalContribution(slot: AggregationSlot(typeIndex: typeIndex, day: day, bucket: bucket), day: day, duration: 1, fraction: 1)]
+        }
+
+        let totalDuration = end.timeIntervalSince(start)
+        var result: [IntervalContribution] = []
+        var cursor = start
+        while cursor < end, result.count < maximumBucketsPerRecord {
+            let absoluteBucket = floor(cursor.timeIntervalSinceReferenceDate / bucketDuration) * bucketDuration
+            let boundary = Date(timeIntervalSinceReferenceDate: absoluteBucket + bucketDuration)
+            let next = min(end, boundary)
+            let duration = next.timeIntervalSince(cursor)
+            let day = calendar.startOfDay(for: cursor)
+            let bucket = Int(cursor.timeIntervalSince(day) / bucketDuration)
+            result.append(IntervalContribution(
+                slot: AggregationSlot(typeIndex: typeIndex, day: day, bucket: bucket),
+                day: day,
+                duration: duration,
+                fraction: duration / totalDuration
+            ))
+            cursor = next
+        }
+        return cursor == end ? result : []
+    }
+}
+
+private struct HealthAggregationPlan {
+    let typeIndices: [String: Int]
+    let sourceIndices: [AppleHealthSource: Int]
+    let selectedSourceBySlot: [AggregationSlot: Int]
+
+    func contributions(for record: AppleHealthRecord) -> [(IntervalContribution, Int)]? {
+        guard let typeIndex = typeIndices[record.identifier], let sourceIndex = sourceIndices[record.source], let start = record.startDate else { return nil }
+        let end = record.endDate ?? start
+        let contributions = IntervalGrid.contributions(for: start, end: end, typeIndex: typeIndex)
+        return contributions.isEmpty ? nil : contributions.map { ($0, sourceIndex) }
+    }
+
+    func isSelected(_ contribution: IntervalContribution, sourceIndex: Int) -> Bool {
+        selectedSourceBySlot[contribution.slot] == sourceIndex
+    }
+
+    static let empty = HealthAggregationPlan(typeIndices: [:], sourceIndices: [:], selectedSourceBySlot: [:])
+}
+
+private let supportedAppleHealthElementNames: Set<String> = ["Record", "Correlation", "Workout", "ActivitySummary", "ClinicalRecord", "Audiogram", "VisionPrescription"]
+
+private protocol AppleHealthElementConsumer: AnyObject {
+    func consume(elementName: String, attributes: [String: String], rawTag: Data?) -> Bool
+}
+
+private final class AppleHealthAggregationPlanner: NSObject, XMLParserDelegate {
+    private let cancellationToken: ImportCancellationToken?
+    private var seenRecords: Set<RecordFingerprint> = []
+    private var typeIndices: [String: Int] = [:]
+    private var sources: [AppleHealthSource: Int] = [:]
+    private var sourcesByIndex: [AppleHealthSource] = []
+    private var coverage: [SourceAggregationSlot: TimeInterval] = [:]
+
+    init(cancellationToken: ImportCancellationToken?) {
+        self.cancellationToken = cancellationToken
+        super.init()
+    }
+
+    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
+        if cancellationToken?.isCancelled == true {
+            parser.abortParsing()
+            return
+        }
+        append(attributes: attributeDict, elementName: elementName)
+    }
+
+    /// Returns false only for an exact duplicate. Every other relevant record
+    /// belongs in the compact second-pass spool, including malformed dates that
+    /// retain the existing fallback-to-sample behaviour.
+    @discardableResult
+    func append(attributes attributeDict: [String: String], elementName: String = "Record") -> Bool {
+        guard elementName == "Record" else { return false }
+        let identifier = attributeDict["type"] ?? elementName
+        let rule = HealthDataAggregationRule.rule(for: identifier)
+        guard rule == .cumulativeInterval || (rule == .sleepInterval && (attributeDict["value"] ?? "").localizedCaseInsensitiveContains("asleep")) else { return false }
+        let record = AppleHealthRecord(elementName: elementName, attributes: attributeDict)
+        guard seenRecords.insert(record.fingerprint).inserted else { return false }
+        guard let start = record.startDate else { return true }
+
+        let typeIndex = typeIndices[record.identifier, default: typeIndices.count]
+        typeIndices[record.identifier] = typeIndex
+        let sourceIndex: Int
+        if let existing = sources[record.source] {
+            sourceIndex = existing
+        } else {
+            sourceIndex = sourcesByIndex.count
+            sources[record.source] = sourceIndex
+            sourcesByIndex.append(record.source)
+        }
+        let end = record.endDate ?? start
+        for contribution in IntervalGrid.contributions(for: start, end: end, typeIndex: typeIndex) {
+            let key = SourceAggregationSlot(slot: contribution.slot, sourceIndex: sourceIndex)
+            let previous = coverage[key] ?? 0
+            coverage[key] = min(IntervalGrid.bucketDuration, previous + contribution.duration)
+        }
+        return true
+    }
+
+    func makePlan() -> HealthAggregationPlan {
+        let stableSourceNames = sourcesByIndex.map(\.stableName)
+        var selections: [AggregationSlot: (sourceIndex: Int, coverage: TimeInterval)] = [:]
+        for (key, duration) in coverage {
+            if let current = selections[key.slot] {
+                let currentName = stableSourceNames[current.sourceIndex]
+                let candidateName = stableSourceNames[key.sourceIndex]
+                if duration > current.coverage || (duration == current.coverage && candidateName < currentName) {
+                    selections[key.slot] = (key.sourceIndex, duration)
+                }
+            } else {
+                selections[key.slot] = (key.sourceIndex, duration)
+            }
+        }
+        return HealthAggregationPlan(
+            typeIndices: typeIndices,
+            sourceIndices: sources,
+            selectedSourceBySlot: selections.mapValues(\.sourceIndex)
+        )
+    }
+}
+
+private final class AppleHealthFirstPassDelegate: NSObject, XMLParserDelegate, AppleHealthElementConsumer {
+    private let cancellationToken: ImportCancellationToken?
+    private let planner: AppleHealthAggregationPlanner
+    private let spool: FileHandle
+    private var spoolBuffer = Data()
+    private var didFinish = false
+    private(set) var directAccumulators: [String: HealthDataTypeAccumulator] = [:]
+    private(set) var recordCount = 0
+
+    init(spool: FileHandle, cancellationToken: ImportCancellationToken?) {
+        self.spool = spool
+        self.cancellationToken = cancellationToken
+        self.planner = AppleHealthAggregationPlanner(cancellationToken: cancellationToken)
+        super.init()
+        try? spool.write(contentsOf: Data("<?xml version=\"1.0\" encoding=\"UTF-8\"?><HealthData>\n".utf8))
+    }
+
+    var plan: HealthAggregationPlan { planner.makePlan() }
+
+    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
+        guard consume(elementName: elementName, attributes: attributeDict, rawTag: nil) else {
+            parser.abortParsing()
+            return
+        }
+    }
+
+    func consume(elementName: String, attributes attributeDict: [String: String], rawTag: Data?) -> Bool {
+        if cancellationToken?.isCancelled == true {
+            return false
+        }
+        guard supportedAppleHealthElementNames.contains(elementName) else { return true }
+
+        if elementName == "Record" {
+            let identifier = attributeDict["type"] ?? elementName
+            let rule = HealthDataAggregationRule.rule(for: identifier)
+            let isAsleep = (attributeDict["value"] ?? "").localizedCaseInsensitiveContains("asleep")
+            if rule == .cumulativeInterval || (rule == .sleepInterval && isAsleep) {
+                guard planner.append(attributes: attributeDict) else { return true }
+                return appendToSpool(attributes: attributeDict)
+            }
+        }
+
+        let record = AppleHealthRecord(elementName: elementName, attributes: attributeDict)
+        let accumulator = directAccumulators[record.identifier] ?? HealthDataTypeAccumulator(identifier: record.identifier)
+        let accepted = accumulator.append(record: record, plan: .empty)
+        directAccumulators[record.identifier] = accumulator
+        if elementName == "Record", accepted { recordCount += 1 }
+        return true
+    }
+
+    func finish() -> Bool {
+        guard !didFinish else { return true }
+        do {
+            try flushSpoolBuffer()
+            try spool.write(contentsOf: Data("</HealthData>\n".utf8))
+            try spool.close()
+            didFinish = true
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    func closeIfNeeded() {
+        guard !didFinish else { return }
+        try? spool.close()
+        didFinish = true
+    }
+
+    private func appendToSpool(attributes: [String: String]) -> Bool {
+        // The source export may use paired Record elements with child content.
+        // The aggregation pass needs only the parsed Record attributes, so write
+        // a complete standalone element instead of copying an opening raw tag.
+        let attributesText = attributes.sorted { $0.key < $1.key }.map { key, value in
+            " \(key)=\"\(xmlEscaped(value))\""
+        }.joined()
+        spoolBuffer.append(Data("<Record\(attributesText)/>\n".utf8))
+        guard spoolBuffer.count >= 1_048_576 else { return true }
+        do {
+            try flushSpoolBuffer()
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private func flushSpoolBuffer() throws {
+        guard !spoolBuffer.isEmpty else { return }
+        try spool.write(contentsOf: spoolBuffer)
+        spoolBuffer.removeAll(keepingCapacity: true)
+    }
+
+    private func xmlEscaped(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+    }
+}
+
+private final class AppleHealthXMLDelegate: NSObject, XMLParserDelegate, AppleHealthElementConsumer {
+    private(set) var recordCount = 0
+    private let plan: HealthAggregationPlan
+    private let cancellationToken: ImportCancellationToken?
+    private let recordsAreAlreadyDeduplicated: Bool
+    private(set) var accumulators: [String: HealthDataTypeAccumulator] = [:]
+
+    init(plan: HealthAggregationPlan, cancellationToken: ImportCancellationToken?, recordsAreAlreadyDeduplicated: Bool = false) {
+        self.plan = plan
+        self.cancellationToken = cancellationToken
+        self.recordsAreAlreadyDeduplicated = recordsAreAlreadyDeduplicated
+    }
 
     var dataTypes: [HealthDataTypeSummary] {
         accumulators.values.map(\.summary).sorted {
@@ -317,44 +1444,129 @@ private final class AppleHealthXMLDelegate: NSObject, XMLParserDelegate {
     }
 
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
-        let supportedElements: Set<String> = ["Record", "Correlation", "Workout", "ActivitySummary", "ClinicalRecord", "Audiogram", "VisionPrescription"]
-        guard supportedElements.contains(elementName) else { return }
-        let identifier = attributeDict["type"] ?? elementName
-        if elementName == "Record" { recordCount += 1 }
-        var accumulator = accumulators[identifier] ?? HealthDataTypeAccumulator(identifier: identifier)
-        accumulator.append(
-            value: Double(attributeDict["value"] ?? ""),
-            unit: attributeDict["unit"],
-            date: AppleHealthDateParser.date(from: attributeDict["startDate"])
-        )
-        accumulators[identifier] = accumulator
+        guard consume(elementName: elementName, attributes: attributeDict, rawTag: nil) else {
+            parser.abortParsing()
+            return
+        }
+    }
+
+    func consume(elementName: String, attributes attributeDict: [String: String], rawTag: Data?) -> Bool {
+        if cancellationToken?.isCancelled == true {
+            return false
+        }
+        guard supportedAppleHealthElementNames.contains(elementName) else { return true }
+        let record = AppleHealthRecord(elementName: elementName, attributes: attributeDict)
+        let accumulator = accumulators[record.identifier] ?? HealthDataTypeAccumulator(identifier: record.identifier)
+        let accepted = recordsAreAlreadyDeduplicated
+            ? accumulator.appendKnownUnique(record: record, plan: plan)
+            : accumulator.append(record: record, plan: plan)
+        accumulators[record.identifier] = accumulator
+        if elementName == "Record", accepted { recordCount += 1 }
+        return true
     }
 }
 
-private struct HealthDataTypeAccumulator {
+private final class HealthDataTypeAccumulator {
     let identifier: String
     var recordCount = 0
     var sum = 0.0
     var numericCount = 0
     var unit: String?
+    private var seenRecords: Set<RecordFingerprint> = []
     private var dailyTotals: [Date: (sum: Double, count: Int)] = [:]
+    private var acceptedSleepBySlot: [AggregationSlot: TimeInterval] = [:]
 
     init(identifier: String) {
         self.identifier = identifier
     }
 
-    mutating func append(value: Double?, unit: String?, date: Date?) {
-        recordCount += 1
-        if let value {
-            sum += value
-            numericCount += 1
+    func append(record: AppleHealthRecord, plan: HealthAggregationPlan) -> Bool {
+        guard seenRecords.insert(record.fingerprint).inserted else { return false }
+        return appendKnownUnique(record: record, plan: plan)
+    }
+
+    func appendKnownUnique(record: AppleHealthRecord, plan: HealthAggregationPlan) -> Bool {
+        switch record.rule {
+        case .cumulativeInterval:
+            return appendCumulative(record: record, plan: plan)
+        case .sleepInterval where record.isAsleep:
+            return appendSleep(record: record, plan: plan)
+        default:
+            appendSample(record: record)
+            return true
         }
-        if self.unit == nil { self.unit = unit }
-        if let value, let date {
-            let day = Calendar.current.startOfDay(for: date)
+    }
+
+    func merge(_ other: HealthDataTypeAccumulator) {
+        guard identifier == other.identifier else { return }
+        recordCount += other.recordCount
+        sum += other.sum
+        numericCount += other.numericCount
+        if unit == nil { unit = other.unit }
+        for (day, totals) in other.dailyTotals {
             let previous = dailyTotals[day] ?? (0, 0)
-            dailyTotals[day] = (previous.sum + value, previous.count + 1)
+            dailyTotals[day] = (previous.sum + totals.sum, previous.count + totals.count)
         }
+    }
+
+    private func appendSample(record: AppleHealthRecord) {
+        recordCount += 1
+        guard let value = record.numericValue else { return }
+        sum += value
+        numericCount += 1
+        if unit == nil { unit = record.unit }
+        if let date = record.startDate {
+            appendDaily(value: value, on: date)
+        }
+    }
+
+    private func appendCumulative(record: AppleHealthRecord, plan: HealthAggregationPlan) -> Bool {
+        guard let value = record.numericValue, let contributions = plan.contributions(for: record) else {
+            appendSample(record: record)
+            return true
+        }
+        var acceptedValue = 0.0
+        for (contribution, sourceIndex) in contributions where plan.isSelected(contribution, sourceIndex: sourceIndex) {
+            let partialValue = value * contribution.fraction
+            acceptedValue += partialValue
+            appendDaily(value: partialValue, on: contribution.day)
+        }
+        guard acceptedValue > 0 else { return false }
+        recordCount += 1
+        sum += acceptedValue
+        numericCount += 1
+        if unit == nil { unit = record.unit }
+        return true
+    }
+
+    private func appendSleep(record: AppleHealthRecord, plan: HealthAggregationPlan) -> Bool {
+        guard let contributions = plan.contributions(for: record) else {
+            recordCount += 1
+            return true
+        }
+        var acceptedDuration: TimeInterval = 0
+        for (contribution, sourceIndex) in contributions where plan.isSelected(contribution, sourceIndex: sourceIndex) {
+            let alreadyAccepted = acceptedSleepBySlot[contribution.slot] ?? 0
+            let permitted = max(0, IntervalGrid.bucketDuration - alreadyAccepted)
+            let accepted = min(contribution.duration, permitted)
+            guard accepted > 0 else { continue }
+            acceptedSleepBySlot[contribution.slot] = alreadyAccepted + accepted
+            let hours = accepted / 3600
+            acceptedDuration += accepted
+            appendDaily(value: hours, on: contribution.day)
+        }
+        guard acceptedDuration > 0 else { return false }
+        recordCount += 1
+        sum += acceptedDuration / 3600
+        numericCount += 1
+        if unit == nil { unit = "h" }
+        return true
+    }
+
+    private func appendDaily(value: Double, on date: Date) {
+        let day = Calendar.current.startOfDay(for: date)
+        let previous = dailyTotals[day] ?? (0, 0)
+        dailyTotals[day] = (previous.sum + value, previous.count + 1)
     }
 
     var summary: HealthDataTypeSummary {
@@ -382,33 +1594,74 @@ private enum AppleHealthDateParser {
 
     static func date(from value: String?) -> Date? {
         guard let value else { return nil }
-        return formatter.date(from: value) ?? ISO8601DateFormatter().date(from: value)
+        return fixedWidthDate(from: value) ?? formatter.date(from: value) ?? ISO8601DateFormatter().date(from: value)
+    }
+
+    /// Apple Health normally writes dates as `yyyy-MM-dd HH:mm:ss +HHMM`.
+    /// Parsing that fixed representation directly avoids millions of expensive
+    /// formatter calls for large local exports. Other valid representations keep
+    /// the Foundation fallbacks above.
+    private static func fixedWidthDate(from value: String) -> Date? {
+        let bytes = Array(value.utf8)
+        guard bytes.count >= 25,
+              bytes[4] == 45, bytes[7] == 45, bytes[10] == 32,
+              bytes[13] == 58, bytes[16] == 58,
+              bytes[19] == 32, (bytes[20] == 43 || bytes[20] == 45),
+              let year = number(bytes, 0, 4), let month = number(bytes, 5, 2),
+              let day = number(bytes, 8, 2), let hour = number(bytes, 11, 2),
+              let minute = number(bytes, 14, 2), let second = number(bytes, 17, 2),
+              let offsetHour = number(bytes, 21, 2), let offsetMinute = number(bytes, 23, 2),
+              (1...12).contains(month), (1...31).contains(day), hour < 24, minute < 60, second < 60,
+              offsetHour <= 23, offsetMinute < 60 else { return nil }
+
+        let adjustedYear = year - (month <= 2 ? 1 : 0)
+        let era = adjustedYear >= 0 ? adjustedYear / 400 : (adjustedYear - 399) / 400
+        let yearOfEra = adjustedYear - era * 400
+        let adjustedMonth = month + (month > 2 ? -3 : 9)
+        let dayOfYear = (153 * adjustedMonth + 2) / 5 + day - 1
+        let dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear
+        let daysSinceUnixEpoch = era * 146_097 + dayOfEra - 719_468
+        let localSeconds = TimeInterval(daysSinceUnixEpoch * 86_400 + hour * 3_600 + minute * 60 + second)
+        let offsetSeconds = TimeInterval((offsetHour * 3_600 + offsetMinute * 60) * (bytes[20] == 43 ? 1 : -1))
+        return Date(timeIntervalSince1970: localSeconds - offsetSeconds)
+    }
+
+    private static func number(_ bytes: [UInt8], _ start: Int, _ length: Int) -> Int? {
+        var result = 0
+        for index in start..<(start + length) {
+            let digit = bytes[index]
+            guard (48...57).contains(digit) else { return nil }
+            result = result * 10 + Int(digit - 48)
+        }
+        return result
     }
 }
 
 enum HealthDataTypeName {
+    private static let english: [String: String] = [
+        "HKQuantityTypeIdentifierStepCount": "Steps", "HKQuantityTypeIdentifierHeartRate": "Heart Rate",
+        "HKCategoryTypeIdentifierSleepAnalysis": "Sleep Analysis", "HKQuantityTypeIdentifierActiveEnergyBurned": "Active Energy",
+        "HKQuantityTypeIdentifierBasalEnergyBurned": "Resting Energy", "HKQuantityTypeIdentifierDistanceWalkingRunning": "Walking + Running Distance",
+        "HKQuantityTypeIdentifierBodyMass": "Body Mass", "HKQuantityTypeIdentifierBodyMassIndex": "Body Mass Index",
+        "HKQuantityTypeIdentifierBodyFatPercentage": "Body Fat Percentage", "HKQuantityTypeIdentifierFlightsClimbed": "Flights Climbed",
+        "HKQuantityTypeIdentifierDietaryWater": "Dietary Water", "HKQuantityTypeIdentifierBloodPressureSystolic": "Blood Pressure Systolic",
+        "HKQuantityTypeIdentifierBloodPressureDiastolic": "Blood Pressure Diastolic", "Workout": "Workouts",
+        "ActivitySummary": "Activity Summaries", "ClinicalRecord": "Clinical Records"
+    ]
+
+    private static let german: [String: String] = [
+        "HKQuantityTypeIdentifierStepCount": "Schritte", "HKQuantityTypeIdentifierHeartRate": "Herzfrequenz",
+        "HKCategoryTypeIdentifierSleepAnalysis": "Schlafanalyse", "HKQuantityTypeIdentifierActiveEnergyBurned": "Aktive Energie",
+        "HKQuantityTypeIdentifierBasalEnergyBurned": "Ruheenergie", "HKQuantityTypeIdentifierDistanceWalkingRunning": "Geh- und Laufdistanz",
+        "HKQuantityTypeIdentifierBodyMass": "Körpergewicht", "HKQuantityTypeIdentifierBodyMassIndex": "Body-Mass-Index",
+        "HKQuantityTypeIdentifierBodyFatPercentage": "Körperfettanteil", "HKQuantityTypeIdentifierFlightsClimbed": "Gestiegene Stockwerke",
+        "HKQuantityTypeIdentifierDietaryWater": "Getrunkenes Wasser", "HKQuantityTypeIdentifierBloodPressureSystolic": "Blutdruck systolisch",
+        "HKQuantityTypeIdentifierBloodPressureDiastolic": "Blutdruck diastolisch", "Workout": "Trainings",
+        "ActivitySummary": "Aktivitätsübersichten", "ClinicalRecord": "Klinische Datensätze"
+    ]
+
     static func displayName(for identifier: String, language: AppLanguage = .current) -> String {
-        let english: [String: String] = [
-            "HKQuantityTypeIdentifierStepCount": "Steps", "HKQuantityTypeIdentifierHeartRate": "Heart Rate",
-            "HKCategoryTypeIdentifierSleepAnalysis": "Sleep Analysis", "HKQuantityTypeIdentifierActiveEnergyBurned": "Active Energy",
-            "HKQuantityTypeIdentifierBasalEnergyBurned": "Resting Energy", "HKQuantityTypeIdentifierDistanceWalkingRunning": "Walking + Running Distance",
-            "HKQuantityTypeIdentifierBodyMass": "Body Mass", "HKQuantityTypeIdentifierBodyMassIndex": "Body Mass Index",
-            "HKQuantityTypeIdentifierBodyFatPercentage": "Body Fat Percentage", "HKQuantityTypeIdentifierFlightsClimbed": "Flights Climbed",
-            "HKQuantityTypeIdentifierDietaryWater": "Dietary Water", "HKQuantityTypeIdentifierBloodPressureSystolic": "Blood Pressure Systolic",
-            "HKQuantityTypeIdentifierBloodPressureDiastolic": "Blood Pressure Diastolic", "Workout": "Workouts",
-            "ActivitySummary": "Activity Summaries", "ClinicalRecord": "Clinical Records"
-        ]
-        let german: [String: String] = [
-            "HKQuantityTypeIdentifierStepCount": "Schritte", "HKQuantityTypeIdentifierHeartRate": "Herzfrequenz",
-            "HKCategoryTypeIdentifierSleepAnalysis": "Schlafanalyse", "HKQuantityTypeIdentifierActiveEnergyBurned": "Aktive Energie",
-            "HKQuantityTypeIdentifierBasalEnergyBurned": "Ruheenergie", "HKQuantityTypeIdentifierDistanceWalkingRunning": "Geh- und Laufdistanz",
-            "HKQuantityTypeIdentifierBodyMass": "Körpergewicht", "HKQuantityTypeIdentifierBodyMassIndex": "Body-Mass-Index",
-            "HKQuantityTypeIdentifierBodyFatPercentage": "Körperfettanteil", "HKQuantityTypeIdentifierFlightsClimbed": "Gestiegene Stockwerke",
-            "HKQuantityTypeIdentifierDietaryWater": "Getrunkenes Wasser", "HKQuantityTypeIdentifierBloodPressureSystolic": "Blutdruck systolisch",
-            "HKQuantityTypeIdentifierBloodPressureDiastolic": "Blutdruck diastolisch", "Workout": "Trainings",
-            "ActivitySummary": "Aktivitätsübersichten", "ClinicalRecord": "Klinische Datensätze"
-        ]
-        if let name = (language == .german ? german : english)[identifier] { return name }
+        if let name = (language == .german ? Self.german : Self.english)[identifier] { return name }
         let stem = identifier
             .replacingOccurrences(of: "HKQuantityTypeIdentifier", with: "")
             .replacingOccurrences(of: "HKCategoryTypeIdentifier", with: "")

@@ -1,10 +1,10 @@
 # HealthAtlas – Nächste Schritte
 
-Stand: 13. September 2026 · Bezug: öffentliche Final-Version `v1.0.1`
+Stand: 17. September 2026 · Bezug: öffentliche Beta `v1.5.4-beta`
 
 ## Bestätigte offene Arbeit
 
-Derzeit sind keine bestätigten offenen Aufgaben eingetragen.
+- Keine bestätigte offene Arbeit.
 
 ## Pflege
 

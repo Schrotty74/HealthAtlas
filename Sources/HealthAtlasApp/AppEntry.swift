@@ -34,6 +34,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 defer: false
             )
             newWindow.title = BuildChannel.current.displayName
+            // Dev/UI visual checks may force a single window into Aqua or
+            // Dark Aqua without touching the user's macOS appearance. This
+            // environment variable is intentionally ignored outside Dev.
+            if BuildChannel.current == .dev,
+               let requestedAppearance = ProcessInfo.processInfo.environment["HEALTHATLAS_TEST_APPEARANCE"] {
+                switch requestedAppearance {
+                case "Aqua":
+                    NSApp.appearance = NSAppearance(named: .aqua)
+                    newWindow.appearance = NSAppearance(named: .aqua)
+                case "DarkAqua":
+                    NSApp.appearance = NSAppearance(named: .darkAqua)
+                    newWindow.appearance = NSAppearance(named: .darkAqua)
+                default: break
+                }
+            }
             newWindow.isOpaque = false
             newWindow.backgroundColor = .clear
             newWindow.titlebarAppearsTransparent = false

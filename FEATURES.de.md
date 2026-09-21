@@ -15,9 +15,12 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich.
 ## Import und Quellen
 
 - Eine lokale Apple-Health-`Export.xml`-Datei oder ein ZIP-Archiv damit importieren. Die klinische Zusatzdatei wird bewusst nicht importiert.
-- Unter **Quellen** jeden erkannten lokalen Datentyp nach Kategorie gruppiert prüfen. Gewünschte Typen auswählen und große Listen durchsuchen.
+- Die ursprüngliche XML wird einmal sequenziell gelesen und bis 5 GiB unterstützt. Nur Werte, die für die Überlappungslogik benötigt werden, landen begrenzt in einer lokalen temporären Zwischenablage. Exakte exportierte Records werden einmal gezählt; summierbare Intervalltypen verwenden eine deterministische Quellenregel in 15-Minuten-Intervallen. Bei gleicher Abdeckung entscheidet die alphabetische Quellenreihenfolge ohne Unterschied von Groß- und Kleinschreibung oder Akzenten; einzelne Messproben bleiben getrennt, sofern sie keine exakten Dubletten sind.
+- HealthAtlas behauptet nicht, Apples interne Quellenpriorität nachzubilden. Schlaf wird auf eine Quelle pro lokalem Intervall begrenzt; Workouts werden nur bei vollständig gleichen exportierten Attributen dedupliziert.
+- Unter **Quellen** jeden erkannten lokalen Datentyp nach Kategorie gruppiert prüfen. Kategorie und Suche bleiben sichtbar; **Anzeigen & anpinnen** enthält Alle anzeigen, Keine anzeigen und das Ziel für Pin.
 - Datentypen getrennt für Übersicht, Verläufe und Einblicke anpinnen und lokal anordnen.
 - Einen Import ersetzen, alle lokalen Daten nach Bestätigung löschen und den Importzeitpunkt der aktuellen Sitzung sehen.
+- Bei fehlgeschlagenen Importen steht eine kopierbare technische Diagnose für GitHub-Issue #13 bereit. Sie enthält keine Dateinamen, Pfade, XML-Inhalte oder Gesundheitsdaten.
 - Die Datenqualitäts-Karte beschreibt lokale Abdeckung, fehlende Tage und selten erfasste Typen, ohne Gesundheitswerte zu bewerten.
 
 ## Übersicht
@@ -47,7 +50,7 @@ Diese Seite beschreibt die aktuellen HealthAtlas-Funktionen ausführlich.
 
 - Deutsche oder englische Oberfläche verwenden.
 - Die native Menüleiste für Import, lokalen PDF-Bericht, Design-Studio und Fenstersteuerung verwenden; die Sidebar lässt sich im Menü „Ansicht“ ein- oder ausblenden.
-- Clear Glass, Midnight Glass, Aurora oder Warmpaper wählen. Die App startet im 16:9-Format und bleibt frei skalierbar.
+- Clear Glass, Midnight Glass, Aurora, Warmpaper oder Schwarz & Weiß wählen. Schwarz & Weiß verwendet semantische macOS-Farben und Materialien, folgt der Systemdarstellung und hält Karten und Diagramme mit neutralen Flächen, farbigen Kennzahlen-Akzenten und Linienstilen lesbar. Die App startet im 16:9-Format und bleibt frei skalierbar.
 - Im Design-Studio die installierte Veröffentlichung sehen und die öffentliche GitHub-Release-Liste bei jedem Start, täglich, wöchentlich oder monatlich automatisch oder manuell prüfen. Eine neuere passende Veröffentlichung wird erst nach Klick auf ihren Link geöffnet.
 - Geführte Leerzustände führen zu Quellen oder lokalem Import, wenn Daten oder eine Auswahl fehlen.
 - Die Oberfläche nutzt native Glasflächen und dezente Animationen und berücksichtigt die macOS-Einstellung „Bewegung reduzieren“.

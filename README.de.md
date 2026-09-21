@@ -7,14 +7,14 @@ Die App startet leer, importiert ausschließlich eine vom Nutzer gewählte Datei
 ## Was HealthAtlas bietet
 
 - Eine lokale Apple-Health-`Export.xml`-Datei oder ein ZIP-Archiv importieren und die erkannten Datentypen gezielt auswählen.
-- Quellen nach Kategorie oder Suche durchsuchen sowie getrennte Pins und lokale Reihenfolgen für Übersicht, Verläufe und Einblicke verwalten.
+- Quellen nach Kategorie oder Suche durchsuchen. Das Menü **Anzeigen & anpinnen** zeigt oder verbirgt alle Typen und legt fest, ob Pin für Übersicht, Verläufe oder Einblicke gilt.
 - 4, 8 oder 12 Übersichtskacheln, ihre Dichte und lokale Reihenfolge festlegen.
 - Ein bis vier Datentypen unabhängig für den gemeinsamen Gesundheitsverlauf auswählen.
 - Einen Wert über 7T, 15T, 30T, 3M, 6M und 1J verfolgen, mit anklickbaren Punkten und anklickbarem lokalem Kalender.
 - Den aktuellen Zeitraum mit dem unmittelbar vorherigen vergleichen und einen Wert in einer Vollbild-Fokusansicht öffnen.
 - Lokale Momentaufnahmen, Abdeckung und Erfassungsmuster ohne Diagnose oder Gesundheitsbewertung lesen.
 - Einen lokalen PDF-Bericht mit eigener Auswahl für Zeitraum, Datentypen und Theme exportieren.
-- Deutsch oder Englisch, eines von vier Glass-Themes und die manuelle oder geplante Prüfung der öffentlichen GitHub-Release-Liste nutzen.
+- Deutsch oder Englisch, eines von vier Glass-Themes oder das nativ wirkende Theme Schwarz & Weiß und die manuelle oder geplante Prüfung der öffentlichen GitHub-Release-Liste nutzen.
 - Die beiden öffentlichen Handbücher getrennt öffnen oder ChatGPT, Gemini beziehungsweise Claude das passende Handbuch anhand einer allgemeinen kopierten Frage erklären lassen. Lokale Gesundheitsdaten sind nicht enthalten.
 
 Neuigkeiten und alle Details stehen in der [vollständigen Funktionsübersicht](FEATURES.de.md).
@@ -59,20 +59,32 @@ Die einzige startbare Dev-App liegt anschließend unter `dist/local-test/HealthA
 Auch ein direkter Build oder Run des gemeinsamen Dev-Schemes in Xcode aktualisiert genau diese App.
 Der Ordner `.build` ist ausschließlich der temporäre Compiler-Arbeitsbereich von Xcode, keine zweite App zum Öffnen.
 
-Dev-, Beta- und Final-Builds sind ad hoc signiert. macOS Gatekeeper kann beim ersten Öffnen einen Hinweis anzeigen.
+Dev-, Beta- und Final-Builds sind ad hoc signiert. macOS Gatekeeper kann
+beim ersten Öffnen einen Hinweis anzeigen.
 
-Wenn Gatekeeper einen offiziellen HealthAtlas-Download auf aktuellen macOS-Versionen blockiert:
+So öffnest du einen lokalen Build, ohne Gatekeeper systemweit abzuschalten:
 
-1. Versuche zuerst einmal, die HealthAtlas-App normal zu öffnen, damit macOS den blockierten Start registriert.
-2. Öffne **Systemeinstellungen → Datenschutz & Sicherheit** und scrolle nach unten zum Bereich **Sicherheit**.
-3. Klicke bei diesem HealthAtlas-Build auf **Dennoch öffnen**.
-4. Bestätige die Warnung mit **Öffnen** und authentifiziere dich, falls macOS danach fragt.
+1. Im Finder bei gedrückter Control-Taste auf `HealthAtlas.app`,
+   `HealthAtlas Beta.app` oder `HealthAtlas Dev.app` klicken und
+   **Öffnen** wählen.
+2. Im Hinweisfenster nochmals **Öffnen** bestätigen.
+3. Falls macOS die App weiter blockiert: **Systemeinstellungen → Datenschutz &
+   Sicherheit** öffnen und bei genau diesem HealthAtlas-Build **Dennoch
+   öffnen** wählen.
 
-Die Option **Dennoch öffnen** wird nur für begrenzte Zeit nach dem blockierten Startversuch angezeigt. Überschreibe Gatekeeper nur für einen Build, den du selbst erstellt oder vom offiziellen HealthAtlas-GitHub-Release erhalten hast. Dadurch wird nur für diese konkrete App eine Ausnahme gespeichert; Gatekeeper wird nicht systemweit deaktiviert.
+Mach das nur bei einem Build, den du selbst erstellt oder vom offiziellen
+HealthAtlas-GitHub-Release erhalten hast. Gatekeeper wird dadurch nicht
+systemweit deaktiviert.
 
 ## Datenquellen
 
 Apple-Health-ZIP-Archive mit `Export.xml` und direkte `Export.xml`-Dateien werden lokal gelesen; die klinische Zusatzdatei wird bewusst nicht importiert. Es gibt keine direkte HealthKit- oder Cloud-Anbindung.
+
+Während des Imports zeigt HealthAtlas den Anteil der tatsächlich gelesenen XML-Bytes. Bei ZIP-Archiven dient die geprüfte unkomprimierte Größe von `Export.xml` als Grundlage. Während einer Phase ohne zuverlässig bekannte Gesamtgröße bleibt die Aktivitätsanzeige sichtbar. HealthAtlas schätzt keine verbleibende Zeit.
+
+Bei einem fehlgeschlagenen Import lässt sich aus der Fehlermeldung eine technische Diagnose für GitHub-Issue #13 kopieren. Sie enthält App- und macOS-Version, Eingabeart, Dateigröße, Importstufe, Fehlercode, verfügbare XML-Zeile und -Spalte sowie Laufzeit. Dateiname, Pfad, XML-Inhalt und Gesundheitsdaten bleiben ausgeschlossen.
+
+HealthAtlas liest die ursprüngliche XML einmal sequenziell und unterstützt Dateien bis 5 GiB. Nur summierbare Intervallwerte und Schlafintervalle, die für die Quellenregel benötigt werden, landen begrenzt in einer lokalen temporären Zwischenablage. Exakte Records mit denselben exportierten Attributen werden nur einmal gezählt. Bei summierbaren Intervalltypen wie Schritten, Distanz und aktiver Energie vergleicht HealthAtlas unterschiedliche Quellen in lokalen 15-Minuten-Intervallen, damit überlappende Anteile nicht doppelt addiert werden. Einzelmessungen wie Herzfrequenz und Gewicht bleiben getrennte Messproben, sofern sie keine exakten Dubletten sind. Schlafdauer wird ebenfalls auf eine Quelle pro lokalem Intervall begrenzt; Workouts werden nur bei vollständig gleichen exportierten Attributen dedupliziert. Der Export enthält nicht genug Informationen, um Apples interne Quellenpriorität nachzubilden. HealthAtlas verwendet deshalb diese deterministische lokale Regel und behauptet keine identischen Werte zur Health-App. Bei gleicher Abdeckung entscheidet eine stabile alphabetische Quellenreihenfolge ohne Unterschied von Groß- und Kleinschreibung oder Akzenten.
 
 ## Demo ohne persönliche Daten
 

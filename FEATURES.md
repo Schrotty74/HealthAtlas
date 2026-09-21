@@ -15,9 +15,12 @@ This page describes the current HealthAtlas functions in detail.
 ## Import and sources
 
 - Import a local Apple Health `Export.xml` file or a ZIP archive containing one. The clinical companion file is intentionally not imported.
-- Review every recognised local data type in **Sources**, grouped by category. Choose which types appear in the app and search large lists.
+- The original XML is read sequentially once and supports up to 5 GiB. Only records needed for overlap handling use a bounded local temporary spool. Exact exported records are counted once; cumulative interval types use a deterministic 15-minute source-overlap rule, resolving equal coverage with case- and diacritic-insensitive alphabetical source order, while discrete samples remain distinct unless they are exact duplicates.
+- HealthAtlas does not claim to reproduce Apple Health's private source-priority order. Sleep is bounded to one source per local interval, and workouts are deduplicated only when their complete exported attributes match.
+- Review every recognised local data type in **Sources**, grouped by category. Category and search stay visible; **Show & pin** contains show all, show none, and the Pin destination.
 - Pin types separately for Overview, Trends and Insights, and set their local order.
 - Replace an import, delete all local data after confirmation, and see the import time for the current session.
+- Failed imports offer a copyable technical diagnostic for GitHub issue #13. It excludes file names, paths, XML content, and health data.
 - The data-quality card describes local coverage, missing dates and sparsely recorded types without rating health values.
 
 ## Overview
@@ -47,7 +50,7 @@ This page describes the current HealthAtlas functions in detail.
 
 - Use the German or English interface.
 - Use the native menu bar for import, the local PDF report, Design Studio and window controls; use the View menu to show or hide the sidebar.
-- Choose Clear Glass, Midnight Glass, Aurora or Warmpaper. The app starts at 16:9 and remains freely resizable.
+- Choose Clear Glass, Midnight Glass, Aurora, Warmpaper or Black & White. Black & White uses macOS semantic colors and materials, follows the system appearance, and keeps cards and charts readable with neutral surfaces, colored metric accents and line styles. The app starts at 16:9 and remains freely resizable.
 - In Design Studio, see the installed release and automatically check the public GitHub release list at every launch, daily, weekly or monthly, or check manually. A newer matching release is opened only after you choose its link.
 - In Design Studio, open the German or English public manual separately, or use ChatGPT, Gemini or Claude to explain the matching manual from a general copied prompt. No imported or local health data is included.
 - Guided empty states lead to Sources or local import when data or a selection is missing.

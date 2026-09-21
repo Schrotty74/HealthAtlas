@@ -263,10 +263,14 @@ Scripts/privacy-check.sh
 tree="$(worktree_tree)"
 beta_before="$(git rev-parse refs/heads/beta)"
 beta_commit="$(create_beta_commit "$version" "$release_label" "$tree")"
-release_changes="$(categorized_release_changes "$previous_release_note_ref" "$beta_commit")" || {
-    echo "Abbruch: Seit ${previous_beta_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Keine Beta ohne tatsächliche Änderungen erstellen." >&2
-    exit 1
-}
+if [[ -n "${HEALTHATLAS_RELEASE_CHANGES:-}" ]]; then
+    release_changes="$HEALTHATLAS_RELEASE_CHANGES"
+else
+    release_changes="$(categorized_release_changes "$previous_release_note_ref" "$beta_commit")" || {
+        echo "Abbruch: Seit ${previous_beta_tag:-dem Projektbeginn} wurden keine releasbaren Änderungen gefunden. Keine Beta ohne tatsächliche Änderungen erstellen." >&2
+        exit 1
+    }
+fi
 git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 

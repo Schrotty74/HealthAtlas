@@ -9,7 +9,7 @@ struct HealthAtlasTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
         let demoURL = projectRoot.appendingPathComponent("Demo/AppleHealthDemo/Export.xml")
-        let summary = AppleHealthImporter.importXML(data: try Data(contentsOf: demoURL), fileName: "Export.xml")
+        let summary = AppleHealthImporter.importXML(at: demoURL, fileName: "Export.xml")
 
         #expect(summary?.recordCount == 518)
         #expect(summary?.dataTypes.count == 193)
@@ -33,6 +33,113 @@ struct HealthAtlasTests {
         #expect(summary?.dataTypes.first(where: { $0.identifier == "HKQuantityTypeIdentifierStepCount" })?.valueText.hasPrefix("42") == true)
         #expect(summary?.dataTypes.first(where: { $0.identifier == "HKQuantityTypeIdentifierHeartRate" })?.valueText.hasPrefix("65") == true)
         #expect(summary?.dataTypes.first(where: { $0.identifier == "HKQuantityTypeIdentifierHeartRate" })?.dailyValues.count == 2)
+    }
+
+    @Test func exactDuplicateRecordsFromTheSameSourceAreCountedOnce() {
+        let record = "<Record type=\"HKQuantityTypeIdentifierStepCount\" sourceName=\"iPhone\" sourceVersion=\"18.0\" device=\"iPhone\" unit=\"count\" value=\"100\" startDate=\"2026-07-10 09:00:00 +0200\" endDate=\"2026-07-10 09:15:00 +0200\" creationDate=\"2026-07-10 09:16:00 +0200\"/>"
+        let summary = importSummary(records: record + record)
+
+        let steps = metric("HKQuantityTypeIdentifierStepCount", in: summary)
+        #expect(steps?.recordCount == 1)
+        #expect(steps?.sum == 100)
+        #expect(summary?.recordCount == 1)
+    }
+
+    @Test func overlappingCumulativeSourcesUseOneDeterministicSourcePerInterval() {
+        let summary = importSummary(records: """
+        <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Alpha Phone" unit="count" value="100" startDate="2026-07-10 09:00:00 +0200" endDate="2026-07-10 09:15:00 +0200"/>
+        <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Zeta Watch" unit="count" value="120" startDate="2026-07-10 09:00:00 +0200" endDate="2026-07-10 09:15:00 +0200"/>
+        """)
+
+        let steps = metric("HKQuantityTypeIdentifierStepCount", in: summary)
+        #expect(steps?.sum == 100)
+        #expect(steps?.recordCount == 1)
+    }
+
+    @Test func nonOverlappingCumulativeSourcesAreBothIncluded() {
+        let summary = importSummary(records: """
+        <Record type="HKQuantityTypeIdentifierDistanceWalkingRunning" sourceName="Alpha Phone" unit="km" value="1.2" startDate="2026-07-10 09:00:00 +0200" endDate="2026-07-10 09:15:00 +0200"/>
+        <Record type="HKQuantityTypeIdentifierDistanceWalkingRunning" sourceName="Tracker App" unit="km" value="0.8" startDate="2026-07-10 09:15:00 +0200" endDate="2026-07-10 09:30:00 +0200"/>
+        """)
+
+        #expect(metric("HKQuantityTypeIdentifierDistanceWalkingRunning", in: summary)?.sum == 2)
+    }
+
+    @Test func partiallyOverlappingCumulativeSourcesUseTheSelectedPortionOnly() {
+        let summary = importSummary(records: """
+        <Record type="HKQuantityTypeIdentifierActiveEnergyBurned" sourceName="Alpha Phone" unit="kcal" value="100" startDate="2026-07-10 09:00:00 +0200" endDate="2026-07-10 09:30:00 +0200"/>
+        <Record type="HKQuantityTypeIdentifierActiveEnergyBurned" sourceName="Zeta Watch" unit="kcal" value="80" startDate="2026-07-10 09:15:00 +0200" endDate="2026-07-10 09:45:00 +0200"/>
+        """)
+
+        #expect(metric("HKQuantityTypeIdentifierActiveEnergyBurned", in: summary)?.sum == 140)
+    }
+
+    @Test func discreteMeasurementsKeepDistinctSourcesButRemoveExactDuplicates() {
+        let summary = importSummary(records: """
+        <Record type="HKQuantityTypeIdentifierHeartRate" sourceName="Apple Watch" sourceVersion="1" unit="count/min" value="60" startDate="2026-07-10 09:00:00 +0200" endDate="2026-07-10 09:01:00 +0200"/>
+        <Record type="HKQuantityTypeIdentifierHeartRate" sourceName="Tracker App" sourceVersion="2" unit="count/min" value="80" startDate="2026-07-10 09:00:00 +0200" endDate="2026-07-10 09:01:00 +0200"/>
+        <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Scale" unit="kg" value="70" startDate="2026-07-10 10:00:00 +0200" endDate="2026-07-10 10:00:00 +0200"/>
+        <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Scale" unit="kg" value="72" startDate="2026-07-10 18:00:00 +0200" endDate="2026-07-10 18:00:00 +0200"/>
+        """)
+
+        let heartRate = metric("HKQuantityTypeIdentifierHeartRate", in: summary)
+        let bodyMass = metric("HKQuantityTypeIdentifierBodyMass", in: summary)
+        #expect(heartRate?.recordCount == 2)
+        #expect(heartRate?.average == 70)
+        #expect(bodyMass?.recordCount == 2)
+        #expect(bodyMass?.dailyValues.first?.average == 71)
+    }
+
+    @Test func overlappingSleepIntervalsAreBoundedToOneSourceAndWorkoutsOnlyDeduplicateExactly() {
+        let summary = importSummary(records: """
+        <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Alpha Phone" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-07-10 23:00:00 +0200" endDate="2026-07-11 07:00:00 +0200"/>
+        <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Zeta Watch" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-07-10 23:00:00 +0200" endDate="2026-07-11 07:00:00 +0200"/>
+        <Workout sourceName="Apple Watch" workoutActivityType="HKWorkoutActivityTypeRunning" duration="1800" startDate="2026-07-10 18:00:00 +0200" endDate="2026-07-10 18:30:00 +0200"/>
+        <Workout sourceName="Apple Watch" workoutActivityType="HKWorkoutActivityTypeRunning" duration="1800" startDate="2026-07-10 18:00:00 +0200" endDate="2026-07-10 18:30:00 +0200"/>
+        """)
+
+        #expect(metric("HKCategoryTypeIdentifierSleepAnalysis", in: summary)?.sum == 8)
+        #expect(metric("HKCategoryTypeIdentifierSleepAnalysis", in: summary)?.unit == "h")
+        #expect(metric("Workout", in: summary)?.recordCount == 1)
+    }
+
+    @Test func manualSourceOverlapFixtureMatchesEveryDocumentedExpectedValue() {
+        let fixtureURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/SourceOverlapValidation.xml")
+        let summary = AppleHealthImporter.importXML(at: fixtureURL, fileName: fixtureURL.lastPathComponent)
+
+        guard let summary else {
+            Issue.record("Expected the synthetic source-overlap fixture to import successfully.")
+            return
+        }
+
+        #expect(summary.recordCount == 21, "Expected 21 accepted Record elements; received \(summary.recordCount).")
+
+        assertMetric("HKQuantityTypeIdentifierStepCount", in: summary, expectedRecordCount: 11, expectedSum: 515, expectedAverage: 515 / 11)
+        assertMetric("HKQuantityTypeIdentifierDistanceWalkingRunning", in: summary, expectedRecordCount: 2, expectedSum: 2.5, expectedAverage: 1.25)
+        assertMetric("HKQuantityTypeIdentifierActiveEnergyBurned", in: summary, expectedRecordCount: 2, expectedSum: 160, expectedAverage: 80)
+        assertMetric("HKQuantityTypeIdentifierHeartRate", in: summary, expectedRecordCount: 2, expectedSum: 150, expectedAverage: 75)
+        assertMetric("HKQuantityTypeIdentifierBodyMass", in: summary, expectedRecordCount: 2, expectedSum: 142, expectedAverage: 71)
+        assertMetric("HKCategoryTypeIdentifierSleepAnalysis", in: summary, expectedRecordCount: 2, expectedSum: 3, expectedAverage: 1.5)
+
+        let sleepDailyValues = metric("HKCategoryTypeIdentifierSleepAnalysis", in: summary)?.dailyValues.map(\.sum).sorted() ?? []
+        #expect(sleepDailyValues == [1, 2], "Expected sleep split [1, 2] hours by local day; received \(sleepDailyValues).")
+
+        let workouts = metric("Workout", in: summary)
+        #expect(workouts?.recordCount == 2, "Expected two non-duplicate workouts; received \(workouts?.recordCount ?? -1).")
+    }
+
+    @Test func sourceAggregationStreamsManyRecordsWithoutRetainingTheXML() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("ManyRecords.xml")
+        try writeManySourceRecords(to: xmlURL, count: 25_000)
+
+        let summary = AppleHealthImporter.importXML(at: xmlURL, fileName: "ManyRecords.xml")
+        #expect(metric("HKQuantityTypeIdentifierStepCount", in: summary)?.recordCount == 25_000)
+        #expect(metric("HKQuantityTypeIdentifierStepCount", in: summary)?.sum == 25_000)
     }
 
     @Test func appleHealthParserImportsExportXMLFromZIPArchive() throws {
@@ -67,6 +174,469 @@ struct HealthAtlasTests {
         }
         #expect(summary.recordCount == 1)
         #expect(summary.dataTypes.first?.identifier == "HKQuantityTypeIdentifierStepCount")
+    }
+
+    @Test func streamingXMLImportReportsMonotoneByteProgressAndCompletesAt100Percent() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        try writeManySourceRecords(to: xmlURL, count: 5_000)
+        var progress: [Double] = []
+
+        guard case .imported = LocalImportValidator.validate(url: xmlURL, progress: { progress.append($0) }) else {
+            Issue.record("Expected the synthetic XML export to import.")
+            return
+        }
+
+        #expect(progress.first == 0)
+        #expect(progress.last == 1)
+        #expect(progress.allSatisfy { (0...1).contains($0) })
+        #expect(zip(progress, progress.dropFirst()).allSatisfy { $0 <= $1 })
+        #expect(progress.count <= 22)
+    }
+
+    @Test func streamingZIPImportUsesExportXMLProgressAndCompletesAt100Percent() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        try writeManySourceRecords(to: xmlURL, count: 5_000)
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        var progress: [Double] = []
+
+        guard case .imported = LocalImportValidator.validate(url: archiveURL, progress: { progress.append($0) }) else {
+            Issue.record("Expected the synthetic ZIP export to import.")
+            return
+        }
+
+        #expect(progress.first == 0)
+        #expect(progress.last == 1)
+        #expect(progress.allSatisfy { (0...1).contains($0) })
+        #expect(zip(progress, progress.dropFirst()).allSatisfy { $0 <= $1 })
+        #expect(progress.count <= 22)
+    }
+
+    @Test func cancelledStreamingImportNeverReports100Percent() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        try writeManySourceRecords(to: xmlURL, count: 5_000)
+        let cancellationToken = ImportCancellationToken()
+        var progress: [Double] = []
+
+        let result = LocalImportValidator.validate(url: xmlURL, cancellationToken: cancellationToken) { fraction in
+            progress.append(fraction)
+            if fraction > 0 { cancellationToken.cancel() }
+        }
+
+        #expect(result == .cancelled)
+        #expect(progress.first == 0)
+        #expect(progress.last != 1)
+        #expect(progress.allSatisfy { $0 < 1 })
+    }
+
+    @Test func streamingImportAcceptsAppleHealthInternalDTDFromXMLAndZIPArchive() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE HealthData [
+          <!ELEMENT HealthData (ExportDate,Record*)>
+          <!ELEMENT ExportDate EMPTY>
+          <!ATTLIST ExportDate value CDATA #REQUIRED>
+          <!ELEMENT Record EMPTY>
+          <!ATTLIST Record type CDATA #REQUIRED unit CDATA #IMPLIED value CDATA #IMPLIED startDate CDATA #IMPLIED>
+        ]>
+        <HealthData locale="en_US">
+          <ExportDate value="2026-09-17 07:00:00 +0200" />
+          <Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="42" startDate="2026-09-17 06:00:00 +0200" />
+        </HealthData>
+        """
+        try Data(xml.utf8).write(to: xmlURL)
+
+        guard case let .imported(xmlSummary) = LocalImportValidator.validate(url: xmlURL) else {
+            Issue.record("Expected an Apple Health XML file with an internal DTD to import.")
+            return
+        }
+        #expect(xmlSummary.recordCount == 1)
+
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        guard case let .imported(zipSummary) = LocalImportValidator.validate(url: archiveURL) else {
+            Issue.record("Expected the same Apple Health XML to import from ZIP.")
+            return
+        }
+        #expect(zipSummary.recordCount == 1)
+    }
+
+    @Test func streamingImportAcceptsNonSelfClosingRecordsWithChildContent() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <HealthData>
+          <Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="42" startDate="2026-09-17 06:00:00 +0200" endDate="2026-09-17 06:15:00 +0200">
+            <MetadataEntry key="synthetic" value="safe" />
+          </Record>
+        </HealthData>
+        """
+        try Data(xml.utf8).write(to: xmlURL)
+
+        guard case let .imported(xmlSummary) = LocalImportValidator.validate(url: xmlURL) else {
+            Issue.record("Expected a non-self-closing Apple Health record to import from XML.")
+            return
+        }
+        #expect(xmlSummary.recordCount == 1)
+
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        guard case let .imported(zipSummary) = LocalImportValidator.validate(url: archiveURL) else {
+            Issue.record("Expected the same non-self-closing record to import from ZIP.")
+            return
+        }
+        #expect(zipSummary.recordCount == 1)
+    }
+
+    @Test func streamingImportAcceptsValidAppleHealthXMLVariationsFromXMLAndZIP() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!-- Safe synthetic variation coverage. -->
+        <!DOCTYPE HealthData [
+          <!ELEMENT HealthData ANY>
+          <!ELEMENT Record ANY>
+        ]>
+        <HealthData locale="en_US">
+          <FutureContainer version="1">
+            <FutureElement><![CDATA[ignored synthetic extension]]></FutureElement>
+          </FutureContainer>
+          <Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="42" startDate="2026-09-17 06:00:00 +0200" endDate="2026-09-17 06:15:00 +0200" sourceName="Synthetic &amp; Safe">
+            <MetadataEntry key="synthetic" value="safe" />
+            <FutureRecordChild enabled="true" />
+          </Record>
+        </HealthData>
+        <?safe-test complete?>
+        """
+        let utf8BOM = Data([0xEF, 0xBB, 0xBF])
+        try (utf8BOM + Data(xml.utf8)).write(to: xmlURL)
+
+        guard case let .imported(xmlSummary) = LocalImportValidator.validate(url: xmlURL) else {
+            Issue.record("Expected a valid Apple Health XML variation to import from XML.")
+            return
+        }
+        #expect(xmlSummary.recordCount == 1)
+
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        guard case let .imported(zipSummary) = LocalImportValidator.validate(url: archiveURL) else {
+            Issue.record("Expected the same valid Apple Health XML variation to import from ZIP.")
+            return
+        }
+        #expect(zipSummary.recordCount == 1)
+    }
+
+    @Test func streamingImportRejectsMalformedClosingTagsWithSafeParserLocation() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let export = directory.appendingPathComponent("Synthetic-Private-Export.xml")
+        try Data("""
+        <HealthData>
+          <Record type="HKQuantityTypeIdentifierStepCount"></Record unexpected>
+        </HealthData>
+        """.utf8).write(to: export)
+
+        guard case let .rejected(failure) = LocalImportValidator.validate(url: export) else {
+            Issue.record("Expected malformed XML to be rejected.")
+            return
+        }
+
+        #expect(failure.diagnostics.errorCode == "HealthAtlas.Import.XML.firstPass.invalidTagSyntax")
+        #expect(failure.diagnostics.parserLine == 2)
+        #expect(failure.diagnostics.parserColumn != nil)
+        let copied = failure.diagnostics.copiedText
+        #expect(copied.contains("XML parser location: line 2, column "))
+        #expect(!copied.contains(export.path))
+        #expect(!copied.contains(export.lastPathComponent))
+    }
+
+    @Test func importSizeLimitsSupportLargeLocalExports() {
+        #expect(LocalImportValidator.supportsXMLByteCount(126 * 1024 * 1024))
+        #expect(LocalImportValidator.supportsXMLByteCount(LocalImportValidator.maximumBytes))
+        #expect(!LocalImportValidator.supportsXMLByteCount(LocalImportValidator.maximumBytes + 1))
+        #expect(AppleHealthImporter.supportsArchiveByteCount(126 * 1024 * 1024))
+        #expect(AppleHealthImporter.supportsArchiveByteCount(AppleHealthImporter.maximumArchiveBytes))
+        #expect(!AppleHealthImporter.supportsArchiveByteCount(AppleHealthImporter.maximumArchiveBytes + 1))
+    }
+
+    @Test func importCanBeCancelledBeforeParsingBegins() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        try Data("<?xml version=\"1.0\"?><HealthData><Record type=\"HKQuantityTypeIdentifierStepCount\" value=\"1\" startDate=\"2026-01-01 00:00:00 +0000\" /></HealthData>".utf8).write(to: xmlURL)
+        let cancellationToken = ImportCancellationToken()
+        cancellationToken.cancel()
+
+        #expect(LocalImportValidator.validate(url: xmlURL, cancellationToken: cancellationToken) == .cancelled)
+    }
+
+    @Test func importCanBeCancelledWhileStreamingRecords() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        // Keep the stream active long enough for the asynchronous cancellation
+        // to be observed on fast development machines.
+        try writeManySourceRecords(to: xmlURL, count: 100_000)
+        let cancellationToken = ImportCancellationToken()
+        DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(10)) {
+            cancellationToken.cancel()
+        }
+
+        if case .cancelled = LocalImportValidator.validate(url: xmlURL, cancellationToken: cancellationToken) {
+            return
+        }
+        Issue.record("Expected the streaming import to stop after cancellation.")
+    }
+
+    @Test func streamingImportHandles126MiBXMLAndZIPArchive() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        try writeSyntheticXML(to: xmlURL, byteCount: 126 * 1024 * 1024)
+
+        guard case let .imported(xmlSummary) = LocalImportValidator.validate(url: xmlURL) else {
+            Issue.record("Expected the 126 MiB XML export to import.")
+            return
+        }
+        #expect(xmlSummary.recordCount == 1)
+
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        guard case let .imported(zipSummary) = LocalImportValidator.validate(url: archiveURL) else {
+            Issue.record("Expected the ZIP with a 126 MiB Export.xml to import.")
+            return
+        }
+        #expect(zipSummary.recordCount == 1)
+    }
+
+    @Test func optionalLargeStreamingImportHandles500MiBXML() throws {
+        guard ProcessInfo.processInfo.environment["HEALTHATLAS_RUN_LARGE_IMPORT_TESTS"] == "1" else { return }
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let xmlURL = directory.appendingPathComponent("Export.xml")
+        let archiveURL = directory.appendingPathComponent("Export.zip")
+        let testByteCount = 500 * 1024 * 1024
+        try writeSyntheticXML(to: xmlURL, byteCount: testByteCount)
+
+        guard case let .imported(summary) = LocalImportValidator.validate(url: xmlURL) else {
+            Issue.record("Expected the 500 MiB XML export to import.")
+            return
+        }
+        #expect(summary.recordCount == 1)
+
+        try createZIP(at: archiveURL, containing: xmlURL, in: directory)
+        guard case let .imported(zipSummary) = LocalImportValidator.validate(url: archiveURL) else {
+            Issue.record("Expected the ZIP with a 500 MiB Export.xml to import.")
+            return
+        }
+        #expect(zipSummary.recordCount == 1)
+
+        let oversizedXML = directory.appendingPathComponent("Oversized.xml")
+        let oversizedArchive = directory.appendingPathComponent("Oversized.zip")
+        try writeSparseFile(to: oversizedXML, byteCount: LocalImportValidator.maximumBytes + 1)
+        try createZIP(at: oversizedArchive, containing: oversizedXML, in: directory)
+        if case .rejected = LocalImportValidator.validate(url: oversizedArchive) {
+            // The compressed archive is deliberately small; the contained XML is over the limit.
+        } else {
+            Issue.record("Expected a ZIP with an oversized uncompressed XML entry to be rejected.")
+        }
+    }
+
+    @Test func optionalExternalPerformanceImport() {
+        guard let path = ProcessInfo.processInfo.environment["HEALTHATLAS_EXTERNAL_IMPORT_TEST_PATH"] else { return }
+        let started = ContinuousClock.now
+        let url = URL(fileURLWithPath: path)
+        let result = LocalImportValidator.validate(url: url)
+        let elapsed = started.duration(to: .now)
+        guard case .imported = result else {
+            Issue.record("Expected the external performance fixture to import.")
+            return
+        }
+        print("External performance import completed in \(elapsed).")
+    }
+
+    @Test func optionalExternalArchiveImport() {
+        guard let path = ProcessInfo.processInfo.environment["HEALTHATLAS_EXTERNAL_ARCHIVE_TEST_PATH"] else { return }
+        let started = ContinuousClock.now
+        let url = URL(fileURLWithPath: path)
+        let result = LocalImportValidator.validate(url: url)
+        let elapsed = started.duration(to: .now)
+        guard case .imported = result else {
+            Issue.record("Expected the external archive fixture to import.")
+            return
+        }
+        print("External archive import completed in \(elapsed).")
+    }
+
+    @Test func importValidationRejectsInvalidAndEmptyInputs() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let emptyXML = directory.appendingPathComponent("Empty.xml")
+        let malformedXML = directory.appendingPathComponent("Broken.xml")
+        let unsupportedFile = directory.appendingPathComponent("Export.txt")
+        let invalidZIP = directory.appendingPathComponent("Broken.zip")
+        let nonHealthZIP = directory.appendingPathComponent("NoExport.zip")
+        let textFile = directory.appendingPathComponent("Other.txt")
+        let oversizedXML = directory.appendingPathComponent("Oversized.xml")
+
+        try Data().write(to: emptyXML)
+        try Data("<HealthData><Record".utf8).write(to: malformedXML)
+        try Data("not an export".utf8).write(to: unsupportedFile)
+        try Data("not a zip archive".utf8).write(to: invalidZIP)
+        try Data("unrelated".utf8).write(to: textFile)
+        try writeSparseFile(to: oversizedXML, byteCount: LocalImportValidator.maximumBytes + 1)
+        try createZIP(at: nonHealthZIP, containing: textFile, in: directory)
+
+        [emptyXML, malformedXML, unsupportedFile, invalidZIP, nonHealthZIP, oversizedXML].forEach { url in
+            if case .rejected = LocalImportValidator.validate(url: url) {
+                return
+            }
+            Issue.record("Expected \(url.lastPathComponent) to be rejected.")
+        }
+    }
+
+    @Test func failedImportDiagnosticsContainOnlySafeTechnicalMetadata() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let export = directory.appendingPathComponent("Alex-Private-Health-Export.xml")
+        let archive = directory.appendingPathComponent("Alex-Private-Health-Export.zip")
+        let privateValue = "9876"
+        let privateSource = "Alex Personal Watch"
+        try Data("<HealthData><Record value=\"\(privateValue)\" sourceName=\"\(privateSource)\"".utf8).write(to: export)
+        try Data("not a ZIP archive".utf8).write(to: archive)
+
+        guard case let .rejected(failure) = LocalImportValidator.validate(url: export) else {
+            Issue.record("Expected the malformed XML fixture to be rejected.")
+            return
+        }
+
+        let copied = failure.diagnostics.copiedText
+        #expect(copied.contains("HealthAtlas Import Diagnostics"))
+        #expect(copied.contains("Input: XML file"))
+        #expect(copied.contains("File size:"))
+        #expect(copied.contains("Stage: XML first pass"))
+        #expect(copied.contains("Error: HealthAtlas.Import.XML.firstPass.documentClosedUnexpectedly"))
+        #expect(copied.contains("XML parser location: line "))
+        #expect(copied.contains("Elapsed:"))
+        #expect(!copied.contains(export.path))
+        #expect(!copied.contains(export.lastPathComponent))
+        #expect(!copied.contains(privateValue))
+        #expect(!copied.contains(privateSource))
+
+        guard case let .rejected(archiveFailure) = LocalImportValidator.validate(url: archive) else {
+            Issue.record("Expected the invalid ZIP fixture to be rejected.")
+            return
+        }
+        let archiveCopied = archiveFailure.diagnostics.copiedText
+        #expect(archiveCopied.contains("Input: ZIP archive"))
+        #expect(archiveCopied.contains("Stage: ZIP listing"))
+        #expect(!archiveCopied.contains(archive.path))
+        #expect(!archiveCopied.contains(archive.lastPathComponent))
+    }
+
+    private func makeTemporaryDirectory() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HealthAtlasTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }
+
+    private func importSummary(records: String) -> ImportedHealthSummary? {
+        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><HealthData>\(records)</HealthData>"
+        return AppleHealthImporter.importXML(data: Data(xml.utf8), fileName: "sources.xml")
+    }
+
+    private func metric(_ identifier: String, in summary: ImportedHealthSummary?) -> HealthDataTypeSummary? {
+        summary?.dataTypes.first { $0.identifier == identifier }
+    }
+
+    private func assertMetric(
+        _ identifier: String,
+        in summary: ImportedHealthSummary,
+        expectedRecordCount: Int,
+        expectedSum: Double,
+        expectedAverage: Double
+    ) {
+        guard let actual = metric(identifier, in: summary) else {
+            Issue.record("Expected metric \(identifier) to be present.")
+            return
+        }
+        #expect(actual.recordCount == expectedRecordCount, "\(identifier) expected \(expectedRecordCount) accepted records; received \(actual.recordCount).")
+        #expect(actual.sum == expectedSum, "\(identifier) expected total \(expectedSum); received \(actual.sum).")
+        #expect(actual.average == expectedAverage, "\(identifier) expected average \(expectedAverage); received \(actual.average).")
+    }
+
+    private func writeSyntheticXML(to url: URL, byteCount: Int) throws {
+        let opening = Data("""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE HealthData [
+          <!ELEMENT HealthData (Record*)>
+          <!ELEMENT Record EMPTY>
+          <!ATTLIST Record type CDATA #REQUIRED unit CDATA #IMPLIED value CDATA #IMPLIED startDate CDATA #IMPLIED>
+        ]>
+        <HealthData><Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="42" startDate="2026-07-10 09:00:00 +0200"/>
+        """.utf8)
+        let closing = Data("</HealthData>".utf8)
+        precondition(byteCount > opening.count + closing.count)
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        try handle.write(contentsOf: opening)
+
+        var remaining = byteCount - opening.count - closing.count
+        let whitespace = Data(repeating: 0x20, count: min(1 * 1024 * 1024, remaining))
+        while remaining > 0 {
+            let count = min(remaining, whitespace.count)
+            try handle.write(contentsOf: whitespace.prefix(count))
+            remaining -= count
+        }
+        try handle.write(contentsOf: closing)
+    }
+
+    private func writeManySourceRecords(to url: URL, count: Int) throws {
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        try handle.write(contentsOf: Data("<?xml version=\"1.0\" encoding=\"UTF-8\"?><HealthData>".utf8))
+        for index in 0..<count {
+            let hour = index / 3600
+            let minute = (index / 60) % 60
+            let second = index % 60
+            let timestamp = String(format: "2026-07-01 %02d:%02d:%02d +0200", hour, minute, second)
+            let record = "<Record type=\"HKQuantityTypeIdentifierStepCount\" sourceName=\"Synthetic Watch\" unit=\"count\" value=\"1\" startDate=\"\(timestamp)\" endDate=\"\(timestamp)\"/>"
+            try handle.write(contentsOf: Data(record.utf8))
+        }
+        try handle.write(contentsOf: Data("</HealthData>".utf8))
+    }
+
+    private func createZIP(at archiveURL: URL, containing fileURL: URL, in directory: URL) throws {
+        let archive = Process()
+        archive.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
+        archive.currentDirectoryURL = directory
+        archive.arguments = ["-q", archiveURL.path, fileURL.lastPathComponent]
+        try archive.run()
+        archive.waitUntilExit()
+        #expect(archive.terminationStatus == 0)
+    }
+
+    private func writeSparseFile(to url: URL, byteCount: Int) throws {
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        try handle.truncate(atOffset: UInt64(byteCount))
     }
 
     @Test func firstLaunchAIServiceURLsUseTheThreeSelectedServices() {
@@ -174,6 +744,7 @@ struct HealthAtlasTests {
         #expect(AppReleaseVersion("v0.1.0-beta.10")! > AppReleaseVersion("v0.1.0-beta.9")!)
         #expect(AppReleaseVersion("v0.1.0")! > AppReleaseVersion("v0.1.0-beta.10")!)
         #expect(AppReleaseVersion("v0.2.0-beta.1")! > AppReleaseVersion("v0.1.0")!)
+        #expect(AppReleaseVersion("v1.1.1-beta")! > AppReleaseVersion("v1.1.0-beta")!)
     }
 
     @Test func appUpdateUsesTheMatchingReleaseChannel() {
